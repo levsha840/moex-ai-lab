@@ -13,29 +13,56 @@ DB = {
 
 TICKERS = ["AFKS", "MTLR", "OZON", "VKCO", "SMLT", "PIKK", "RNFT", "WUSH", "SELG", "MBNK"]
 
+
 def fetch_candles(ticker: str, start: str, end: str, retries: int = 5):
     url = f"https://iss.moex.com/iss/engines/stock/markets/shares/securities/{ticker}/candles.json"
-    params = {"from": start, "till": end, "interval": 24}
 
-    for attempt in range(1, retries + 1):
-        try:
-            print(f"{ticker}: request attempt {attempt}/{retries}")
-            r = requests.get(url, params=params, timeout=90)
-            r.raise_for_status()
+    all_rows = []
+    offset = 0
+    limit = 500
 
-            data = r.json()["candles"]
-            columns = data["columns"]
-            rows = data["data"]
+    while True:
+        params = {
+            "from": start,
+            "till": end,
+            "interval": 24,
+            "start": offset,
+            "limit": limit,
+        }
 
-            return [dict(zip(columns, row)) for row in rows]
+        rows_loaded = 0
 
-        except Exception as e:
-            print(f"{ticker}: error on attempt {attempt}: {e}")
-            if attempt < retries:
-                time.sleep(10 * attempt)
-            else:
-                print(f"{ticker}: skipped after {retries} failed attempts")
-                return []
+        for attempt in range(1, retries + 1):
+            try:
+                print(f"{ticker}: request offset={offset}, attempt {attempt}/{retries}")
+                r = requests.get(url, params=params, timeout=90)
+                r.raise_for_status()
+
+                data = r.json()["candles"]
+                columns = data["columns"]
+                rows = data["data"]
+
+                rows_loaded = len(rows)
+                all_rows.extend([dict(zip(columns, row)) for row in rows])
+                print(f"{ticker}: loaded {rows_loaded} rows at offset={offset}")
+                break
+
+            except Exception as e:
+                print(f"{ticker}: error on attempt {attempt}: {e}")
+                if attempt < retries:
+                    time.sleep(10 * attempt)
+                else:
+                    print(f"{ticker}: skipped offset={offset}")
+                    return all_rows
+
+        if rows_loaded < limit:
+            break
+
+        offset += limit
+        time.sleep(1)
+
+    return all_rows
+
 
 def save_candles(conn, ticker: str, candles):
     if not candles:
@@ -69,9 +96,10 @@ def save_candles(conn, ticker: str, candles):
             ))
     conn.commit()
 
+
 def main():
     end = datetime.now(timezone.utc).date()
-    start = end - timedelta(days=365 * 3)
+    start = end - timedelta(days=365 * 7)
 
     print(f"Loading MOEX candles from {start} to {end}")
     conn = psycopg2.connect(**DB)
@@ -82,10 +110,11 @@ def main():
             print(f"Loading {ticker}...")
             candles = fetch_candles(ticker, str(start), str(end))
             save_candles(conn, ticker, candles)
-            print(f"{ticker}: saved {len(candles)} candles")
+            print(f"{ticker}: total saved/updated {len(candles)} candles")
             time.sleep(2)
     finally:
         conn.close()
+
 
 if __name__ == "__main__":
     main()
