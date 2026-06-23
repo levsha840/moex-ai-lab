@@ -7,3 +7,4 @@ data/
 logs/
 *.db
 *.sqlite
+backup_moex_ai.sql
