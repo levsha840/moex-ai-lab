@@ -1,23 +1,20 @@
-import os
 import psycopg2
 from contextlib import contextmanager
-
+from core.config.settings import DB_SETTINGS
 
 DEFAULT_DB_CONFIG = {
-    "host": os.getenv("MOEX_DB_HOST", "localhost"),
-    "port": int(os.getenv("MOEX_DB_PORT", "5432")),
-    "dbname": os.getenv("MOEX_DB_NAME", "moex_ai"),
-    "user": os.getenv("MOEX_DB_USER", "moex"),
-    "password": os.getenv("MOEX_DB_PASSWORD", "moex_pass"),
+    "host": DB_SETTINGS.host,
+    "port": DB_SETTINGS.port,
+    "dbname": DB_SETTINGS.dbname,
+    "user": DB_SETTINGS.user,
+    "password": DB_SETTINGS.password,
 }
-
 
 def get_connection():
     return psycopg2.connect(**DEFAULT_DB_CONFIG)
 
-
 @contextmanager
-def db_cursor(commit: bool = False):
+def db_cursor(commit=False):
     conn = get_connection()
     cur = conn.cursor()
     try:

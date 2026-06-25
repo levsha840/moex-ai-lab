@@ -1,19 +1,17 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
-
+from typing import Dict, Any
 
 @dataclass
 class Signal:
-    action: str  # BUY, SELL, HOLD
+    action: str
     confidence: float = 1.0
     reason: str = ""
 
-
 class BaseStrategy:
-    strategy_name: str = ""
-    version: str = "1.0"
-    author: str = "human"
-    source: str = "manual"
+    strategy_name = ""
+    version = "1.0"
+    author = "human"
+    source = "manual"
 
     def generate_signal(self, row) -> Signal:
         raise NotImplementedError
