@@ -1,0 +1,6 @@
+replay_trades
+replay_win_rate
+replay_profit_factor
+replay_expectancy
+replay_total_pnl
+last_replay
