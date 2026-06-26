@@ -1,6 +1,6 @@
 # 02_ROADMAP
 
-MOEX AI LAB — актуальное состояние после релиза v1.5 Paper Trading Engine.
+MOEX AI LAB — актуальное состояние после релиза v1.7 Risk Engine.
 
 ## Статус релизов
 
@@ -9,34 +9,30 @@ MOEX AI LAB — актуальное состояние после релиза 
 - v1.2 Feature Factory — завершен.
 - v1.3 Replay Engine — завершен.
 - v1.4 Strategy Engine — завершен.
-- v1.5 Paper Trading Engine — завершен в этом патче.
+- v1.5 Paper Trading Engine — завершен.
+- v1.6 Position Manager — завершен.
+- v1.6.1 Persistence Layer — завершен.
+- v1.7 Risk Engine — завершен.
+- v1.8 — в плане.
 
-## v1.5 Paper Trading Engine
+## Завершённые релизы
 
-Добавлен промышленный long-only paper execution layer:
-
-- доменные модели виртуальных заявок, сделок, позиций, отклоненных заявок и портфельных snapshot;
-- PaperTradingEngine для исполнения BUY / SELL / HOLD сигналов Strategy Engine;
-- учет initial cash, комиссии, минимальной комиссии и проскальзывания;
-- проверка достаточности денежных средств;
-- запрет short-продаж по умолчанию;
-- журнал виртуальных заявок, сделок, отклонений и portfolio snapshots;
-- расчет realized / unrealized PnL, equity и market value;
-- тесты Paper Trading Engine.
-
-## Архитектурное правило
-
-Paper Trading Engine не пишет напрямую в PostgreSQL. Он является чистым детерминированным execution-layer. Persistency/Repository слой будет добавлен отдельным релизом, чтобы не смешивать доменную логику исполнения и хранение данных.
+- v1.0–v1.2: фундамент, данные, фичи.
+- v1.3: ReplayEngine — детерминированный посвечный replayer.
+- v1.4: StrategyEngine — конвейер BUY/SELL/HOLD сигналов.
+- v1.5: PaperTradingEngine — виртуальное исполнение заявок.
+- v1.6: PositionManager — управление LONG/SHORT позициями.
+- v1.6.1: Persistence Layer — Protocol-based абстракция хранения, MemoryRepository.
+- v1.7: RiskEngine — pre-trade оценка риска, интеграция с PaperTradingEngine.
 
 ## Следующий релиз
 
-v1.6 Portfolio / Risk Manager Integration:
+v1.8 (планируется):
 
-- связать PaperTradingEngine с Risk Manager;
-- добавить лимиты на размер позиции и риск на сделку;
-- добавить portfolio-level ограничения;
-- подготовить persistence adapter для paper trading журналов;
-- расширить end-to-end replay → strategy → paper execution сценарий.
+- PostgreSQL backend для PositionRepository;
+- дневные лимиты риска;
+- stop-loss и take-profit;
+- end-to-end интеграционный тест: ReplayEngine → StrategyEngine → RiskEngine → PaperTradingEngine.
 
 ## Правило
 

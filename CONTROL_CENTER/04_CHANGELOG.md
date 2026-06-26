@@ -1,6 +1,6 @@
 # 04_CHANGELOG
 
-MOEX AI LAB — актуальное состояние после релиза **v1.6.1 Persistence Layer**.
+MOEX AI LAB — актуальное состояние после релиза **v1.7 Risk Engine**.
 
 ---
 
@@ -13,7 +13,8 @@ MOEX AI LAB — актуальное состояние после релиза 
 * ✅ v1.4 Strategy Engine — завершен.
 * ✅ v1.5 Paper Trading Engine — завершен.
 * ✅ v1.6 Position Manager — завершен.
-* 🚧 v1.6.1 Persistence Layer — в разработке (текущий релиз).
+* ✅ v1.6.1 Persistence Layer — завершен.
+* ✅ v1.7 Risk Engine — завершен.
 
 ---
 
@@ -70,20 +71,37 @@ MOEX AI LAB — актуальное состояние после релиза 
 
 ---
 
+# v1.7 Risk Engine
+
+Реализован независимый детерминированный слой оценки риска.
+
+Реализовано:
+
+* доменные модели: `RiskDecision`, `RiskDecisionType`, `RiskReason`, `RiskLimits`, `RiskCheckRequest`;
+* `RiskEngine.check()` — возвращает `ALLOW` / `REJECT` + список причин;
+* проверка `max_trade_value`;
+* проверка `max_position_value`;
+* проверка `max_position_pct`;
+* проверка `max_open_positions`;
+* запрет short при `allow_short=False`;
+* интеграция с `PaperTradingEngine` через опциональный `risk_engine`;
+* отклонения попадают в `rejected_orders` журнал;
+* обратная совместимость сохранена;
+* исправлен packaging тестов (`tests/persistence/__init__.py`);
+* 9 новых тестов Risk Engine.
+
+---
+
 # Следующий релиз
 
-## v1.7 Risk Engine
+## v1.8
 
 Планируется реализовать:
 
-* риск на сделку;
-* максимальный размер позиции;
+* PostgreSQL backend для PositionRepository;
 * дневные лимиты риска;
-* контроль максимальной просадки;
-* stop-loss;
-* take-profit;
-* portfolio risk limits;
-* интеграцию с PositionManager и Persistence Layer.
+* stop-loss и take-profit;
+* end-to-end интеграционный тест полного конвейера.
 
 ---
 

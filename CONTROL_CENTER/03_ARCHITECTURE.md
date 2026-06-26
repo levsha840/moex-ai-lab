@@ -1,6 +1,6 @@
 # 03_ARCHITECTURE
 
-MOEX AI LAB — актуальное состояние после релиза v1.5 Paper Trading Engine.
+MOEX AI LAB — актуальное состояние после релиза v1.7 Risk Engine.
 
 ## Статус релизов
 
@@ -9,34 +9,59 @@ MOEX AI LAB — актуальное состояние после релиза 
 - v1.2 Feature Factory — завершен.
 - v1.3 Replay Engine — завершен.
 - v1.4 Strategy Engine — завершен.
-- v1.5 Paper Trading Engine — завершен в этом патче.
+- v1.5 Paper Trading Engine — завершен.
+- v1.6 Position Manager — завершен.
+- v1.6.1 Persistence Layer — завершен.
+- v1.7 Risk Engine — завершен.
 
-## v1.5 Paper Trading Engine
+## Конвейер обработки (v1.7)
 
-Добавлен промышленный long-only paper execution layer:
+```
+[MOEX / T-Invest API]
+        │
+        ▼
+[data_collector] ──► PostgreSQL (candles_intraday, candles)
+                              │
+                              ▼
+                    [FeatureFactory] ──► features_daily
+                              │
+                              ▼
+                    [ReplayEngine]   ← replay из БД или in-memory
+                              │
+                              ▼
+                    [StrategyEngine] ← стратегии (BaseStrategy)
+                              │  StrategyDecision (Signal BUY/SELL/HOLD)
+                              ▼
+                    [RiskEngine]     ← pre-trade проверка лимитов
+                              │  ALLOW / REJECT
+                              ▼
+                  [PaperTradingEngine] ← execution layer
+                              │
+                    [Persistence Layer] ← PositionRepository
+                           ├─ MemoryPositionRepository ✓
+                           └─ PostgresPositionRepository (запланировано)
+```
 
-- доменные модели виртуальных заявок, сделок, позиций, отклоненных заявок и портфельных snapshot;
-- PaperTradingEngine для исполнения BUY / SELL / HOLD сигналов Strategy Engine;
-- учет initial cash, комиссии, минимальной комиссии и проскальзывания;
-- проверка достаточности денежных средств;
-- запрет short-продаж по умолчанию;
-- журнал виртуальных заявок, сделок, отклонений и portfolio snapshots;
-- расчет realized / unrealized PnL, equity и market value;
-- тесты Paper Trading Engine.
+## Архитектурные правила
 
-## Архитектурное правило
+- `RiskEngine`, `ReplayEngine`, `StrategyEngine`, `PaperTradingEngine` — детерминированные объекты без доступа к БД.
+- Бизнес-логика не зависит от способа хранения данных: все сервисы работают через интерфейсы `Persistence Layer`.
+- `RiskEngine` подключается к `PaperTradingEngine` опционально — при отсутствии поведение не меняется.
 
-Paper Trading Engine не пишет напрямую в PostgreSQL. Он является чистым детерминированным execution-layer. Persistency/Repository слой будет добавлен отдельным релизом, чтобы не смешивать доменную логику исполнения и хранение данных.
+## Нерешённые архитектурные вопросы
+
+- `PaperTradingEngine` ведёт собственный учёт позиций (`PaperPosition`) независимо от `PositionManager` — связь не определена.
+- `core/portfolio/` (старый слой) существует параллельно с `core/position/` — судьба не определена.
+- `PostgresPositionRepository` — заглушка, реализация не начата.
 
 ## Следующий релиз
 
-v1.6 Portfolio / Risk Manager Integration:
+v1.8 (планируется):
 
-- связать PaperTradingEngine с Risk Manager;
-- добавить лимиты на размер позиции и риск на сделку;
-- добавить portfolio-level ограничения;
-- подготовить persistence adapter для paper trading журналов;
-- расширить end-to-end replay → strategy → paper execution сценарий.
+- PostgreSQL backend для PositionRepository;
+- дневные лимиты риска;
+- stop-loss и take-profit;
+- end-to-end интеграционный тест полного конвейера.
 
 ## Правило
 

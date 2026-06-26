@@ -18,6 +18,8 @@ from core.paper.models import (
     PaperRejectedOrder,
     PaperTrade,
 )
+from core.risk.engine import RiskEngine
+from core.risk.models import RiskCheckRequest
 from core.strategy.signal import Signal, SignalAction
 from core.strategy.strategy_engine import StrategyDecision
 
@@ -44,8 +46,9 @@ class PaperTradingEngine:
     commission, slippage and operation journals.
     """
 
-    def __init__(self, config: PaperExecutionConfig | None = None) -> None:
+    def __init__(self, config: PaperExecutionConfig | None = None, risk_engine: RiskEngine | None = None) -> None:
         self.config = config or PaperExecutionConfig()
+        self.risk_engine = risk_engine
         self.state = PaperTradingState(cash=float(self.config.initial_cash))
 
     def reset(self) -> None:
@@ -105,6 +108,15 @@ class PaperTradingEngine:
         )
         self.state.orders.append(order)
         self.state.last_prices[order.ticker] = order.requested_price
+
+        if self.risk_engine is not None:
+            risk_decision = self.risk_engine.check(self._build_risk_request(order))
+            if not risk_decision.allowed:
+                reason = "; ".join(r.value for r in risk_decision.reasons)
+                rejected = PaperRejectedOrder(order=order, status=PaperOrderStatus.REJECTED, reason=reason)
+                self.state.rejected_orders.append(rejected)
+                snapshot = self.snapshot(order.ts)
+                return PaperExecutionResult(order=order, trade=None, rejected=rejected, snapshot=snapshot)
 
         rejection_reason = self._validate_order(order)
         if rejection_reason is not None:
@@ -231,6 +243,31 @@ class PaperTradingEngine:
     def _reject_without_order(self, signal: Signal, reason: str) -> PaperExecutionResult:
         snapshot = self.snapshot(signal.ts)
         return PaperExecutionResult(order=None, trade=None, rejected=None, snapshot=snapshot)
+
+    def _build_risk_request(self, order: PaperOrder) -> RiskCheckRequest:
+        execution_price = self._execution_price(order)
+        position_key = (order.strategy_name, order.ticker)
+        position = self.state.positions.get(position_key)
+        current_position_value = (
+            position.quantity * self.state.last_prices.get(order.ticker, position.avg_price)
+            if position is not None and position.quantity > 0
+            else 0.0
+        )
+        open_positions_count = sum(1 for p in self.state.positions.values() if p.quantity > 0)
+        market_value = sum(
+            p.quantity * self.state.last_prices.get(p.ticker, p.avg_price)
+            for p in self.state.positions.values()
+        )
+        return RiskCheckRequest(
+            side=order.side.value,
+            ticker=order.ticker,
+            strategy_name=order.strategy_name,
+            quantity=order.quantity,
+            price=execution_price,
+            current_position_value=current_position_value,
+            open_positions_count=open_positions_count,
+            portfolio_equity=self.state.cash + market_value,
+        )
 
     def _new_id(self, prefix: str) -> str:
         return f"{prefix}_{uuid4().hex}"

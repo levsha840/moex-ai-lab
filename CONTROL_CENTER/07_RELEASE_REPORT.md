@@ -1,6 +1,6 @@
 # 07_RELEASE_REPORT
 
-MOEX AI LAB — актуальное состояние после релиза v1.5 Paper Trading Engine.
+MOEX AI LAB — релиз v1.7 Risk Engine.
 
 ## Статус релизов
 
@@ -9,34 +9,43 @@ MOEX AI LAB — актуальное состояние после релиза 
 - v1.2 Feature Factory — завершен.
 - v1.3 Replay Engine — завершен.
 - v1.4 Strategy Engine — завершен.
-- v1.5 Paper Trading Engine — завершен в этом патче.
+- v1.5 Paper Trading Engine — завершен.
+- v1.6 Position Manager — завершен.
+- v1.6.1 Persistence Layer — завершен.
+- v1.7 Risk Engine — завершен.
 
-## v1.5 Paper Trading Engine
+## v1.7 Risk Engine — что сделано
 
-Добавлен промышленный long-only paper execution layer:
+### Новые файлы
 
-- доменные модели виртуальных заявок, сделок, позиций, отклоненных заявок и портфельных snapshot;
-- PaperTradingEngine для исполнения BUY / SELL / HOLD сигналов Strategy Engine;
-- учет initial cash, комиссии, минимальной комиссии и проскальзывания;
-- проверка достаточности денежных средств;
-- запрет short-продаж по умолчанию;
-- журнал виртуальных заявок, сделок, отклонений и portfolio snapshots;
-- расчет realized / unrealized PnL, equity и market value;
-- тесты Paper Trading Engine.
+- `core/risk/models.py` — `RiskDecision`, `RiskDecisionType`, `RiskReason`, `RiskLimits`, `RiskCheckRequest`
+- `core/risk/engine.py` — `RiskEngine.check()`: детерминированная оценка риска
+- `core/risk/__init__.py` — публичный API пакета
+- `tests/test_risk_engine.py` — 9 тестов
+- `tests/persistence/__init__.py` — fix: packaging тестов
+
+### Изменённые файлы
+
+- `core/paper/engine.py` — интеграция `RiskEngine` (опциональный параметр `risk_engine`)
+
+### Тесты
+
+- Итого: 52 passed, 0 failed.
+- Новых тестов: 9.
+- Регрессий: 0.
 
 ## Архитектурное правило
 
-Paper Trading Engine не пишет напрямую в PostgreSQL. Он является чистым детерминированным execution-layer. Persistency/Repository слой будет добавлен отдельным релизом, чтобы не смешивать доменную логику исполнения и хранение данных.
+`RiskEngine` — чистый детерминированный слой без доступа к БД. Подключается к `PaperTradingEngine` опционально. Обратная совместимость сохранена.
 
 ## Следующий релиз
 
-v1.6 Portfolio / Risk Manager Integration:
+v1.8:
 
-- связать PaperTradingEngine с Risk Manager;
-- добавить лимиты на размер позиции и риск на сделку;
-- добавить portfolio-level ограничения;
-- подготовить persistence adapter для paper trading журналов;
-- расширить end-to-end replay → strategy → paper execution сценарий.
+- PostgreSQL backend для PositionRepository;
+- дневные лимиты риска;
+- stop-loss и take-profit;
+- end-to-end интеграционный тест полного конвейера.
 
 ## Правило
 
