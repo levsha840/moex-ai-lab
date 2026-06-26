@@ -1,34 +1,39 @@
-# 06_SESSION_START — MOEX AI LAB
+# 06_SESSION_START
 
-## Как начать следующую сессию
+MOEX AI LAB — актуальное состояние после релиза v1.4 Strategy Engine.
 
-1. Открыть `D:\MOEX_AI` в VS Code.
-2. Активировать окружение:
+## Статус релизов
 
-```powershell
-.\.venv\Scripts\activate
-```
+- v1.0 Foundation — завершен.
+- v1.1 Intraday Data Layer — завершен.
+- v1.2 Feature Factory — завершен.
+- v1.3 Replay Engine — завершен.
+- v1.4 Strategy Engine — завершен в этом патче.
 
-3. Проверить Python:
+## v1.4 Strategy Engine
 
-```powershell
-python --version
-```
+Добавлен новый слой торгового ядра:
 
-Ожидается Python 3.12.x.
+- единая модель сигналов BUY / SELL / HOLD;
+- StrategyContext для передачи candle/history/features в стратегии;
+- BaseStrategy для новых стратегий;
+- StrategyEngine для запуска стратегий поверх ReplayEngine;
+- EngineStrategyRegistry для регистрации стратегий;
+- адаптер для старых стратегий, использующих generate_signal(row);
+- тесты Strategy Engine.
 
-4. Запустить тесты:
+## Следующий релиз
 
-```powershell
-python -m pytest
-```
+v1.5 Paper Trading Engine:
 
-5. Проверить Git:
+- исполнение сигналов;
+- виртуальные заявки;
+- сделки;
+- комиссия;
+- проскальзывание;
+- журнал операций;
+- подготовка к Portfolio/Risk Manager.
 
-```powershell
-git status
-```
+## Правило
 
-## Текущий этап
-
-После v1.3 следующий этап — **v1.4 Strategy Runtime Layer**.
+После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.

@@ -1,34 +1,39 @@
-# 02_ROADMAP — MOEX AI LAB
+# 02_ROADMAP
 
-## Завершено
+MOEX AI LAB — актуальное состояние после релиза v1.4 Strategy Engine.
 
-- v1.0 Foundation.
-- v1.1 Intraday Data Layer.
-- v1.2 Feature Factory.
-- v1.3 Replay Engine.
+## Статус релизов
 
-## Далее
+- v1.0 Foundation — завершен.
+- v1.1 Intraday Data Layer — завершен.
+- v1.2 Feature Factory — завершен.
+- v1.3 Replay Engine — завершен.
+- v1.4 Strategy Engine — завершен в этом патче.
 
-### v1.4 Strategy Runtime Layer
+## v1.4 Strategy Engine
 
-Цель: подключить стратегии к replay-потоку и получать сигналы на каждой свече.
+Добавлен новый слой торгового ядра:
 
-План:
+- единая модель сигналов BUY / SELL / HOLD;
+- StrategyContext для передачи candle/history/features в стратегии;
+- BaseStrategy для новых стратегий;
+- StrategyEngine для запуска стратегий поверх ReplayEngine;
+- EngineStrategyRegistry для регистрации стратегий;
+- адаптер для старых стратегий, использующих generate_signal(row);
+- тесты Strategy Engine.
 
-1. Единый интерфейс стратегии.
-2. Runtime-контекст стратегии.
-3. Подключение `ReplayEngine` + `FeatureFactory` + strategy callback.
-4. Журнал событий стратегии.
-5. Unit-тесты.
+## Следующий релиз
 
-### v1.5 Backtest Metrics Layer
+v1.5 Paper Trading Engine:
 
-Цель: считать сделки, equity curve, drawdown, win-rate, profit factor.
+- исполнение сигналов;
+- виртуальные заявки;
+- сделки;
+- комиссия;
+- проскальзывание;
+- журнал операций;
+- подготовка к Portfolio/Risk Manager.
 
-### v1.6 Paper Trading Integration
+## Правило
 
-Цель: связать сигналы стратегии с paper execution.
-
-### v1.7 AI Learning Dataset
-
-Цель: подготовить датасет для обучения моделей.
+После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.

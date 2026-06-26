@@ -1,55 +1,39 @@
-# 03_ARCHITECTURE — MOEX AI LAB
+# 03_ARCHITECTURE
 
-## Слои системы
+MOEX AI LAB — актуальное состояние после релиза v1.4 Strategy Engine.
 
-```text
-configs/
-infrastructure/
-core/db/
-core/features/
-core/replay/
-core/strategy/
-core/execution/
-core/analytics/
-services/
-tests/
-CONTROL_CENTER/
-```
+## Статус релизов
 
-## v1.3 Replay Engine
+- v1.0 Foundation — завершен.
+- v1.1 Intraday Data Layer — завершен.
+- v1.2 Feature Factory — завершен.
+- v1.3 Replay Engine — завершен.
+- v1.4 Strategy Engine — завершен в этом патче.
 
-Добавлен слой:
+## v1.4 Strategy Engine
 
-```text
-core/replay/
-├── __init__.py
-└── replay_engine.py
-```
+Добавлен новый слой торгового ядра:
 
-Назначение:
+- единая модель сигналов BUY / SELL / HOLD;
+- StrategyContext для передачи candle/history/features в стратегии;
+- BaseStrategy для новых стратегий;
+- StrategyEngine для запуска стратегий поверх ReplayEngine;
+- EngineStrategyRegistry для регистрации стратегий;
+- адаптер для старых стратегий, использующих generate_signal(row);
+- тесты Strategy Engine.
 
-- принимает список свечей;
-- сортирует данные по `ticker`, `ts`;
-- проигрывает историю шаг за шагом;
-- хранит позицию replay;
-- возвращает `ReplayEvent`;
-- поддерживает warmup history;
-- опционально подключает `FeatureFactory`.
+## Следующий релиз
 
-## Поток данных
+v1.5 Paper Trading Engine:
 
-```text
-candles_intraday
-    ↓
-IntradayRepository
-    ↓
-FeatureFactory
-    ↓
-ReplayEngine
-    ↓
-Strategy Runtime / Backtest / AI Learning
-```
+- исполнение сигналов;
+- виртуальные заявки;
+- сделки;
+- комиссия;
+- проскальзывание;
+- журнал операций;
+- подготовка к Portfolio/Risk Manager.
 
-## Принцип
+## Правило
 
-Replay должен быть детерминированным: одинаковые входные свечи дают одинаковую последовательность событий.
+После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.

@@ -1,31 +1,39 @@
-# 07_RELEASE_REPORT — MOEX AI LAB
+# 07_RELEASE_REPORT
 
-## v1.3 Replay Engine
+MOEX AI LAB — актуальное состояние после релиза v1.4 Strategy Engine.
 
-### Цель
+## Статус релизов
 
-Создать детерминированный replay-движок для проигрывания исторических intraday-свечей.
+- v1.0 Foundation — завершен.
+- v1.1 Intraday Data Layer — завершен.
+- v1.2 Feature Factory — завершен.
+- v1.3 Replay Engine — завершен.
+- v1.4 Strategy Engine — завершен в этом патче.
 
-### Результат
+## v1.4 Strategy Engine
 
-Добавлен `ReplayEngine`, который:
+Добавлен новый слой торгового ядра:
 
-- принимает исторические свечи;
-- сортирует их по инструменту и времени;
-- проигрывает по одной свече;
-- возвращает `ReplayEvent`;
-- поддерживает warmup history;
-- может получать признаки от `FeatureFactory`.
+- единая модель сигналов BUY / SELL / HOLD;
+- StrategyContext для передачи candle/history/features в стратегии;
+- BaseStrategy для новых стратегий;
+- StrategyEngine для запуска стратегий поверх ReplayEngine;
+- EngineStrategyRegistry для регистрации стратегий;
+- адаптер для старых стратегий, использующих generate_signal(row);
+- тесты Strategy Engine.
 
-### Проверка
+## Следующий релиз
 
-Ожидаемые команды:
+v1.5 Paper Trading Engine:
 
-```powershell
-python -m pytest
-python -m pytest tests/test_replay_engine.py
-```
+- исполнение сигналов;
+- виртуальные заявки;
+- сделки;
+- комиссия;
+- проскальзывание;
+- журнал операций;
+- подготовка к Portfolio/Risk Manager.
 
-### Решение
+## Правило
 
-Replay Engine становится базовым слоем для будущих Strategy Runtime, Backtest и AI Learning.
+После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.

@@ -1,26 +1,39 @@
-# 09_DECISIONS — MOEX AI LAB
+# 09_DECISIONS
 
-## ADR-001: CONTROL_CENTER как источник состояния
+MOEX AI LAB — актуальное состояние после релиза v1.4 Strategy Engine.
 
-Принято: вся актуальная информация по проекту хранится в `CONTROL_CENTER`.
+## Статус релизов
 
-## ADR-002: Python 3.12
+- v1.0 Foundation — завершен.
+- v1.1 Intraday Data Layer — завершен.
+- v1.2 Feature Factory — завершен.
+- v1.3 Replay Engine — завершен.
+- v1.4 Strategy Engine — завершен в этом патче.
 
-Принято: рабочая версия Python — 3.12.x.
+## v1.4 Strategy Engine
 
-Причина: лучшая совместимость с ML/AI и бинарными пакетами.
+Добавлен новый слой торгового ядра:
 
-## ADR-003: Replay Engine как отдельный слой
+- единая модель сигналов BUY / SELL / HOLD;
+- StrategyContext для передачи candle/history/features в стратегии;
+- BaseStrategy для новых стратегий;
+- StrategyEngine для запуска стратегий поверх ReplayEngine;
+- EngineStrategyRegistry для регистрации стратегий;
+- адаптер для старых стратегий, использующих generate_signal(row);
+- тесты Strategy Engine.
 
-Принято: replay отделен от стратегии, backtest и execution.
+## Следующий релиз
 
-Причина: один и тот же поток исторических событий должен использоваться для:
+v1.5 Paper Trading Engine:
 
-- backtest;
-- обучения;
-- paper trading;
-- анализа стратегий.
+- исполнение сигналов;
+- виртуальные заявки;
+- сделки;
+- комиссия;
+- проскальзывание;
+- журнал операций;
+- подготовка к Portfolio/Risk Manager.
 
-## ADR-004: Интеграционные тесты отдельно
+## Правило
 
-Принято: проверки внешних API не должны блокировать `python -m pytest`.
+После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.

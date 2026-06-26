@@ -1,29 +1,31 @@
-# PATCH v1.3 — Replay Engine
+# PATCH v1.4 — Strategy Engine
 
-## Что входит
+## Что добавлено
 
-- `core/replay/replay_engine.py` — deterministic replay свеча-за-свечой.
-- `core/replay/__init__.py` — публичный экспорт replay-модуля.
-- `tests/test_replay_engine.py` — unit-тесты Replay Engine.
-- `pytest.ini` — обычный `python -m pytest` теперь запускает только `tests/`.
-- `services/data_collector/app/test_tinvest.py` — старый T-Invest check больше не ломает общий тестовый прогон.
-- `requirements.txt`, `requirements-dev.txt`, `requirements-lock.txt` — нормализация зависимостей.
-- `CONTROL_CENTER/*` — обновление состояния проекта.
+- `core/strategy/signal.py` — единая модель `Signal`, `SignalAction`, `PositionSide`, `OrderIntent`.
+- `core/strategy/strategy_context.py` — контекст стратегии на один replay-шаг.
+- `core/strategy/base_strategy.py` — новый интерфейс стратегий `BaseStrategy`.
+- `core/strategy/strategy_engine.py` — движок запуска стратегий поверх `ReplayEngine`.
+- `core/strategy/strategy_registry.py` — новый registry для Strategy Engine.
+- `tests/test_strategy_engine.py` — тесты нового слоя.
+- `CONTROL_CENTER/*` — документация обновлена до v1.4.
 
 ## Проверка
 
 ```powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest
-python -m pytest tests/test_replay_engine.py
-python -m pytest tests/test_intraday_repository.py tests/test_feature_factory.py tests/test_replay_engine.py
+python -m pytest tests
+python -m pytest tests/test_strategy_engine.py
 ```
 
-## Если всё зелёное
+## Коммит
 
 ```powershell
 git status
 git add .
-git commit -m "v1.3 Replay Engine"
+git commit -m "v1.4 Strategy Engine"
 git push
 ```
+
+## Важно
+
+Старые стратегии через `generate_signal(row)` не ломаются: `StrategyEngine` умеет адаптировать их в новый формат `Signal`.

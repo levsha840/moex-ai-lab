@@ -1,32 +1,39 @@
-# 04_CHANGELOG — MOEX AI LAB
+# 04_CHANGELOG
 
-## v1.3 Replay Engine
+MOEX AI LAB — актуальное состояние после релиза v1.4 Strategy Engine.
 
-Добавлено:
+## Статус релизов
 
-- `core/replay/replay_engine.py`.
-- `ReplayConfig`.
-- `ReplayEvent`.
-- `ReplayState`.
-- `ReplayEngine.step()`.
-- `ReplayEngine.run()`.
-- `ReplayEngine.window()`.
-- Интеграция с `FeatureFactory` через callback.
-- `tests/test_replay_engine.py`.
-- `pytest.ini`.
-- `requirements.txt`.
-- `requirements-dev.txt`.
-- `requirements-lock.txt`.
+- v1.0 Foundation — завершен.
+- v1.1 Intraday Data Layer — завершен.
+- v1.2 Feature Factory — завершен.
+- v1.3 Replay Engine — завершен.
+- v1.4 Strategy Engine — завершен в этом патче.
 
-Изменено:
+## v1.4 Strategy Engine
 
-- Старый T-Invest integration check больше не блокирует общий pytest.
-- Основной запуск тестов ограничен папкой `tests/`.
+Добавлен новый слой торгового ядра:
 
-## v1.2 Feature Factory
+- единая модель сигналов BUY / SELL / HOLD;
+- StrategyContext для передачи candle/history/features в стратегии;
+- BaseStrategy для новых стратегий;
+- StrategyEngine для запуска стратегий поверх ReplayEngine;
+- EngineStrategyRegistry для регистрации стратегий;
+- адаптер для старых стратегий, использующих generate_signal(row);
+- тесты Strategy Engine.
 
-Добавлен слой генерации технических признаков.
+## Следующий релиз
 
-## v1.1 Intraday Data Layer
+v1.5 Paper Trading Engine:
 
-Добавлен слой хранения и доступа к intraday-свечам.
+- исполнение сигналов;
+- виртуальные заявки;
+- сделки;
+- комиссия;
+- проскальзывание;
+- журнал операций;
+- подготовка к Portfolio/Risk Manager.
+
+## Правило
+
+После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.
