@@ -1,19 +1,26 @@
 # 05_TODO — MOEX AI LAB
 
-## Следующий релиз: v1.3 Intraday Dataset Builder / Replay Integration
+## Текущий статус
 
-### Основные задачи
+v1.3 готов к проверке и коммиту.
 
-- [ ] Создать модуль построения датасета из `candles_intraday`.
-- [ ] Подключить `IntradayRepository` к `FeatureFactory`.
-- [ ] Добавить фильтрацию по тикеру и диапазону дат.
-- [ ] Подготовить формат dataset rows для AI/replay.
-- [ ] Добавить smoke-тест полного pipeline.
-- [ ] Обновить `CONTROL_CENTER` после завершения.
+## Проверить
+
+- `python -m pytest`
+- `python -m pytest tests/test_replay_engine.py`
+- `python -m pytest tests/test_intraday_repository.py tests/test_feature_factory.py tests/test_replay_engine.py`
+
+## Следующий релиз: v1.4 Strategy Runtime Layer
+
+- Создать runtime-интерфейс стратегии.
+- Подключить стратегию к replay-event.
+- Добавить strategy context.
+- Добавить signal event.
+- Добавить тесты runtime-цикла.
 
 ## Позже
 
-- [ ] Добавить pandas adapter, если потребуется.
-- [ ] Добавить сохранение рассчитанных признаков в БД.
-- [ ] Добавить target labeling для обучения.
-- [ ] Добавить feature quality checks.
+- Реальный collector для T-Invest / MOEX ISS.
+- Backtest metrics.
+- Paper trading loop.
+- AI dataset builder.

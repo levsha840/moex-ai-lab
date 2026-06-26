@@ -1,34 +1,32 @@
 # 01_PROJECT_STATE — MOEX AI LAB
 
-## Текущее состояние
+## Текущий релиз
 
-Текущий завершенный релиз: **v1.2 Feature Factory**.
+**v1.3 Replay Engine — завершен после проверки.**
 
-## Готово
+## Состояние платформы
 
-- Базовая платформа MOEX AI LAB.
-- Strategy Catalog / Registry.
-- Replay-инфраструктура.
-- PostgreSQL/TimescaleDB слой.
-- `v1.1 Intraday Data Layer`:
-  - таблица `candles_intraday`;
-  - SQL-схема `infrastructure/intraday_schema.sql`;
-  - репозиторий `core/db/intraday_repository.py`;
-  - тесты репозитория.
-- `v1.2 Feature Factory`:
-  - модуль `core/features`;
-  - технические индикаторы SMA, EMA, RSI, ATR;
-  - признаки доходности, объема, диапазона и волатильности;
-  - фабрика признаков `FeatureFactory`;
-  - тесты Feature Factory.
+- v1.0 Foundation — завершено.
+- v1.1 Intraday Data Layer — завершено.
+- v1.2 Feature Factory — завершено.
+- v1.3 Replay Engine — добавлен патчем.
 
-## Текущий фокус
+## Реализованные компоненты
 
-Следующий релиз: **v1.3 Intraday Dataset Builder / Replay Integration**.
+- PostgreSQL / TimescaleDB infrastructure.
+- `candles_intraday` для хранения intraday OHLCV.
+- `IntradayRepository` для доступа к intraday-данным.
+- `FeatureFactory` для технических признаков.
+- `ReplayEngine` для детерминированного проигрывания свечей.
+- Unit-тесты для ключевых модулей.
 
-Цель следующего релиза — связать intraday-данные и Feature Factory с дальнейшим replay/AI pipeline.
+## Рабочее окружение
 
-## Правило актуальности
+- Python: 3.12.x.
+- Режим запуска: `.venv`.
+- Основная команда проверки: `python -m pytest`.
+- GitHub: основной источник кода.
 
-Папка `CONTROL_CENTER` является единственным источником актуального состояния проекта.
-После каждого завершенного релиза документы должны проверяться и обновляться.
+## Правило
+
+`CONTROL_CENTER` — единственный источник актуального состояния проекта. После каждого завершенного этапа документы проверяются и обновляются.

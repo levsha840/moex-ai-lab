@@ -1,0 +1,3 @@
+# Lock file placeholder.
+# Regenerate locally after dependency changes:
+# python -m pip freeze > requirements-lock.txt

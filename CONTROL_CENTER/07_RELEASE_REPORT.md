@@ -1,27 +1,31 @@
 # 07_RELEASE_REPORT — MOEX AI LAB
 
-## v1.2 Feature Factory
+## v1.3 Replay Engine
 
 ### Цель
 
-Создать слой генерации признаков для дальнейшего использования в replay, стратегиях и AI-моделях.
+Создать детерминированный replay-движок для проигрывания исторических intraday-свечей.
 
 ### Результат
 
-Релиз добавляет Feature Layer:
+Добавлен `ReplayEngine`, который:
 
-- `technical_indicators.py`;
-- `feature_factory.py`;
-- тесты Feature Factory.
+- принимает исторические свечи;
+- сортирует их по инструменту и времени;
+- проигрывает по одной свече;
+- возвращает `ReplayEvent`;
+- поддерживает warmup history;
+- может получать признаки от `FeatureFactory`.
 
-### Критерии готовности
+### Проверка
 
-- Feature Factory принимает OHLCV-свечи.
-- Для каждого тикера признаки считаются отдельно.
-- Базовые индикаторы работают без внешних ML-зависимостей.
-- Тесты проходят.
+Ожидаемые команды:
 
-### Статус
+```powershell
+python -m pytest
+python -m pytest tests/test_replay_engine.py
+```
 
-Готов к проверке пользователем.
-После успешной проверки и commit/push релиз считается закрытым.
+### Решение
+
+Replay Engine становится базовым слоем для будущих Strategy Runtime, Backtest и AI Learning.
