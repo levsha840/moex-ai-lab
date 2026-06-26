@@ -406,3 +406,33 @@ def test_deterministic_reject_reason_preserved():
         return reg.get(h.id).rejection_reason
 
     assert run() == run()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# create() with metadata kwarg (added in v3.3 for HypothesisGenerator)
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_create_with_metadata_stores_values():
+    reg = _registry()
+    h = reg.create("title", "statement", metadata={"template_id": "tmpl_x"})
+    assert h.metadata["template_id"] == "tmpl_x"
+
+
+def test_create_with_metadata_does_not_alias_caller_dict():
+    reg = _registry()
+    caller_dict = {"template_id": "tmpl_x"}
+    h = reg.create("title", "statement", metadata=caller_dict)
+    caller_dict["template_id"] = "MUTATED"
+    assert reg.get(h.id).metadata["template_id"] == "tmpl_x"
+
+
+def test_create_without_metadata_defaults_to_empty_dict():
+    reg = _registry()
+    h = reg.create("title", "statement")
+    assert h.metadata == {}
+
+
+def test_create_metadata_kwarg_is_keyword_only():
+    reg = _registry()
+    with pytest.raises(TypeError):
+        reg.create("title", "statement", {"positional": "not allowed"})  # type: ignore[call-arg]

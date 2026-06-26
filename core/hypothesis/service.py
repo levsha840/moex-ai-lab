@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, timezone
-from typing import Callable
+from typing import Any, Callable
 from uuid import uuid4
 
 from core.hypothesis.models import Hypothesis, HypothesisStatus
@@ -79,7 +79,13 @@ class HypothesisRegistry:
     # Mutations
     # ──────────────────────────────────────────────────────────────────────────
 
-    def create(self, title: str, statement: str) -> Hypothesis:
+    def create(
+        self,
+        title: str,
+        statement: str,
+        *,
+        metadata: dict[str, Any] | None = None,
+    ) -> Hypothesis:
         now = self._clock()
         hypothesis = Hypothesis(
             id=uuid4().hex,
@@ -88,6 +94,7 @@ class HypothesisRegistry:
             status=HypothesisStatus.IDEA,
             created_at=now,
             updated_at=now,
+            metadata=dict(metadata) if metadata is not None else {},
         )
         self._repo.add(hypothesis)
         return copy.deepcopy(hypothesis)
