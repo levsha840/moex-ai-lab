@@ -1,26 +1,34 @@
 # 01_PROJECT_STATE — MOEX AI LAB
 
-## Current Release
-- Active release: v1.1 Intraday Data Layer
-- Status: in progress
-- Source of truth: CONTROL_CENTER
+## Текущее состояние
 
-## Current Baseline
-- v1.0 Foundation is treated as existing baseline.
-- Git working tree must be clean before applying release patches.
-- PostgreSQL/TimescaleDB runs in Docker container `moex_postgres`.
+Текущий завершенный релиз: **v1.2 Feature Factory**.
 
-## Implemented Areas
-- Core package structure.
-- Strategy registry and sample strategies.
-- Replay scripts and analytics foundation.
-- Database connection layer in `core/db/postgres.py`.
+## Готово
 
-## v1.1 Scope
-- Add `candles_intraday` TimescaleDB table.
-- Add `IntradayRepository` for insert/update and read operations.
-- Add unit tests for repository behavior.
-- Add script for applying intraday schema.
+- Базовая платформа MOEX AI LAB.
+- Strategy Catalog / Registry.
+- Replay-инфраструктура.
+- PostgreSQL/TimescaleDB слой.
+- `v1.1 Intraday Data Layer`:
+  - таблица `candles_intraday`;
+  - SQL-схема `infrastructure/intraday_schema.sql`;
+  - репозиторий `core/db/intraday_repository.py`;
+  - тесты репозитория.
+- `v1.2 Feature Factory`:
+  - модуль `core/features`;
+  - технические индикаторы SMA, EMA, RSI, ATR;
+  - признаки доходности, объема, диапазона и волатильности;
+  - фабрика признаков `FeatureFactory`;
+  - тесты Feature Factory.
 
-## Operational Rule
-After each completed release or major stage, update all CONTROL_CENTER documents if their content changed.
+## Текущий фокус
+
+Следующий релиз: **v1.3 Intraday Dataset Builder / Replay Integration**.
+
+Цель следующего релиза — связать intraday-данные и Feature Factory с дальнейшим replay/AI pipeline.
+
+## Правило актуальности
+
+Папка `CONTROL_CENTER` является единственным источником актуального состояния проекта.
+После каждого завершенного релиза документы должны проверяться и обновляться.

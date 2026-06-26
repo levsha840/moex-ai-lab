@@ -1,18 +1,25 @@
 # 09_DECISIONS — MOEX AI LAB
 
-## ADR-001 — CONTROL_CENTER as source of truth
-Decision: use CONTROL_CENTER as the only project state source.
-Status: accepted.
+## ADR-001: CONTROL_CENTER как источник истины
 
-## ADR-002 — Patch-based delivery
-Decision: multi-file project updates are delivered as patch packages.
-Status: accepted.
+Решение: использовать папку `CONTROL_CENTER` как единственный источник актуального состояния проекта.
 
-## ADR-003 — Intraday candles table separate from daily/generic candles
-Decision: v1.1 introduces `candles_intraday` instead of overloading existing `candles` table.
-Status: accepted.
-Reason: intraday data has higher volume and needs explicit lifecycle/indexing.
+Статус: принято.
 
-## ADR-004 — Repository isolation
-Decision: database access for intraday candles is isolated in `IntradayRepository`.
-Status: accepted.
+## ADR-002: Intraday Data Layer
+
+Решение: intraday-свечи хранятся отдельно в `candles_intraday` и доступны через отдельный репозиторий.
+
+Статус: принято в v1.1.
+
+## ADR-003: Feature Factory как отдельный слой
+
+Решение: расчет технических признаков вынесен в отдельный модуль `core/features`.
+
+Причина:
+
+- признаки должны использоваться и стратегиями, и replay, и AI;
+- стратегии не должны содержать дублирующий код индикаторов;
+- слой признаков должен быть тестируемым отдельно.
+
+Статус: принято в v1.2.

@@ -1,13 +1,18 @@
 # 10_IDEAS_BACKLOG — MOEX AI LAB
 
-## Ideas
-- Add automatic MOEX ISS intraday downloader.
-- Add gap detection for missing candle intervals.
-- Add market session calendar validation.
-- Add data quality score per ticker/day.
-- Add compression/retention policy for old intraday data.
-- Add intraday volatility ranking for instrument selection.
-- Add feature cache invalidation when candles are updated.
+## Идеи для будущих релизов
 
-## Not in v1.1
-These ideas are not part of current release unless explicitly promoted to TODO.
+- Добавить сохранение рассчитанных признаков в отдельную таблицу БД.
+- Добавить feature store для повторного использования признаков.
+- Добавить target labeling:
+  - future return;
+  - max adverse excursion;
+  - max favorable excursion;
+  - volatility-adjusted return.
+- Добавить проверку качества признаков:
+  - пропуски;
+  - выбросы;
+  - постоянные признаки;
+  - утечки будущего.
+- Добавить pandas/numpy backend для ускорения после стабилизации логики.
+- Добавить визуальный отчет по признакам.

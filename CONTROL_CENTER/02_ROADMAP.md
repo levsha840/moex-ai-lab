@@ -1,41 +1,38 @@
 # 02_ROADMAP — MOEX AI LAB
 
-## Releases
+## Статус релизов
 
-### v1.0 Foundation
-Status: completed baseline.
+- `v1.0 Foundation` — завершено.
+- `v1.1 Intraday Data Layer` — завершено.
+- `v1.2 Feature Factory` — завершено.
+- `v1.3 Intraday Dataset Builder / Replay Integration` — следующий этап.
+- `v1.4 Strategy Engine Upgrade` — план.
+- `v1.5 Paper Trading Integration` — план.
+- `v1.6 Portfolio Manager` — план.
+- `v1.7 AI Learning Loop` — план.
+- `v2.0 Autonomous Trader` — целевой крупный релиз.
 
-### v1.1 Intraday Data Layer
-Status: in progress.
-Goals:
-- Create durable intraday candle storage.
-- Add repository API for writing and reading intraday OHLCV data.
-- Prepare project for intraday feature factory.
+## v1.2 Feature Factory — результат
 
-### v1.2 Feature Factory
-Status: planned.
-Goals:
-- Build features from intraday candles.
-- Store calculated features.
-- Prepare data for replay and strategy scoring.
+Создан слой подготовки признаков из OHLCV-свечей:
 
-### v1.3 Replay Engine Upgrade
-Status: planned.
-Goals:
-- Run replay on intraday data.
-- Connect strategies to intraday candles/features.
+- SMA;
+- EMA;
+- RSI;
+- ATR;
+- close return;
+- volume change;
+- intrabar return;
+- range percentage;
+- rolling volatility;
+- относительное положение close к SMA/EMA.
 
-### v1.4 Strategy Engine
-Status: planned.
+## v1.3 — следующий релиз
 
-### v1.5 Paper Trading
-Status: planned.
+Задачи:
 
-### v1.6 Portfolio Manager
-Status: planned.
-
-### v1.7 AI Learning Layer
-Status: planned.
-
-### v2.0 Autonomous Trader
-Status: future.
+1. Создать builder датасетов из `candles_intraday`.
+2. Подключить Feature Factory к intraday-репозиторию.
+3. Подготовить формат обучающего датасета для AI.
+4. Добавить smoke-тест pipeline: DB → Repository → FeatureFactory → Dataset.
+5. Обновить `CONTROL_CENTER`.

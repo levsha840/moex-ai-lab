@@ -1,40 +1,42 @@
 # 03_ARCHITECTURE — MOEX AI LAB
 
-## Core Principles
-- CONTROL_CENTER is the project state source of truth.
-- Database access is isolated inside repository modules.
-- Market data storage and strategy execution must stay decoupled.
-- Live trading must remain disabled unless explicitly enabled by configuration.
+## Архитектурные слои
 
-## Current Architecture
+## Data Layer
+
+- PostgreSQL/TimescaleDB.
+- Исторические и intraday-таблицы.
+- `core/db/postgres.py` — подключение к БД.
+- `core/db/intraday_repository.py` — доступ к минутным свечам.
+
+## Feature Layer
+
+Новый слой релиза `v1.2`:
 
 ```text
-configs/                 runtime examples and config files
-core/                    platform core
-  db/                    database access
-  strategy/              strategy abstractions and registry
-  execution/             replay execution
-  analytics/             metrics and reports
-infrastructure/          SQL schemas
-scripts/                 PowerShell operational scripts
-tests/                   automated tests
-CONTROL_CENTER/          project state and governance
+core/features/
+├── __init__.py
+├── technical_indicators.py
+└── feature_factory.py
 ```
 
-## v1.1 Intraday Data Layer
+Назначение:
 
-### Database
-Table: `candles_intraday`
-- time-series OHLCV data
-- primary key: `(time, ticker, timeframe, source)`
-- TimescaleDB hypertable by `time`
+- преобразование OHLCV-свечей в набор признаков;
+- расчет технических индикаторов;
+- подготовка данных для replay, стратегий и AI-моделей;
+- отсутствие жесткой зависимости от pandas/numpy на раннем этапе.
 
-### Python API
-Module: `core/db/intraday_repository.py`
-- `IntradayCandle` dataclass
-- `IntradayRepository.upsert_many()`
-- `IntradayRepository.get_range()`
-- `IntradayRepository.get_latest()`
+## Strategy Layer
 
-## Next Architecture Step
-v1.2 will add feature-building modules on top of `IntradayRepository`.
+- Базовые стратегии находятся в `core/strategy`.
+- Стратегии должны получать уже подготовленные данные, а не рассчитывать признаки внутри себя.
+
+## Replay / Analytics Layer
+
+- Replay использует исторические данные и стратегии.
+- Следующий этап — подключение Feature Factory к replay/dataset pipeline.
+
+## Принцип
+
+Сырые данные, признаки, стратегии и исполнение должны оставаться разными слоями.

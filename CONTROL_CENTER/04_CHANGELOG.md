@@ -1,21 +1,36 @@
 # 04_CHANGELOG — MOEX AI LAB
 
+## v1.2 Feature Factory
+
+Дата: 2026-06-26
+
+### Добавлено
+
+- `core/features/technical_indicators.py`.
+- `core/features/feature_factory.py`.
+- `core/features/__init__.py`.
+- `tests/test_feature_factory.py`.
+
+### Реализовано
+
+- SMA.
+- EMA.
+- RSI.
+- ATR.
+- Percentage change.
+- Rolling volatility.
+- FeatureFactory для OHLCV-свечей.
+- Раздельная обработка тикеров.
+- Проверка обязательных колонок.
+
+### Проверка
+
+- `python -m pytest tests/test_feature_factory.py`.
+- Рекомендуемая регрессия: `python -m pytest tests/test_intraday_repository.py tests/test_feature_factory.py`.
+
 ## v1.1 Intraday Data Layer
-Status: prepared as patch.
 
-### Added
-- `infrastructure/intraday_schema.sql`
-- `core/db/intraday_repository.py`
-- `tests/test_intraday_repository.py`
-- `scripts/apply_intraday_schema.ps1`
-- CONTROL_CENTER documentation set.
-
-### Changed
-- `.gitignore` normalized for Python, virtual environments, environment files, logs, reports and VS Code.
-
-### Validation
-Run:
-```powershell
-.\scripts\apply_intraday_schema.ps1
-python -m pytest tests/test_intraday_repository.py
-```
+- Добавлена таблица `candles_intraday`.
+- Добавлен SQL-скрипт применения схемы.
+- Добавлен `IntradayRepository`.
+- Добавлены тесты репозитория.

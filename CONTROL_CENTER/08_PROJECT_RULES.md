@@ -1,13 +1,17 @@
 # 08_PROJECT_RULES — MOEX AI LAB
 
-## Core Rules
-1. CONTROL_CENTER is the only source of current project state.
-2. After every completed release, check all 10 CONTROL_CENTER documents.
-3. Do not enable live trading by default.
-4. Do not commit virtual environments, cache files, logs or generated reports.
-5. Every release must include validation commands.
-6. Prefer patch-based delivery for multi-file changes.
-7. Git working tree should be clean before applying a new release patch.
+## Основные правила
 
-## Safety Rule
-Any module capable of sending live orders must be isolated and disabled unless explicitly enabled.
+1. `CONTROL_CENTER` — единственный источник актуального состояния проекта.
+2. После каждого завершенного релиза документы `CONTROL_CENTER` должны проверяться и обновляться.
+3. Каждый релиз должен иметь тесты или smoke-проверку.
+4. Перед началом нового релиза `git status` должен быть чистым.
+5. Коммит делается только после успешной проверки.
+6. Структурные изменения делаются релизными патчами, а не хаотичными ручными правками.
+
+## Архитектурные правила
+
+1. Data Layer не должен зависеть от Strategy Layer.
+2. Feature Layer не должен зависеть от конкретной стратегии.
+3. Strategy Layer должен использовать подготовленные признаки, а не смешивать расчет признаков с логикой сигналов.
+4. AI Layer должен строиться поверх Feature/Dataset Layer.

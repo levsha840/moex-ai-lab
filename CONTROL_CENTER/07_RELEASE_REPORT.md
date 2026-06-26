@@ -1,22 +1,27 @@
 # 07_RELEASE_REPORT — MOEX AI LAB
 
-## v1.1 Intraday Data Layer
+## v1.2 Feature Factory
 
-### Objective
-Create the intraday data foundation for minute/smaller timeframe OHLCV storage and access.
+### Цель
 
-### Deliverables
-- TimescaleDB schema for `candles_intraday`.
-- Repository for batch upsert and reads.
-- Unit tests.
-- Operational apply script.
+Создать слой генерации признаков для дальнейшего использования в replay, стратегиях и AI-моделях.
 
-### Acceptance Criteria
-- SQL schema applies without error.
-- Table `candles_intraday` exists.
-- Unit tests pass.
-- Existing platform tests pass.
-- Git commit created after validation.
+### Результат
 
-### Status
-Prepared, awaiting local validation.
+Релиз добавляет Feature Layer:
+
+- `technical_indicators.py`;
+- `feature_factory.py`;
+- тесты Feature Factory.
+
+### Критерии готовности
+
+- Feature Factory принимает OHLCV-свечи.
+- Для каждого тикера признаки считаются отдельно.
+- Базовые индикаторы работают без внешних ML-зависимостей.
+- Тесты проходят.
+
+### Статус
+
+Готов к проверке пользователем.
+После успешной проверки и commit/push релиз считается закрытым.
