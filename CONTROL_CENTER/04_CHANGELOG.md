@@ -92,16 +92,37 @@ MOEX AI LAB — актуальное состояние после релиза 
 
 ---
 
+# Architecture Refresh
+
+Added:
+
+* `CONTROL_CENTER/05_SYSTEM_VISION.md`
+* `CONTROL_CENTER/10_ARCHITECTURE_DECISIONS.md`
+
+Changed:
+
+* `CONTROL_CENTER/01_PROJECT_STATE.md`
+* `CONTROL_CENTER/02_ROADMAP.md`
+* `CONTROL_CENTER/03_ARCHITECTURE.md`
+
+Result:
+
+Platform Vision 2.0 adopted.
+
+---
+
 # Следующий релиз
 
-## v1.8
+## v1.8 — Minimal Portfolio Allocation Engine
 
 Планируется реализовать:
 
-* PostgreSQL backend для PositionRepository;
-* дневные лимиты риска;
-* stop-loss и take-profit;
-* end-to-end интеграционный тест полного конвейера.
+* `core/allocation/` — новый детерминированный слой;
+* `AllocationConfig`, `AllocationLimits`, `AllocationRequest`, `AllocationDecision`;
+* `AllocationDecisionType`: `ALLOCATE`, `REDUCE`, `REJECT`;
+* базовые лимиты: `max_position_pct`, `max_strategy_pct`, `max_correlated_pct`, `cash_buffer`, `rebalance_threshold`;
+* unit tests;
+* без Kelly, Markowitz, AI allocation.
 
 ---
 

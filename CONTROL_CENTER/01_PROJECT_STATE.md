@@ -1,6 +1,6 @@
 # 01_PROJECT_STATE
 
-MOEX AI LAB — актуальное состояние после релиза v1.7 Risk Engine.
+MOEX AI LAB — актуальное состояние после Architecture Refresh.
 
 ## Статус релизов
 
@@ -13,6 +13,7 @@ MOEX AI LAB — актуальное состояние после релиза 
 - v1.6 Position Manager — завершен.
 - v1.6.1 Persistence Layer — завершен.
 - v1.7 Risk Engine — завершен.
+- Architecture Refresh — завершен.
 
 ## v1.7 Risk Engine
 
@@ -31,19 +32,33 @@ MOEX AI LAB — актуальное состояние после релиза 
 - исправлен packaging тестов (`tests/persistence/__init__.py`);
 - тесты Risk Engine (9 тестов).
 
+## Architecture Refresh
+
+Принята Platform Vision 2.0. Платформа переориентирована с набора стратегий на четыре инженерных контура:
+
+- **Production Core** — детерминированное исполнение: StrategyEngine → PortfolioAllocationEngine → RiskEngine → PaperTradingEngine.
+- **Validation Core** — обязательный шлюз перед допуском стратегии: WalkForward + Cost Model + PASS/FAIL.
+- **Research Core** — генерация и проверка гипотез (не имеет доступа к Production).
+- **Operations Core** — supervision работающих стратегий: деградация, drawdown, audit trail.
+
+Новые документы: `05_SYSTEM_VISION.md`, `10_ARCHITECTURE_DECISIONS.md`.
+
+Текущие стратегии (RSI/SMA) признаны демонстрационными — не кандидаты для торговли.
+
 ## Архитектурное правило
 
-`RiskEngine` является чистым детерминированным слоем без доступа к базе данных.
-Бизнес-логика не зависит от способа хранения данных — все сервисы работают через интерфейсы Persistence Layer.
+Все core engines (`ReplayEngine`, `StrategyEngine`, `RiskEngine`, `PaperTradingEngine`) — детерминированные объекты без доступа к БД. Бизнес-логика работает только через интерфейсы Persistence Layer.
 
 ## Следующий релиз
 
-v1.8 (планируется):
+v1.8 — Minimal Portfolio Allocation Engine:
 
-- PostgreSQL backend для PositionRepository;
-- дневные лимиты риска;
-- stop-loss и take-profit;
-- end-to-end интеграционный тест: ReplayEngine → StrategyEngine → RiskEngine → PaperTradingEngine.
+- `core/allocation/` — новый детерминированный слой;
+- `AllocationConfig`, `AllocationLimits`, `AllocationRequest`, `AllocationDecision`;
+- `AllocationDecisionType`: `ALLOCATE`, `REDUCE`, `REJECT`;
+- базовые лимиты: `max_position_pct`, `max_strategy_pct`, `max_correlated_pct`, `cash_buffer`, `rebalance_threshold`;
+- unit tests;
+- без Kelly, Markowitz, AI allocation.
 
 ## Правило
 
