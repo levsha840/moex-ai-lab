@@ -139,3 +139,75 @@ def rolling_std(values: Sequence[Number], period: int) -> list[float | None]:
         variance = sum((value - mean) ** 2 for value in window) / period
         result.append(sqrt(variance))
     return result
+
+
+def adx(
+    highs: Sequence[Number],
+    lows: Sequence[Number],
+    closes: Sequence[Number],
+    period: int = 14,
+) -> list[float | None]:
+    """Average Directional Index using Wilder smoothing.
+
+    Returns None for indices where ADX cannot yet be computed.
+    Requires at least 2*period - 1 bars for the first ADX value.
+    Consistent with ATR: first smooth initialised at index period-1.
+    """
+    _validate_period(period)
+    n = len(highs)
+    if not (n == len(lows) == len(closes)):
+        raise ValueError("highs, lows and closes must have the same length")
+
+    result: list[float | None] = [None] * n
+    if n < 2 * period - 1:
+        return result
+
+    # +DM / -DM: index 0 has no previous bar, so it is always 0.
+    plus_dm = [0.0] * n
+    minus_dm = [0.0] * n
+    for i in range(1, n):
+        up_move = float(highs[i]) - float(highs[i - 1])
+        down_move = float(lows[i - 1]) - float(lows[i])
+        if up_move > down_move and up_move > 0.0:
+            plus_dm[i] = up_move
+        if down_move > up_move and down_move > 0.0:
+            minus_dm[i] = down_move
+
+    tr_values = true_range(highs, lows, closes)
+
+    # Initialise Wilder smoothing at index period-1 (same convention as ATR).
+    smooth_tr = sum(tr_values[:period])
+    smooth_plus = sum(plus_dm[:period])
+    smooth_minus = sum(minus_dm[:period])
+
+    dx_values: list[float | None] = [None] * n
+
+    for i in range(period - 1, n):
+        if i > period - 1:
+            smooth_tr = smooth_tr - smooth_tr / period + tr_values[i]
+            smooth_plus = smooth_plus - smooth_plus / period + plus_dm[i]
+            smooth_minus = smooth_minus - smooth_minus / period + minus_dm[i]
+
+        if smooth_tr == 0.0:
+            dx_values[i] = 0.0
+            continue
+
+        plus_di = 100.0 * smooth_plus / smooth_tr
+        minus_di = 100.0 * smooth_minus / smooth_tr
+        di_sum = plus_di + minus_di
+        dx_values[i] = 100.0 * abs(plus_di - minus_di) / di_sum if di_sum != 0.0 else 0.0
+
+    # ADX = Wilder smooth of DX.
+    # Initialise with the mean of the first period DX values (indices period-1 .. 2*period-2).
+    adx_start = 2 * period - 2
+    initial_slice = [v for v in dx_values[period - 1 : adx_start + 1] if v is not None]
+    adx_value = sum(initial_slice) / period
+    result[adx_start] = adx_value
+
+    for i in range(adx_start + 1, n):
+        dx = dx_values[i]
+        if dx is not None:
+            adx_value = (adx_value * (period - 1) + dx) / period
+            result[i] = adx_value
+
+    return result
