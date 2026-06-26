@@ -1,16 +1,16 @@
 """
 Position Manager for MOEX AI LAB.
-
-The manager is intentionally in-memory for v1.6 and keeps domain logic isolated
-from storage. Persistence can be added by a repository layer in later releases.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from core.position.models import Position, PositionCloseResult, PositionSide
+
+if TYPE_CHECKING:
+    from core.persistence.interfaces import PositionRepository
 
 PositionKey = tuple[str, str, PositionSide]
 
@@ -18,8 +18,9 @@ PositionKey = tuple[str, str, PositionSide]
 class PositionManager:
     """Manage opened LONG and SHORT positions per strategy/ticker/side."""
 
-    def __init__(self) -> None:
+    def __init__(self, position_repository: "PositionRepository | None" = None) -> None:
         self._positions: dict[PositionKey, Position] = {}
+        self._repository = position_repository
 
     def open_position(
         self,
@@ -31,12 +32,7 @@ class PositionManager:
         price: float,
         timestamp: datetime | None = None,
     ) -> Position:
-        """
-        Open a new position or increase an existing one.
-
-        If a position with the same strategy, ticker and side already exists,
-        the method recalculates weighted average entry price.
-        """
+        """Open a new position or increase an existing one."""
 
         normalized_side = PositionSide.normalize(side)
         self._validate_identity(ticker=ticker, strategy_name=strategy_name)
@@ -46,8 +42,7 @@ class PositionManager:
         key = self._make_key(ticker, strategy_name, normalized_side)
         now = self._resolve_timestamp(timestamp)
 
-        existing = self._positions.get(key)
-        if existing is not None:
+        if self._get_position_by_key(key) is not None:
             return self.add_to_position(
                 ticker=ticker,
                 strategy_name=strategy_name,
@@ -68,7 +63,7 @@ class PositionManager:
             opened_at=now,
             updated_at=now,
         )
-        self._positions[key] = position
+        self._save_position(key, position)
         return position
 
     def add_to_position(
@@ -87,6 +82,7 @@ class PositionManager:
         self._validate_positive_number(quantity, "quantity")
         self._validate_positive_number(price, "price")
 
+        key = self._make_key(ticker, strategy_name, normalized_side)
         position = self._require_position(ticker, strategy_name, normalized_side)
         now = self._resolve_timestamp(timestamp)
 
@@ -97,6 +93,8 @@ class PositionManager:
         position.average_price = total_cost / total_quantity
         position.current_price = float(price)
         position.updated_at = now
+
+        self._save_position(key, position)
         return position
 
     def reduce_position(
@@ -109,12 +107,7 @@ class PositionManager:
         price: float,
         timestamp: datetime | None = None,
     ) -> PositionCloseResult:
-        """
-        Partially reduce an existing position.
-
-        When the reduction quantity equals the full position quantity, the
-        position is removed from the open-position registry.
-        """
+        """Partially reduce an existing position."""
 
         normalized_side = PositionSide.normalize(side)
         self._validate_positive_number(quantity, "quantity")
@@ -144,7 +137,9 @@ class PositionManager:
         position.updated_at = now
 
         if remaining_quantity == 0:
-            del self._positions[key]
+            self._delete_position(key)
+        else:
+            self._save_position(key, position)
 
         return PositionCloseResult(
             ticker=position.ticker,
@@ -194,9 +189,13 @@ class PositionManager:
         normalized_side = PositionSide.normalize(side)
         self._validate_positive_number(price, "price")
 
+        key = self._make_key(ticker, strategy_name, normalized_side)
         position = self._require_position(ticker, strategy_name, normalized_side)
+
         position.current_price = float(price)
         position.updated_at = self._resolve_timestamp(timestamp)
+
+        self._save_position(key, position)
         return position
 
     def get_position(
@@ -209,10 +208,14 @@ class PositionManager:
         """Return an open position if it exists."""
 
         normalized_side = PositionSide.normalize(side)
-        return self._positions.get(self._make_key(ticker, strategy_name, normalized_side))
+        key = self._make_key(ticker, strategy_name, normalized_side)
+        return self._get_position_by_key(key)
 
     def list_positions(self) -> list[Position]:
         """Return all open positions sorted for deterministic reports/tests."""
+
+        if self._repository is not None:
+            return self._repository.list_all()
 
         return sorted(
             self._positions.values(),
@@ -228,26 +231,56 @@ class PositionManager:
     ) -> bool:
         """Check whether an open position exists."""
 
-        return self.get_position(ticker=ticker, strategy_name=strategy_name, side=side) is not None
+        return self.get_position(
+            ticker=ticker,
+            strategy_name=strategy_name,
+            side=side,
+        ) is not None
 
     def total_unrealized_pnl(self) -> float:
         """Aggregate unrealized PnL across all open positions."""
 
-        return sum(position.unrealized_pnl for position in self._positions.values())
+        return sum(position.unrealized_pnl for position in self.list_positions())
 
     def total_realized_pnl(self) -> float:
-        """Aggregate realized PnL for currently open positions.
+        """Aggregate realized PnL for currently open positions."""
 
-        Fully closed positions are not retained in v1.6. Trade-history storage
-        will belong to a later persistence/repository release.
-        """
-
-        return sum(position.realized_pnl for position in self._positions.values())
+        return sum(position.realized_pnl for position in self.list_positions())
 
     def snapshots(self) -> list[dict[str, object]]:
         """Return serializable snapshots for all open positions."""
 
         return [position.snapshot() for position in self.list_positions()]
+
+    def _get_position_by_key(self, key: PositionKey) -> Position | None:
+        if self._repository is not None:
+            strategy_name, ticker, side = key
+            return self._repository.get(
+                ticker=ticker,
+                strategy_name=strategy_name,
+                side=side,
+            )
+
+        return self._positions.get(key)
+
+    def _save_position(self, key: PositionKey, position: Position) -> None:
+        if self._repository is not None:
+            self._repository.save(position)
+            return
+
+        self._positions[key] = position
+
+    def _delete_position(self, key: PositionKey) -> None:
+        if self._repository is not None:
+            strategy_name, ticker, side = key
+            self._repository.delete(
+                ticker=ticker,
+                strategy_name=strategy_name,
+                side=side,
+            )
+            return
+
+        del self._positions[key]
 
     @staticmethod
     def _calculate_realized_pnl(
@@ -301,8 +334,11 @@ class PositionManager:
     ) -> Position:
         self._validate_identity(ticker=ticker, strategy_name=strategy_name)
 
-        key = self._make_key(ticker, strategy_name, side)
-        position = self._positions.get(key)
+        position = self.get_position(
+            ticker=ticker,
+            strategy_name=strategy_name,
+            side=side,
+        )
 
         if position is None:
             raise KeyError(
