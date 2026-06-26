@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -32,3 +33,14 @@ class WalkForwardWindow:
     train_end: int
     test_start: int
     test_end: int
+
+
+@dataclass(frozen=True)
+class WalkForwardRunResult:
+    window: WalkForwardWindow
+    result: Any
+
+
+@dataclass
+class WalkForwardSummary:
+    runs: list[WalkForwardRunResult]
