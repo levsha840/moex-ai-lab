@@ -1,39 +1,121 @@
 # 02_ROADMAP
 
-MOEX AI LAB — актуальное состояние после релиза v1.7 Risk Engine.
+MOEX AI LAB — актуальный roadmap после Architecture Refresh.
 
-## Статус релизов
-
-- v1.0 Foundation — завершен.
-- v1.1 Intraday Data Layer — завершен.
-- v1.2 Feature Factory — завершен.
-- v1.3 Replay Engine — завершен.
-- v1.4 Strategy Engine — завершен.
-- v1.5 Paper Trading Engine — завершен.
-- v1.6 Position Manager — завершен.
-- v1.6.1 Persistence Layer — завершен.
-- v1.7 Risk Engine — завершен.
-- v1.8 — в плане.
+---
 
 ## Завершённые релизы
 
-- v1.0–v1.2: фундамент, данные, фичи.
-- v1.3: ReplayEngine — детерминированный посвечный replayer.
-- v1.4: StrategyEngine — конвейер BUY/SELL/HOLD сигналов.
-- v1.5: PaperTradingEngine — виртуальное исполнение заявок.
-- v1.6: PositionManager — управление LONG/SHORT позициями.
-- v1.6.1: Persistence Layer — Protocol-based абстракция хранения, MemoryRepository.
-- v1.7: RiskEngine — pre-trade оценка риска, интеграция с PaperTradingEngine.
+| Версия | Название | Статус |
+|---|---|---|
+| v1.0 | Foundation | ✅ завершён |
+| v1.1 | Intraday Data Layer | ✅ завершён |
+| v1.2 | Feature Factory | ✅ завершён |
+| v1.3 | Replay Engine | ✅ завершён |
+| v1.4 | Strategy Engine | ✅ завершён |
+| v1.5 | Paper Trading Engine | ✅ завершён |
+| v1.6 | Position Manager | ✅ завершён |
+| v1.6.1 | Persistence Layer | ✅ завершён |
+| v1.7 | Risk Engine | ✅ завершён |
 
-## Следующий релиз
+---
 
-v1.8 (планируется):
+## Следующие релизы
 
-- PostgreSQL backend для PositionRepository;
-- дневные лимиты риска;
-- stop-loss и take-profit;
-- end-to-end интеграционный тест: ReplayEngine → StrategyEngine → RiskEngine → PaperTradingEngine.
+### v1.8 — Portfolio Allocation Engine
+
+Минимальный аллокатор капитала между стратегиями.
+
+Scope:
+- `AllocationConfig`: max_position_pct, max_correlated_pct, rebalance_threshold
+- Равновесное распределение как базовый режим
+- Лимит на долю одной стратегии в портфеле
+- Интеграция с RiskEngine
+
+Не входит в scope: Kelly criterion, mean-variance оптимизация, динамическая ребалансировка.
+
+---
+
+### v1.9 — WalkForward Engine + Realistic Cost Model
+
+**Единый релиз.** Разделение невозможно: walk-forward без честной модели издержек — это biased backtest.
+
+WalkForward Engine:
+- Скользящие окна: train / validation / OOS
+- Критерии приёмки: Sharpe, max drawdown, число сделок
+- Автоматическое отклонение стратегий, не прошедших OOS
+
+Realistic Cost Model:
+- Спред (ticker-specific, из исторических данных)
+- T+2 settlement (заморозка денег)
+- Налог 13% на прибыль
+- Рыночное влияние для крупных позиций
+
+---
+
+### v2.0 — Data Quality Layer
+
+Предварительное условие для всех исследовательских релизов.
+
+Scope:
+- Корректировка на дивиденды и сплиты
+- Маркировка торговых приостановок (февраль 2022 и др.)
+- Survivorship bias documentation
+- Валидация входных данных перед запуском любого бэктеста
+
+---
+
+### v2.1 — Market Regime Engine
+
+Определение текущего режима рынка перед запуском стратегий.
+
+Режимы: Trend Up / Trend Down / Flat / High Volatility.
+
+Scope:
+- Классификация режима на дневном таймфрейме
+- Фильтр режима в StrategyEngine
+- Таблица `market_regimes_daily` (схема уже есть в infrastructure)
+
+---
+
+### v2.2 — MOEX Hypothesis Lab
+
+Инструмент для формализации и проверки торговых гипотез.
+
+Scope:
+- Шаблон гипотезы: название, экономическое обоснование, параметры
+- Автоматический прогон через WalkForward Engine
+- Журнал результатов: прошла / не прошла / требует уточнения
+- Первые гипотезы для проверки:
+  - Дивидендный gap-fill
+  - Momentum на отчётностях РСБУ
+  - Пары: Роснефть/Лукойл, Сбер/ВТБ
+
+---
+
+### v2.3 — Strategy Candidate Pipeline
+
+Автоматический конвейер: гипотеза → валидация → допуск к paper trading.
+
+Scope:
+- Формальные критерии перехода между этапами
+- Реестр кандидатов со статусами (in-research / validated / paper / rejected)
+- Отчёт по каждому кандидату
+
+---
+
+## Принцип приоритетов
+
+```
+Validation infrastructure (v1.9, v2.0) > Research tools (v2.1, v2.2) > New strategies
+```
+
+Новые торговые стратегии не добавляются до завершения v1.9 + v2.0.
+
+Demo-стратегии (RSI/SMA) остаются в кодовой базе только как smoke-test инструмент.
+
+---
 
 ## Правило
 
-После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.
+После завершения каждого релиза CONTROL_CENTER обновляется. Roadmap — живой документ, обновляется при изменении приоритетов.
