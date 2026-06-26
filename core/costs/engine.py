@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+from core.common import OrderSide
 from core.costs.models import ExecutionCostConfig, ExecutionRequest, ExecutionResult
-
-_VALID_SIDES = {"BUY", "SELL"}
 
 
 class ExecutionCostEngine:
@@ -14,7 +13,9 @@ class ExecutionCostEngine:
             raise ValueError(f"price must be positive, got {request.price}")
         if request.quantity <= 0:
             raise ValueError(f"quantity must be positive, got {request.quantity}")
-        if request.side not in _VALID_SIDES:
+        try:
+            side = OrderSide(str(request.side).upper())
+        except ValueError:
             raise ValueError(f"side must be BUY or SELL, got {request.side!r}")
 
         gross = request.price * request.quantity
@@ -27,7 +28,7 @@ class ExecutionCostEngine:
         slippage_cost = gross * self.config.slippage_bps / 10_000
         total_cost = commission + spread_cost + slippage_cost
 
-        if request.side == "BUY":
+        if side == OrderSide.BUY:
             effective_price = (gross + total_cost) / request.quantity
         else:
             effective_price = (gross - total_cost) / request.quantity

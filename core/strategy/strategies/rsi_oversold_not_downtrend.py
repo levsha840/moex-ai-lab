@@ -1,9 +1,22 @@
-from core.strategy.base import BaseStrategy, Signal
+from core.strategy.base_strategy import BaseStrategy
+from core.strategy.signal import Signal, SignalAction
+from core.strategy.strategy_context import StrategyContext
+
 
 class RSIOversoldNotDowntrend(BaseStrategy):
     strategy_name = "RSI_OVERSOLD_NOT_DOWNTREND"
 
-    def generate_signal(self, row):
-        if row["rsi_14"] < 30 and row["regime"] != "TREND_DOWN":
-            return Signal("BUY", 1.0, self.strategy_name)
-        return Signal("HOLD", 0.0, "NO_SIGNAL")
+    def on_event(self, context: StrategyContext) -> Signal:
+        features = context.features or {}
+        rsi = features.get("rsi_14", 100.0)
+        regime = features.get("regime", "")
+        if float(rsi) < 30 and regime != "TREND_DOWN":
+            return Signal(
+                action=SignalAction.BUY,
+                ticker=context.ticker,
+                ts=context.ts,
+                strategy_name=self.strategy_name,
+                confidence=1.0,
+                price=context.close,
+            )
+        return self.hold(context, "conditions not met")

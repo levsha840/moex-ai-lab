@@ -6,12 +6,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from core.common import OrderSide
 
-class PaperOrderSide(str, Enum):
-    """Supported paper order sides."""
-
-    BUY = "BUY"
-    SELL = "SELL"
+PaperOrderSide = OrderSide
 
 
 class PaperOrderStatus(str, Enum):
@@ -61,7 +58,7 @@ class PaperOrder:
     strategy_name: str
     ticker: str
     ts: Any
-    side: PaperOrderSide
+    side: OrderSide
     quantity: int
     requested_price: float
     reason: str = ""
@@ -77,7 +74,7 @@ class PaperTrade:
     strategy_name: str
     ticker: str
     ts: Any
-    side: PaperOrderSide
+    side: OrderSide
     quantity: int
     price: float
     gross_value: float

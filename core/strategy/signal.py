@@ -15,14 +15,6 @@ class SignalAction(str, Enum):
     HOLD = "HOLD"
 
 
-class PositionSide(str, Enum):
-    """Canonical position state."""
-
-    LONG = "LONG"
-    SHORT = "SHORT"
-    FLAT = "FLAT"
-
-
 @dataclass(frozen=True)
 class Signal:
     """A normalized trading signal produced by any strategy."""

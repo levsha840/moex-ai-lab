@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
+from core.common import OrderSide
+
 
 class RiskDecisionType(str, Enum):
     """Possible outcomes of a risk check."""
@@ -48,7 +50,7 @@ class RiskLimits:
 class RiskCheckRequest:
     """All context required for one pre-trade risk evaluation."""
 
-    side: str                      # "BUY" or "SELL"
+    side: OrderSide
     ticker: str
     strategy_name: str
     quantity: int

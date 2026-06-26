@@ -259,7 +259,7 @@ class PaperTradingEngine:
             for p in self.state.positions.values()
         )
         return RiskCheckRequest(
-            side=order.side.value,
+            side=order.side,
             ticker=order.ticker,
             strategy_name=order.strategy_name,
             quantity=order.quantity,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.common import OrderSide
 from core.paper import PaperExecutionConfig, PaperTradingEngine
 from core.risk import RiskCheckRequest, RiskDecision, RiskDecisionType, RiskEngine, RiskLimits, RiskReason
 from core.strategy import Signal, SignalAction
@@ -11,7 +12,7 @@ from core.strategy import Signal, SignalAction
 
 def make_request(
     *,
-    side: str = "BUY",
+    side: OrderSide = OrderSide.BUY,
     ticker: str = "SBER",
     quantity: int = 10,
     price: float = 100.0,
@@ -106,7 +107,7 @@ def test_risk_engine_rejects_short_when_disabled() -> None:
     engine = RiskEngine(RiskLimits(allow_short=False))
 
     # SELL with no open position → short attempt
-    decision = engine.check(make_request(side="SELL", current_position_value=0.0))
+    decision = engine.check(make_request(side=OrderSide.SELL, current_position_value=0.0))
 
     assert decision.allowed is False
     assert RiskReason.SHORT_NOT_ALLOWED in decision.reasons
@@ -116,7 +117,7 @@ def test_risk_engine_allows_sell_when_position_exists() -> None:
     engine = RiskEngine(RiskLimits(allow_short=False))
 
     # SELL with existing position → closing a long, not shorting
-    decision = engine.check(make_request(side="SELL", current_position_value=1_000.0))
+    decision = engine.check(make_request(side=OrderSide.SELL, current_position_value=1_000.0))
 
     assert decision.allowed is True
 

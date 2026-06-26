@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from core.common import OrderSide
 from core.risk.models import (
     RiskCheckRequest,
     RiskDecision,
@@ -27,14 +28,14 @@ class RiskEngine:
         reasons: list[RiskReason] = []
         trade_value = request.quantity * request.price
 
-        if not self.limits.allow_short and request.side == "SELL":
+        if not self.limits.allow_short and request.side == OrderSide.SELL:
             if request.current_position_value == 0:
                 reasons.append(RiskReason.SHORT_NOT_ALLOWED)
 
         if trade_value > self.limits.max_trade_value:
             reasons.append(RiskReason.MAX_TRADE_VALUE_EXCEEDED)
 
-        if request.side == "BUY":
+        if request.side == OrderSide.BUY:
             new_position_value = request.current_position_value + trade_value
 
             if new_position_value > self.limits.max_position_value:

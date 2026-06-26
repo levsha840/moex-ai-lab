@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from core.common import OrderSide
+
 
 @dataclass(frozen=True)
 class ExecutionCostConfig:
@@ -14,7 +16,7 @@ class ExecutionCostConfig:
 @dataclass(frozen=True)
 class ExecutionRequest:
     ticker: str
-    side: str
+    side: OrderSide
     price: float
     quantity: float
 
