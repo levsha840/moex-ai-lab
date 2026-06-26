@@ -1,17 +1,18 @@
-# DECISIONS
+# 09_DECISIONS — MOEX AI LAB
 
-2026-06-25
+## ADR-001 — CONTROL_CENTER as source of truth
+Decision: use CONTROL_CENTER as the only project state source.
+Status: accepted.
 
-Historical Replay использует paper_trades и paper_positions.
+## ADR-002 — Patch-based delivery
+Decision: multi-file project updates are delivered as patch packages.
+Status: accepted.
 
-Причина
+## ADR-003 — Intraday candles table separate from daily/generic candles
+Decision: v1.1 introduces `candles_intraday` instead of overloading existing `candles` table.
+Status: accepted.
+Reason: intraday data has higher volume and needs explicit lifecycle/indexing.
 
-Полная совместимость с Paper Trading.
-
----
-
-2026-06-25
-
-Strategy Catalog становится единственным источником активных стратегий.
-
-Replay больше не использует жестко прописанный список стратегий.
+## ADR-004 — Repository isolation
+Decision: database access for intraday candles is isolated in `IntradayRepository`.
+Status: accepted.

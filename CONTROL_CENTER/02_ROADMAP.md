@@ -1,65 +1,41 @@
-# ROADMAP
+# 02_ROADMAP — MOEX AI LAB
 
-## v1.0
+## Releases
 
-✅ Core Platform
+### v1.0 Foundation
+Status: completed baseline.
 
-✅ Replay
+### v1.1 Intraday Data Layer
+Status: in progress.
+Goals:
+- Create durable intraday candle storage.
+- Add repository API for writing and reading intraday OHLCV data.
+- Prepare project for intraday feature factory.
 
-✅ Analytics
+### v1.2 Feature Factory
+Status: planned.
+Goals:
+- Build features from intraday candles.
+- Store calculated features.
+- Prepare data for replay and strategy scoring.
 
-✅ Strategy Catalog
+### v1.3 Replay Engine Upgrade
+Status: planned.
+Goals:
+- Run replay on intraday data.
+- Connect strategies to intraday candles/features.
 
-✅ Meta Score
+### v1.4 Strategy Engine
+Status: planned.
 
----
+### v1.5 Paper Trading
+Status: planned.
 
-## v1.1
+### v1.6 Portfolio Manager
+Status: planned.
 
-Intraday Collector
+### v1.7 AI Learning Layer
+Status: planned.
 
-Intraday Feature Factory
-
-Intraday Data Layer
-
----
-
-## v1.2
-
-Intraday Replay
-
----
-
-## v1.3
-
-Paper Live
-
----
-
-## v1.4
-
-Sandbox Trading
-
----
-
-## v1.5
-
-Execution Monitor
-
----
-
-## v2.0
-
-Meta Learning
-
----
-
-## v2.1
-
-AI Strategy Generator
-
----
-
-## v3.0
-
-Autonomous Trading Platform
+### v2.0 Autonomous Trader
+Status: future.

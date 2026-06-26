@@ -1,21 +1,18 @@
-# SESSION START
+# 06_SESSION_START — MOEX AI LAB
 
-Любой новый чат начинается с этого файла.
+## Start Procedure
+1. Open VS Code in `D:\MOEX_AI`.
+2. Run `git status`.
+3. Confirm working tree state.
+4. Read this file and `01_PROJECT_STATE.md`.
+5. Continue from the active release in `02_ROADMAP.md`.
 
-ChatGPT обязан:
+## Current Session Target
+Complete v1.1 Intraday Data Layer.
 
-1. Изучить PROJECT_STATE
-
-2. Изучить ROADMAP
-
-3. Изучить ARCHITECTURE
-
-4. Изучить CHANGELOG
-
-5. Изучить TODO
-
-6. Проверить актуальность документов
-
-7. Если документы устарели — сначала предложить их обновить
-
-8. Только после этого продолжить разработку
+## Commands
+```powershell
+git status
+.\scripts\apply_intraday_schema.ps1
+python -m pytest tests/test_intraday_repository.py
+```

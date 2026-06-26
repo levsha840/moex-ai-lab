@@ -1,59 +1,15 @@
-# TODO
+# 05_TODO — MOEX AI LAB
 
-## Выполнено
+## v1.1 Intraday Data Layer
+- [ ] Apply patch files.
+- [ ] Apply `infrastructure/intraday_schema.sql`.
+- [ ] Confirm `candles_intraday` exists in PostgreSQL.
+- [ ] Run repository unit tests.
+- [ ] Run full existing tests.
+- [ ] Commit v1.1 if checks pass.
 
-[x] Docker
-
-[x] PostgreSQL
-
-[x] TimescaleDB
-
-[x] Feature Factory
-
-[x] Research Engine
-
-[x] WalkForward
-
-[x] Historical Replay
-
-[x] Replay Analytics
-
-[x] Strategy Catalog
-
-[x] Meta Score
-
----
-
-## Следующее
-
-[ ] Intraday Collector
-
-[ ] Intraday Feature Factory
-
-[ ] Intraday Replay
-
-[ ] Paper Live
-
-[ ] Sandbox
-
-[ ] Execution Monitor
-
-[ ] Meta Learning
-
-[ ] AI Generator
-
-[ ] Live Trading
-
----
-
-## Completion Checklist
-
-[ ] PROJECT_STATE
-
-[ ] CHANGELOG
-
-[ ] TODO
-
-[ ] RELEASE_REPORT
-
-[ ] Git Commit
+## v1.2 Feature Factory
+- [ ] Define intraday feature schema.
+- [ ] Implement feature calculation service.
+- [ ] Add feature repository.
+- [ ] Add tests.

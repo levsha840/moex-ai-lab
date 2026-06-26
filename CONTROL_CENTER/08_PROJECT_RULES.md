@@ -1,13 +1,13 @@
-# PROJECT RULES
+# 08_PROJECT_RULES — MOEX AI LAB
 
-Core содержит всю бизнес-логику.
+## Core Rules
+1. CONTROL_CENTER is the only source of current project state.
+2. After every completed release, check all 10 CONTROL_CENTER documents.
+3. Do not enable live trading by default.
+4. Do not commit virtual environments, cache files, logs or generated reports.
+5. Every release must include validation commands.
+6. Prefer patch-based delivery for multi-file changes.
+7. Git working tree should be clean before applying a new release patch.
 
-Services являются только оркестраторами.
-
-Live Trading запрещён до завершения Sandbox.
-
-После каждого этапа обновляется документация.
-
-После каждого этапа выполняется Git Commit.
-
-Перед началом новой разработки всегда проверяется CONTROL_CENTER.
+## Safety Rule
+Any module capable of sending live orders must be isolated and disabled unless explicitly enabled.

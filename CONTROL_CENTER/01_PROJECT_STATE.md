@@ -1,103 +1,26 @@
-# MOEX AI LAB
+# 01_PROJECT_STATE — MOEX AI LAB
 
-## PROJECT STATE
+## Current Release
+- Active release: v1.1 Intraday Data Layer
+- Status: in progress
+- Source of truth: CONTROL_CENTER
 
-Дата последнего обновления: 2026-06-25
+## Current Baseline
+- v1.0 Foundation is treated as existing baseline.
+- Git working tree must be clean before applying release patches.
+- PostgreSQL/TimescaleDB runs in Docker container `moex_postgres`.
 
----
+## Implemented Areas
+- Core package structure.
+- Strategy registry and sample strategies.
+- Replay scripts and analytics foundation.
+- Database connection layer in `core/db/postgres.py`.
 
-# Общая цель
+## v1.1 Scope
+- Add `candles_intraday` TimescaleDB table.
+- Add `IntradayRepository` for insert/update and read operations.
+- Add unit tests for repository behavior.
+- Add script for applying intraday schema.
 
-Создать полностью автономную AI-платформу для Московской биржи, которая:
-
-- самостоятельно собирает данные;
-- строит признаки;
-- определяет режим рынка;
-- генерирует стратегии;
-- проводит WalkForward;
-- проводит Historical Replay;
-- анализирует результаты;
-- самообучается;
-- торгует через T-Invest API.
-
----
-
-# Инфраструктура
-
-Windows 10 Pro
-
-Intel i5-10400F
-
-16 GB RAM
-
-Docker Desktop
-
-Python 3.12
-
-PostgreSQL
-
-TimescaleDB
-
-GitHub
-
----
-
-# Реализовано
-
-✅ Docker
-
-✅ PostgreSQL
-
-✅ TimescaleDB
-
-✅ Data Collector
-
-✅ Feature Factory
-
-✅ Research Engine
-
-✅ Strategy Factory
-
-✅ WalkForward Engine
-
-✅ Historical Replay
-
-✅ Replay Analytics
-
-✅ Strategy Catalog
-
-✅ Meta Score
-
----
-
-# Replay результаты
-
-Final Cash
-
-1099307.86
-
-Прибыль
-
-+9.93%
-
-Активных стратегий
-
-6
-
-Watchlist
-
-1
-
----
-
-# Следующий этап
-
-v1.1 Intraday Data Layer
-
----
-
-# ВАЖНО
-
-Перед началом каждого нового этапа необходимо проверить актуальность всех документов CONTROL_CENTER.
-
-После завершения этапа данный документ ОБЯЗАТЕЛЬНО обновляется.
+## Operational Rule
+After each completed release or major stage, update all CONTROL_CENTER documents if their content changed.

@@ -1,29 +1,22 @@
-# RELEASE REPORT
+# 07_RELEASE_REPORT — MOEX AI LAB
 
-Release
+## v1.1 Intraday Data Layer
 
-v1.0
+### Objective
+Create the intraday data foundation for minute/smaller timeframe OHLCV storage and access.
 
-Статус
+### Deliverables
+- TimescaleDB schema for `candles_intraday`.
+- Repository for batch upsert and reads.
+- Unit tests.
+- Operational apply script.
 
-COMPLETED
+### Acceptance Criteria
+- SQL schema applies without error.
+- Table `candles_intraday` exists.
+- Unit tests pass.
+- Existing platform tests pass.
+- Git commit created after validation.
 
-Модули
-
-Replay
-
-Replay Analytics
-
-Strategy Catalog
-
-Meta Score
-
-Replay Result
-
-+9.93%
-
-Следующий релиз
-
-v1.1
-
-Intraday Data Layer
+### Status
+Prepared, awaiting local validation.
