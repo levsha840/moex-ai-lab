@@ -1,6 +1,6 @@
 # 03_ARCHITECTURE
 
-MOEX AI LAB — архитектура платформы после Architecture Refresh.
+MOEX AI LAB — архитектура платформы после v2.0 Validation Report.
 
 ## Статус релизов
 
@@ -14,6 +14,12 @@ MOEX AI LAB — архитектура платформы после Architectur
 - v1.6.1 Persistence Layer — завершен.
 - v1.7 Risk Engine — завершен.
 - Architecture Refresh — завершен.
+- v1.8 Minimal Portfolio Allocation Engine — завершен.
+- v1.9.1 Execution Cost Model — завершен.
+- v1.9.2 WalkForward Window Generator — завершен.
+- v1.9.3 WalkForward Engine — завершен.
+- v1.9.4 Architecture Cleanup — завершен.
+- v2.0 Validation Report — завершен.
 
 ## Четыре контура платформы
 
@@ -26,8 +32,18 @@ MOEX AI LAB — архитектура платформы после Architectur
                             │ стратегия-кандидат
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  VALIDATION CORE  (обязательный шлюз)                           │
-│  Backtest → Cost Model → WalkForward → OOS Metrics → PASS/FAIL  │
+│  VALIDATION CORE  (обязательный шлюз)               ✅ v2.0     │
+│                                                                 │
+│  ExecutionCostEngine                                            │
+│        ↓                                                        │
+│  WalkForwardWindowGenerator                                     │
+│        ↓                                                        │
+│  WalkForwardEngine                                              │
+│        ↓                                                        │
+│  ValidationReportBuilder                                        │
+│        ↓                                                        │
+│           PASS / FAIL                                           │
+│                                                                 │
 │  Стратегия не допускается в Production без прохождения шлюза.   │
 └───────────────────────────┬─────────────────────────────────────┘
                             │ PASS
@@ -94,12 +110,11 @@ Execution
 ## Нерешённые архитектурные вопросы
 
 - `PaperTradingEngine` ведёт собственный учёт позиций (`PaperPosition`) независимо от `PositionManager` — связь не определена (ADR-0012, Open).
-- `core/portfolio/` (старый слой) существует параллельно с `core/position/` — судьба не определена.
 - `PostgresPositionRepository` — заглушка, реализация не начата.
 
 ## Следующий релиз
 
-v1.8 — Minimal Portfolio Allocation Engine: добавление детерминированного allocation layer между StrategyEngine и RiskEngine.
+v2.1 — Market Regime Engine: детерминированный классификатор рыночных режимов (RegimeType, RegimeClassifier, RegimeReport) без AI, ML и доступа к БД.
 
 ## Правило
 

@@ -1,6 +1,6 @@
 # 04_CHANGELOG
 
-MOEX AI LAB — актуальное состояние после релиза **v1.7 Risk Engine**.
+MOEX AI LAB — актуальное состояние после релиза **v2.0 Validation Report**.
 
 ---
 
@@ -15,6 +15,12 @@ MOEX AI LAB — актуальное состояние после релиза 
 * ✅ v1.6 Position Manager — завершен.
 * ✅ v1.6.1 Persistence Layer — завершен.
 * ✅ v1.7 Risk Engine — завершен.
+* ✅ v1.8 Minimal Portfolio Allocation Engine — завершен.
+* ✅ v1.9.1 Execution Cost Model — завершен.
+* ✅ v1.9.2 WalkForward Window Generator — завершен.
+* ✅ v1.9.3 WalkForward Engine — завершен.
+* ✅ v1.9.4 Architecture Cleanup — завершен.
+* ✅ v2.0 Validation Report — завершен.
 
 ---
 
@@ -111,18 +117,91 @@ Platform Vision 2.0 adopted.
 
 ---
 
+# v1.8 Minimal Portfolio Allocation Engine
+
+Added:
+
+* `core/allocation/` — новый детерминированный слой;
+* `AllocationConfig`, `AllocationRequest`, `AllocationDecision`;
+* `AllocationDecisionType`: ALLOCATE / REDUCE / REJECT;
+* `PortfolioAllocationEngine.allocate()`.
+
+---
+
+# v1.9.1 Execution Cost Model
+
+Added:
+
+* `core/costs/` — детерминированная модель издержек исполнения;
+* `ExecutionCostConfig`, `ExecutionRequest`, `ExecutionResult`;
+* `ExecutionCostEngine.calculate()` — commission, spread, slippage, effective_price для BUY / SELL.
+
+---
+
+# v1.9.2 WalkForward Window Generator
+
+Added:
+
+* `core/walkforward/` — пакет walk-forward валидации;
+* `WalkForwardConfig` с валидацией параметров;
+* `WalkForwardWindow` — полуоткрытые интервалы [start, end);
+* `WalkForwardWindowGenerator.generate()`.
+
+---
+
+# v1.9.3 WalkForward Engine
+
+Added:
+
+* `WalkForwardRunResult`, `WalkForwardSummary` — модели результатов;
+* `WalkForwardEngine.run(data_length, runner)` — generic Callable runner.
+
+---
+
+# v1.9.4 Architecture Cleanup
+
+Deleted:
+
+* `core/execution/replay_execution_engine.py`;
+* `core/risk/risk_manager.py`;
+* `core/strategy/base.py`;
+* `core/strategy/registry.py`;
+* `core/portfolio/` (ghost layer);
+* 4 скрипт-файла в `tests/` (не pytest-тесты).
+
+Changed:
+
+* `PositionSide` — единственная дефиниция в `core/position/models.py`;
+* `OrderSide(str, Enum)` в `core/common.py` заменил `side: str` в `RiskCheckRequest` и `ExecutionRequest`;
+* demo-стратегии переписаны на `on_event` API.
+
+---
+
+# v2.0 Validation Report
+
+Added:
+
+* `ValidationStatus` (PASS / FAIL)
+* `ValidationMetric`
+* `ValidationReport`
+* `ValidationReportBuilder`
+
+Result:
+
+Validation Foundation completed.
+
+---
+
 # Следующий релиз
 
-## v1.8 — Minimal Portfolio Allocation Engine
+## v2.1 — Market Regime Engine
 
 Планируется реализовать:
 
-* `core/allocation/` — новый детерминированный слой;
-* `AllocationConfig`, `AllocationLimits`, `AllocationRequest`, `AllocationDecision`;
-* `AllocationDecisionType`: `ALLOCATE`, `REDUCE`, `REJECT`;
-* базовые лимиты: `max_position_pct`, `max_strategy_pct`, `max_correlated_pct`, `cash_buffer`, `rebalance_threshold`;
-* unit tests;
-* без Kelly, Markowitz, AI allocation.
+* `RegimeType` — перечень рыночных режимов;
+* `RegimeClassifier` — детерминированный классификатор без AI и ML;
+* `RegimeReport` — результат классификации;
+* без доступа к БД, независимый deterministic engine.
 
 ---
 

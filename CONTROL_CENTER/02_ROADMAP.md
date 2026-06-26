@@ -15,6 +15,12 @@ MOEX AI LAB — roadmap после архитектурного обновлен
 | v1.6 | Position Manager | ✅ завершён |
 | v1.6.1 | Persistence Layer | ✅ завершён |
 | v1.7 | Risk Engine | ✅ завершён |
+| v1.8 | Minimal Portfolio Allocation Engine | ✅ завершён |
+| v1.9.1 | Execution Cost Model | ✅ завершён |
+| v1.9.2 | WalkForward Window Generator | ✅ завершён |
+| v1.9.3 | WalkForward Engine | ✅ завершён |
+| v1.9.4 | Architecture Cleanup | ✅ завершён |
+| v2.0 | Validation Report | ✅ завершён |
 
 Architecture Refresh — выполнен: добавлены `05_SYSTEM_VISION.md` и `10_ARCHITECTURE_DECISIONS.md`.
 
@@ -36,57 +42,21 @@ Architecture Refresh — выполнен: добавлены `05_SYSTEM_VISION.
 
 ## Следующие релизы
 
-### v1.8 — Minimal Portfolio Allocation Engine
+### v2.1 — Market Regime Engine
 
-Цель: добавить минимальный детерминированный слой распределения капитала перед RiskEngine.
-
-Scope:
-
-- `core/allocation/`;
-- `AllocationConfig` / `AllocationLimits`;
-- `AllocationRequest`;
-- `AllocationDecision`;
-- `AllocationDecisionType`: `ALLOCATE`, `REDUCE`, `REJECT`;
-- базовые лимиты: `max_position_pct`, `max_strategy_pct`, `max_correlated_pct`, `cash_buffer`, `rebalance_threshold`;
-- unit tests;
-- без Kelly, Markowitz, Black-Litterman, AI allocation и сложной динамической ребалансировки.
-
-Архитектурное правило: `PortfolioAllocationEngine` не исполняет сделки, не пишет в repository, не вызывает RiskEngine и не имеет доступа к БД.
-
----
-
-### v1.9 — Validation Foundation
-
-Цель: создать первичный контур честной проверки стратегий.
+Цель: классифицировать рыночные режимы для фильтрации стратегий по условиям рынка.
 
 Scope:
 
-- WalkForward Engine;
-- Realistic Cost Model (спред, T+2, налог 13%, рыночное влияние);
-- базовая Data Quality;
-- OOS metrics;
-- PASS / FAIL decision;
-- запрет доверять стратегиям без cost-adjusted walk-forward.
-
-Архитектурное правило: WalkForward и Cost Model являются неделимыми — walk-forward без реалистичной модели издержек не считается достаточной проверкой.
+- `RegimeType` — перечень рыночных режимов;
+- `RegimeClassifier` — детерминированный классификатор;
+- `RegimeReport` — результат классификации;
+- без AI, без ML, без доступа к БД;
+- независимый deterministic engine.
 
 ---
 
-### v2.0 — Market Regime Engine
-
-Цель: классифицировать рыночные режимы и проверять стратегии по режимам.
-
-Scope:
-
-- trend / flat / high volatility regimes;
-- regime labels на дневном таймфрейме;
-- strategy performance by regime;
-- фильтр режима в StrategyEngine;
-- запрет production-допуска стратегии без понимания, в каких режимах она работает.
-
----
-
-### v2.1 — Hypothesis Lab
+### v2.2 — Hypothesis Lab
 
 Цель: сделать исследование гипотез управляемым процессом.
 
@@ -100,7 +70,7 @@ Scope:
 
 ---
 
-### v2.2 — Strategy Supervisor
+### v2.4 — Strategy Supervisor
 
 Цель: контролировать уже работающие стратегии.
 
@@ -114,7 +84,7 @@ Scope:
 
 ---
 
-### v2.3 — Observability & Decision Audit
+### v2.5 — Observability & Decision Audit
 
 Цель: обеспечить воспроизводимость и объяснимость решений платформы.
 
@@ -131,10 +101,10 @@ Scope:
 ## Принцип приоритетов
 
 ```
-Validation infrastructure (v1.9) > Research tools (v2.0, v2.1) > New strategies
+Validation infrastructure > Research tools (v2.1+) > New strategies
 ```
 
-Новые production-стратегии не добавляются до завершения v1.9.
+Новые production-стратегии не добавляются до завершения Validation Core.
 
 Demo-стратегии (RSI/SMA) остаются в кодовой базе только как smoke-test инструмент.
 
