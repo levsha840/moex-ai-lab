@@ -13,10 +13,13 @@ class ExecutionCostEngine:
             raise ValueError(f"price must be positive, got {request.price}")
         if request.quantity <= 0:
             raise ValueError(f"quantity must be positive, got {request.quantity}")
-        try:
-            side = OrderSide(str(request.side).upper())
-        except ValueError:
-            raise ValueError(f"side must be BUY or SELL, got {request.side!r}")
+        if isinstance(request.side, OrderSide):
+            side = request.side
+        else:
+            try:
+                side = OrderSide(str(request.side).upper())
+            except ValueError:
+                raise ValueError(f"side must be BUY or SELL, got {request.side!r}")
 
         gross = request.price * request.quantity
 
