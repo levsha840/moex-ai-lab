@@ -1,139 +1,124 @@
 # 01_PROJECT_STATE
 
-MOEX AI LAB — актуальное состояние после v2.0 Validation Report.
+MOEX AI LAB — актуальное состояние после **FC-1 Foundation Closure** (2026-06-27).
+
+---
+
+## Era
+
+| Era | Статус |
+|-----|--------|
+| Foundation Era | ✅ Completed |
+| Program Era | 🟡 Active (Phase 4) |
+
+---
 
 ## Статус релизов
 
-- v1.0 Foundation — завершен.
-- v1.1 Intraday Data Layer — завершен.
-- v1.2 Feature Factory — завершен.
-- v1.3 Replay Engine — завершен.
-- v1.4 Strategy Engine — завершен.
-- v1.5 Paper Trading Engine — завершен.
-- v1.6 Position Manager — завершен.
-- v1.6.1 Persistence Layer — завершен.
-- v1.7 Risk Engine — завершен.
-- Architecture Refresh — завершен.
-- v1.8 Minimal Portfolio Allocation Engine — завершен.
-- v1.9.1 Execution Cost Model — завершен.
-- v1.9.2 WalkForward Window Generator — завершен.
-- v1.9.3 WalkForward Engine — завершен.
-- v1.9.4 Architecture Cleanup — завершен.
-- v2.0 Validation Report — завершен.
+### Foundation Era (Completed)
+
+| Версия | Название | Статус |
+|--------|----------|--------|
+| v1.0 | Foundation | ✅ |
+| v1.1 | Intraday Data Layer | ✅ |
+| v1.2 | Feature Factory | ✅ |
+| v1.3 | Replay Engine | ✅ |
+| v1.4 | Strategy Engine | ✅ |
+| v1.5 | Paper Trading Engine | ✅ |
+| v1.6 | Position Manager | ✅ |
+| v1.6.1 | Persistence Layer | ✅ |
+| v1.7 | Risk Engine | ✅ |
+| — | Architecture Refresh | ✅ |
+| v1.8 | Portfolio Allocation Engine | ✅ |
+| v1.9.1 | Execution Cost Model | ✅ |
+| v1.9.2 | WalkForward Window Generator | ✅ |
+| v1.9.3 | WalkForward Engine | ✅ |
+| v1.9.4 | Architecture Cleanup | ✅ |
+| v2.0 | Validation Report | ✅ |
+| v2.1 | Market Regime Engine | ✅ |
+| v2.2 | Experiment Runner | ✅ |
+| v2.3 | Hypothesis Registry | ✅ |
+| v2.4 | Knowledge Base | ✅ |
+| v3.1 | First Research Pipeline | ✅ |
+| v3.2 | H-13 Synthetic Research Experiment | ✅ |
+| v3.3 | Hypothesis Generator Module | ✅ |
+| FC-1 | Foundation Closure + Documentation System | ✅ |
+
+---
 
 ## Текущий статус тестов
 
-122/122 passed.
+**358 / 358 passed.**
 
-## v2.0 Validation Report
+---
 
-Реализован первый компонент Validation Core — сборка результатов валидации в единый отчёт:
+## Текущий релиз
 
-- `ValidationStatus` (PASS / FAIL);
-- `ValidationMetric` — именованная числовая метрика;
-- `ValidationReport` — статус, список метрик, счётчики окон, pass_rate, notes;
-- `ValidationReportBuilder.build(summary, evaluator)` — итерирует `WalkForwardSummary`, применяет `evaluator` к каждому результату, вычисляет pass_rate;
-- порог PASS: `pass_rate >= 0.80` (захардкодирован);
-- автоматические метрики: `pass_rate`, `windows_total`, `windows_passed`, `windows_failed`;
-- пояснение "Insufficient pass rate" при FAIL;
-- Validation Core полностью независим: нет импортов PaperTrading, ReplayEngine, Broker, Database, PositionManager;
-- 13 новых тестов (122 итого).
+**v3.3 Hypothesis Generator Module** (commit 885ff90)
 
-## v1.9.4 Architecture Cleanup
+Добавлен `core/hypothesis_generator/`:
+- `HypothesisTemplate` с `instantiate()`;
+- `GenerationConfig` (frozen, validated);
+- `HypothesisCandidate` + `GenerationSession`;
+- `MemoryTemplateRepository` (deepcopy isolation);
+- `PriorityRanker` (sorted, non-mutating);
+- `HypothesisGenerator.generate()` → `GenerationSession`;
+- `HypothesisGenerator.accept()` → `Hypothesis` (IDEA, с template_id в metadata);
+- `HypothesisRegistry.create()` расширен backward-compatible `metadata` kwarg;
+- `experiments/h13_adx_continuation/template.py` — `H13_TEMPLATE`;
+- 52 новых теста.
 
-Удалены legacy-модули, не используемые pipeline:
+---
 
-- `core/execution/replay_execution_engine.py`;
-- `core/risk/risk_manager.py`;
-- `core/strategy/base.py` (старый generate_signal base);
-- `core/strategy/registry.py` (старый StrategyRegistry);
-- `core/portfolio/` (ghost layer, не использовался);
-- 4 скрипт-файла в `tests/` (main()-паттерн, не pytest-тесты).
+## Активная фаза
 
-Унификации:
+**Phase 4 — Research Intelligence**
 
-- `PositionSide` — единственная дефиниция в `core/position/models.py`, убран дубликат с FLAT из `core/strategy/signal.py`;
-- `OrderSide(str, Enum)` в `core/common.py` заменил `side: str` в `RiskCheckRequest` и `ExecutionRequest`; `PaperOrderSide` стал алиасом.
+Цель: реальные данные MOEX + Knowledge-guided generation + Multi-hypothesis session.
 
-Demo-стратегии (RSI/SMA) переписаны на новый `BaseStrategy` + `on_event` API.
+Детали: `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md`
 
-## v1.9.3 WalkForward Engine
+---
 
-Реализован generic runner поверх `WalkForwardWindowGenerator`:
+## Core Modules (стабильные)
 
-- `WalkForwardRunResult(window, result)` — результат одного окна;
-- `WalkForwardSummary(runs)` — сводка по всем окнам;
-- `WalkForwardEngine.run(data_length, runner)` — принимает `Callable[[WalkForwardWindow], Any]`, исключения propagate без подавления.
+### Research Core
+- `core/regime/` — MarketRegimeEngine (v2.1)
+- `core/experiment/` — ExperimentRunner (v2.2)
+- `core/hypothesis/` — HypothesisRegistry (v2.3)
+- `core/knowledge/` — KnowledgeBase (v2.4)
+- `core/research_pipeline/` — ResearchPipeline (v3.1)
+- `core/hypothesis_generator/` — Hypothesis Generator Module (v3.3)
 
-## v1.9.2 WalkForward Window Generator
+### Validation Core
+- `core/costs/` — ExecutionCostEngine (v1.9.1)
+- `core/walkforward/` — WalkForwardEngine (v1.9.3)
+- `core/validation/` — ValidationReportBuilder (v2.0)
 
-Реализован детерминированный генератор rolling-окон:
+### Production Core
+- `core/features/` — FeatureFactory (v1.2)
+- `core/replay/` — ReplayEngine (v1.3)
+- `core/strategy/` — StrategyEngine (v1.4)
+- `core/paper/` — PaperTradingEngine (v1.5)
+- `core/position/` — PositionManager (v1.6)
+- `core/persistence/` — PositionRepository (v1.6.1)
+- `core/risk/` — RiskEngine (v1.7)
+- `core/allocation/` — PortfolioAllocationEngine (v1.8)
 
-- `WalkForwardConfig(train_size, test_size, step_size, min_train_size)` — валидация в `__post_init__`;
-- `WalkForwardWindow` — полуоткрытые интервалы `[start, end)`;
-- `WalkForwardWindowGenerator.generate(data_length)` — возвращает список окон без перекрытий.
+---
 
-## v1.9.1 Execution Cost Model
+## Документация (создана в FC-1)
 
-Реализован детерминированный движок расчёта издержек исполнения:
+- `docs/00_AI_CONSTITUTION.md` — миссия и принципы
+- `docs/01_PROJECT_CONSTITUTION.md` — модули, зависимости, правила
+- `docs/10_MASTER_DEVELOPMENT_PROGRAM.md` — программа развития
+- `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md` — Phase 4
+- `docs/30_ARCHITECTURE_DECISION_LOG.md` — ADR (7 записей)
+- `docs/99_PROJECT_DASHBOARD.md` — живая сводка
 
-- `ExecutionCostConfig` — commission_rate, minimum_commission, spread_bps, slippage_bps;
-- `ExecutionRequest / ExecutionResult` — модели запроса и результата;
-- `ExecutionCostEngine.calculate()` — gross, commission, spread, slippage, total_cost, effective_price для BUY/SELL.
-
-## v1.8 Minimal Portfolio Allocation Engine
-
-Реализован детерминированный слой распределения капитала:
-
-- `AllocationConfig` — пять лимитов: max_position_pct, max_strategy_pct, max_correlated_pct, cash_buffer, rebalance_threshold;
-- `AllocationRequest / AllocationDecision` — модели;
-- `AllocationDecisionType`: ALLOCATE, REDUCE, REJECT;
-- `PortfolioAllocationEngine.allocate()` — детерминированный расчёт без доступа к БД.
-
-## v1.7 Risk Engine
-
-Реализован независимый детерминированный слой оценки риска перед исполнением заявок:
-
-- доменные модели: `RiskDecision`, `RiskDecisionType`, `RiskReason`, `RiskLimits`, `RiskCheckRequest`;
-- `RiskEngine.check()` — возвращает `ALLOW` или `REJECT` с причинами;
-- проверка `max_trade_value` — лимит стоимости одной сделки;
-- проверка `max_position_value` — лимит стоимости позиции по инструменту;
-- проверка `max_position_pct` — лимит позиции как доля портфеля;
-- проверка `max_open_positions` — лимит числа одновременно открытых позиций;
-- запрет short при `allow_short=False`;
-- интеграция с `PaperTradingEngine` через опциональный параметр `risk_engine`;
-- отклонённые risk-заявки попадают в `rejected_orders` журнал;
-- обратная совместимость: `PaperTradingEngine` без `risk_engine` работает как прежде;
-- исправлен packaging тестов (`tests/persistence/__init__.py`);
-- тесты Risk Engine (9 тестов).
-
-## Architecture Refresh
-
-Принята Platform Vision 2.0. Платформа переориентирована с набора стратегий на четыре инженерных контура:
-
-- **Production Core** — детерминированное исполнение: StrategyEngine → PortfolioAllocationEngine → RiskEngine → PaperTradingEngine.
-- **Validation Core** — обязательный шлюз перед допуском стратегии: WalkForward + Cost Model + PASS/FAIL.
-- **Research Core** — генерация и проверка гипотез (не имеет доступа к Production).
-- **Operations Core** — supervision работающих стратегий: деградация, drawdown, audit trail.
-
-Новые документы: `05_SYSTEM_VISION.md`, `10_ARCHITECTURE_DECISIONS.md`.
-
-Текущие стратегии (RSI/SMA) признаны демонстрационными — не кандидаты для торговли.
-
-## Архитектурное правило
-
-Все core engines (`ReplayEngine`, `StrategyEngine`, `RiskEngine`, `PaperTradingEngine`) — детерминированные объекты без доступа к БД. Бизнес-логика работает только через интерфейсы Persistence Layer.
-
-## Следующий релиз
-
-v2.1 — Market Regime Engine:
-
-- `RegimeType` — перечень рыночных режимов;
-- `RegimeClassifier` — детерминированный классификатор без AI и ML;
-- `RegimeReport` — результат классификации;
-- без доступа к БД;
-- независимый deterministic engine.
+---
 
 ## Правило
 
-После завершения каждого релиза документы CONTROL_CENTER должны быть обновлены и оставаться единственным источником актуального состояния проекта.
+После завершения каждого релиза или фазы `01_PROJECT_STATE.md` и `02_ROADMAP.md`
+обновляются. `01_PROJECT_STATE` — единственный источник актуального состояния.
