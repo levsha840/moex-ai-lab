@@ -138,6 +138,24 @@
 
 ---
 
+## Architecture Health
+
+> Оценки по итогам Phase 4 Mid-Review (EWO-004, 2026-06-27).
+> Шкала: 0–10.
+
+| Измерение | Оценка | Комментарий |
+|-----------|--------|-------------|
+| **Core Integrity** | 9/10 | ADR-0002 (stdlib, clock injection) соблюдён во всех Capabilities; —1 за `_VALIDATION_PASS_THRESHOLD` дублирование (TD-001) |
+| **Capability Separation** | 9/10 | Чёткие границы 4.1/4.2/4.3 без пересечений; —1 за accept_all() — два уровня абстракции на одном классе |
+| **Extension Readiness** | 8/10 | PlanExecutor, CandidateRanker, TemplateStatisticsProvider, ResearchPolicy готовы; —2 за отсутствие Pipeline Protocol и OrchestrationObserver |
+| **Documentation Consistency** | 8/10 | ADR актуальны; —2 за QueueOrderPolicy в ADR-0008 (исправлено); OQ-004 gap в нумерации |
+| **Test Quality** | 9/10 | 487 тестов, детерминированы, cross-session determinism; —1 за отсутствие end-to-end теста (TD-003) |
+| **Technical Debt** | 8/10 | 3 Active TD (001–003), 7 Deferred TD (004–010); реестр зафиксирован в baseline |
+
+**Baseline зафиксирован:** `docs/40_PHASE_4_BASELINE.md` (2026-06-27)
+
+---
+
 ## Документация
 
 | Документ | Назначение |
@@ -146,7 +164,8 @@
 | `docs/01_PROJECT_CONSTITUTION.md` | Модули, зависимости, правила расширения |
 | `docs/10_MASTER_DEVELOPMENT_PROGRAM.md` | Программа развития, Foundation/Program Era |
 | `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md` | Инженерная программа Phase 4 |
-| `docs/30_ARCHITECTURE_DECISION_LOG.md` | ADR-журнал (7 записей) |
+| `docs/30_ARCHITECTURE_DECISION_LOG.md` | ADR-журнал (14 записей) |
+| `docs/40_PHASE_4_BASELINE.md` | Phase 4 Baseline Snapshot (EWO-005) |
 | `docs/99_PROJECT_DASHBOARD.md` | Этот документ |
 | `docs/research/MOEX_RESEARCH_PROGRAM.md` | 35 гипотез, 7 категорий |
 | `CONTROL_CENTER/` | Оперативное состояние проекта |

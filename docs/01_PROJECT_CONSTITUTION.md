@@ -37,14 +37,16 @@
 
 Контур исследования гипотез. Не имеет прямого доступа к Production Core.
 
-| Модуль | Путь | Назначение |
-|--------|------|------------|
-| MarketRegimeEngine | `core/regime/` | Классификация рыночного режима |
-| HypothesisRegistry | `core/hypothesis/` | Lifecycle управление гипотезами |
-| KnowledgeBase | `core/knowledge/` | Накопление результатов исследований |
-| ExperimentRunner | `core/experiment/` | Оркестрация experiment pipeline |
-| ResearchPipeline | `core/research_pipeline/` | Связка Experiment → KnowledgeBase |
-| Hypothesis Generator Module | `core/hypothesis_generator/` | Генерация кандидатов из шаблонов |
+| Модуль | Путь | Назначение | Версия |
+|--------|------|------------|--------|
+| MarketRegimeEngine | `core/regime/` | Классификация рыночного режима | v2.1 |
+| HypothesisRegistry | `core/hypothesis/` | Lifecycle управление гипотезами | v2.3 |
+| KnowledgeBase | `core/knowledge/` | Накопление результатов исследований | v2.4 |
+| ExperimentRunner | `core/experiment/` | Оркестрация experiment pipeline | v2.2 |
+| ResearchPipeline | `core/research_pipeline/` | Связка Experiment → KnowledgeBase | v3.1 |
+| Hypothesis Generator Module | `core/hypothesis_generator/` | Генерация и knowledge-guided ранжирование кандидатов | v3.3+ |
+| Research Orchestrator | `core/research_orchestrator/` | Sequence executor для плана задач | v4.1 |
+| Research Session | `core/research_session/` | Coordination facade: generate → plan → execute → aggregate | v4.3 |
 
 ### Experiments
 
@@ -71,13 +73,24 @@ experiments/
     └─► core/regime/
     └─► core/features/
 
+core/research_session/
+    └─► core/research_orchestrator/  (ResearchPlan, ResearchTask, PlanExecutor Protocol)
+    └─► core/hypothesis_generator/   (HypothesisGenerator)
+    └─► core/hypothesis/             (HypothesisRegistry)
+    └─► core/research_pipeline/      (ResearchPipeline — concrete)
+
+core/research_orchestrator/
+    └─► core/hypothesis/             (HypothesisRegistry)
+    └─► core/research_pipeline/      (ResearchPipeline)
+
 core/research_pipeline/
     └─► core/experiment/
     └─► core/hypothesis/
     └─► core/knowledge/
 
 core/hypothesis_generator/
-    └─► core/hypothesis/
+    └─► core/hypothesis/             (engine.py, accept())
+    └─► core/knowledge/              (statistics.py only — KBTemplateStatisticsProvider)
 
 core/experiment/
     └─► (только собственные models, никаких Research/Production зависимостей)
