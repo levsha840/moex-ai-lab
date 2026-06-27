@@ -1,6 +1,6 @@
 # 01_PROJECT_STATE
 
-MOEX AI LAB — актуальное состояние после **v4.3 Multi-Hypothesis Research Session** (2026-06-27).
+MOEX AI LAB — актуальное состояние после **v4.4 Research Report** (2026-06-27).
 
 ---
 
@@ -48,23 +48,26 @@ MOEX AI LAB — актуальное состояние после **v4.3 Multi-
 
 ## Текущий статус тестов
 
-**487 / 487 passed.**
+**543 / 543 passed.**
 
 ---
 
 ## Текущий релиз
 
-**v4.3 Multi-Hypothesis Research Session** (2026-06-27)
+**v4.4 Research Report** (2026-06-27)
 
-Новый модуль `core/research_session/`:
-- `ResearchSessionConfig`, `ResearchSessionStatus`, `SessionStatistics`, `ResearchSessionResult` (models);
-- `PlanExecutor` Protocol — stateless executor; `ResearchOrchestrator` реализует структурно;
-- `ResearchSession.run(config, registry, pipeline, *, policy)` — coordination facade;
-- `HypothesisGenerator.accept_all(session, registry)` — bulk acceptance, добавлено в engine.py;
-- 43 новых теста.
+Новые компоненты в `core/research_session/`:
+- `report_models.py` — `ValidationOutcome`, `RecommendationKind`, `RecommendationPriority`,
+  `RecommendationScope`, `HypothesisInfo`, `ResearchFinding`, `ResearchRecommendation`,
+  `ReportSummary`, `ResearchReport`;
+- `report.py` — `ResearchReportBuilder.build(result) → ResearchReport`;
+- `protocols.py` — `HypothesisInfoProvider` Protocol добавлен;
+- `models.py` — `ResearchSessionConfig.pass_threshold: float = 0.80` добавлен (ADR-0017).
 
-ADR добавлены: ADR-0013 (facade), ADR-0014 (PlanExecutor stateless).
-Открытые вопросы: OQ-007, OQ-008, OQ-009.
+ADR добавлены: ADR-0015 (ResearchReport reference), ADR-0016 (HypothesisInfoProvider),
+ADR-0017 (pass_threshold в config), ADR-0018 (ValidationOutcome).
+TD-001 закрыт. OQ-007 закрыт. OQ-010 добавлен (persistence деферрован в Phase 6+).
+56 новых тестов.
 
 ---
 
@@ -88,6 +91,7 @@ ADR добавлены: ADR-0013 (facade), ADR-0014 (PlanExecutor stateless).
 - `core/research_pipeline/` — ResearchPipeline (v3.1)
 - `core/hypothesis_generator/` — Hypothesis Generator Module (v3.3)
 - `core/research_orchestrator/` — Research Orchestrator (v4.1)
+- `core/research_session/` — Research Session + Report (v4.4)
 
 ### Validation Core
 - `core/costs/` — ExecutionCostEngine (v1.9.1)

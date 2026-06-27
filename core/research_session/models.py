@@ -24,11 +24,21 @@ class ResearchSessionConfig:
 
     One ExperimentConfig applies to all hypotheses generated in the session.
     For per-hypothesis configuration, see OQ-008.
+
+    pass_threshold defines what constitutes a PASS in SessionStatistics and
+    ResearchReport findings. Single source of truth (ADR-0017, resolves TD-001).
     """
 
     generation_config: GenerationConfig
     experiment_config: ExperimentConfig
     description: str = ""
+    pass_threshold: float = 0.80
+
+    def __post_init__(self) -> None:
+        if not 0.0 < self.pass_threshold <= 1.0:
+            raise ValueError(
+                f"pass_threshold must be in (0.0, 1.0], got {self.pass_threshold}"
+            )
 
 
 @dataclass(frozen=True)
@@ -44,8 +54,8 @@ class SessionStatistics:
     tasks_completed:         int           # ResearchTaskStatus.COMPLETED
     tasks_failed:            int           # ResearchTaskStatus.FAILED (pipeline exception)
     tasks_skipped:           int           # ResearchTaskStatus.SKIPPED
-    validation_pass:         int           # completed tasks where pass_rate >= 0.80
-    validation_fail:         int           # completed tasks where pass_rate < 0.80
+    validation_pass:         int           # completed tasks where pass_rate >= config.pass_threshold
+    validation_fail:         int           # completed tasks where pass_rate < config.pass_threshold
     validation_inconclusive: int           # completed tasks where pass_rate is None
     avg_pass_rate:           float | None  # mean of non-None pass_rates; None if none exist
     kb_entries_created:      int           # completed tasks with a knowledge_entry_id

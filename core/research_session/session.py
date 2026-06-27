@@ -22,10 +22,6 @@ from core.research_session.models import (
 )
 from core.research_session.protocols import PlanExecutor
 
-# Local copy of the validation pass threshold.
-# Must match ValidationReportBuilder._PASS_THRESHOLD = 0.80 (see OQ-007).
-_VALIDATION_PASS_THRESHOLD: float = 0.80
-
 
 class ResearchSession:
     """Orchestration facade for a full hypothesis research campaign.
@@ -93,7 +89,10 @@ class ResearchSession:
         orch_result = self._executor.run(plan, registry, pipeline, policy=policy)
 
         finished_at = self._clock()
-        stats = _build_statistics(gen_session, hypotheses, orch_result, started_at, finished_at)
+        stats = _build_statistics(
+            gen_session, hypotheses, orch_result, started_at, finished_at,
+            config.pass_threshold,
+        )
         status = _map_status(orch_result.final_status)
 
         return ResearchSessionResult(
@@ -117,7 +116,9 @@ def _map_status(orch_status: OrchestrationStatus) -> ResearchSessionStatus:
     return ResearchSessionStatus.ABORTED
 
 
-def _build_statistics(gen_session, hypotheses, orch_result, started_at, finished_at):
+def _build_statistics(
+    gen_session, hypotheses, orch_result, started_at, finished_at, pass_threshold: float
+):
     completed = orch_result.completed_tasks
 
     validation_pass = 0
@@ -132,7 +133,7 @@ def _build_statistics(gen_session, hypotheses, orch_result, started_at, finished
 
         if task.summary is None or task.summary.pass_rate is None:
             validation_inconclusive += 1
-        elif task.summary.pass_rate >= _VALIDATION_PASS_THRESHOLD:
+        elif task.summary.pass_rate >= pass_threshold:
             validation_pass += 1
             pass_rates.append(task.summary.pass_rate)
         else:

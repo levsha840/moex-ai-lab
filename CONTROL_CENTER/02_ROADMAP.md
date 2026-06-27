@@ -42,7 +42,7 @@ MOEX AI LAB — roadmap после **FC-1 Foundation Closure** (2026-06-27).
 | Research Orchestrator | 4.1 | ✅ Completed (v4.1) |
 | Knowledge-Guided Generation | 4.2 | ✅ Completed (v4.2) |
 | Multi-Hypothesis Research Session | 4.3 | ✅ Completed (v4.3) |
-| Research Report | 4.4 | 🔜 |
+| Research Report | 4.4 | ✅ Completed (v4.4) |
 | Regime-Aware Data Selection | 4.5 | 🔜 |
 
 Детали: `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md`

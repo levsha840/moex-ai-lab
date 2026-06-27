@@ -114,16 +114,33 @@
 
 ---
 
-### 4.4 — Research Report
+### 4.4 — Research Report ✅ Completed (2026-06-27)
 
-**Что:** человекочитаемая сводка по итогам `ResearchSession`.
+**Что:** структурированный отчёт по итогам `ResearchSession` — для людей и будущих Capabilities.
 
-**Детали:**
-- `ResearchReportBuilder.build(session_result) -> ResearchReport`.
-- `ResearchReport` содержит: список гипотез с их результатами, топ-N по pass_rate,
-  список требующих повторного исследования (FAIL с pass_rate > 0.5), summary string.
-- Формат вывода: структурированный dataclass, не Markdown/HTML
-  (рендеринг — забота вызывающего кода).
+**Компоненты:** `core/research_session/`
+- `ValidationOutcome` — PASS / FAIL / INCONCLUSIVE / ERROR / SKIPPED (ADR-0018).
+- `RecommendationKind` — REPEAT_EXPERIMENT / ARCHIVE_HYPOTHESIS / EXPLORE_VARIANT /
+  REVIEW_PARAMETERS / INVESTIGATE_PIPELINE / RESCHEDULE_SKIPPED.
+- `RecommendationPriority` — HIGH / MEDIUM / LOW.
+- `RecommendationScope` — SESSION / HYPOTHESIS (explicit scope, не None-sentinel).
+- `HypothesisInfo` — lightweight frozen dataclass для метаданных гипотезы.
+- `ResearchFinding` — frozen: один finding per task в порядке плана.
+- `ResearchRecommendation` — frozen: data-driven рекомендация (scope + kind + priority).
+- `ReportSummary` — frozen: агрегат (counts, avg/median pass_rate, validation_pass_rate).
+- `ResearchReport` — frozen: `session_id` (reference) + summary + findings + recommendations.
+- `HypothesisInfoProvider` Protocol — `get_info(ids) → dict[str, HypothesisInfo]`.
+- `ResearchReportBuilder.build(result) → ResearchReport` — stateless, no side effects.
+
+**Ключевые решения:**
+- `ResearchReport` хранит `session_id: str`, не полный `ResearchSessionResult` (ADR-0015).
+- `HypothesisInfoProvider` — опциональная зависимость, duck typing (ADR-0016).
+- `pass_threshold` перенесён из константы в `ResearchSessionConfig` (ADR-0017, TD-001 закрыт).
+- `ValidationOutcome` разделяет семантику отчёта и lifecycle задач (ADR-0018).
+- `median_pass_rate` добавлен в `ReportSummary` (более устойчив к выбросам, чем mean).
+- Рекомендации сортируются: HIGH → MEDIUM → LOW, внутри группы — по `kind.value`.
+
+**Тесты:** 56 новых тестов (543 итого).
 
 ---
 
@@ -170,12 +187,27 @@
 | `ResearchSession` | Facade | `core/research_session/session.py` | ✅ |
 | `HypothesisGenerator.accept_all` | Method | `core/hypothesis_generator/engine.py` | ✅ |
 
-### Планируемые (4.4–4.5)
+### Реализованные (4.4)
+
+| Компонент | Тип | Путь | Статус |
+|-----------|-----|------|--------|
+| `ValidationOutcome` | Enum | `core/research_session/report_models.py` | ✅ |
+| `RecommendationKind` | Enum | `core/research_session/report_models.py` | ✅ |
+| `RecommendationPriority` | Enum | `core/research_session/report_models.py` | ✅ |
+| `RecommendationScope` | Enum | `core/research_session/report_models.py` | ✅ |
+| `HypothesisInfo` | Model | `core/research_session/report_models.py` | ✅ |
+| `ResearchFinding` | Model | `core/research_session/report_models.py` | ✅ |
+| `ResearchRecommendation` | Model | `core/research_session/report_models.py` | ✅ |
+| `ReportSummary` | Model | `core/research_session/report_models.py` | ✅ |
+| `ResearchReport` | Model | `core/research_session/report_models.py` | ✅ |
+| `HypothesisInfoProvider` | Protocol | `core/research_session/protocols.py` | ✅ |
+| `ResearchReportBuilder` | Builder | `core/research_session/report.py` | ✅ |
+| `ResearchSessionConfig.pass_threshold` | Field | `core/research_session/models.py` | ✅ |
+
+### Планируемые (4.5)
 
 | Компонент | Тип | Путь | Capability |
 |-----------|-----|------|------------|
-| `ResearchReportBuilder` | Builder | `core/research_pipeline/report.py` | 4.4 |
-| `ResearchReport` | Model | `core/research_pipeline/models.py` | 4.4 |
 | `RegimeAwareDataSelector` | Utility | `core/regime/selector.py` | 4.5 |
 
 Ни один из компонентов не нарушает существующий dependency graph.

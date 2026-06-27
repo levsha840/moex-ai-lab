@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (v4.3)**
+> Последнее обновление: **2026-06-27 (v4.4)**
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | v4.3 Multi-Hypothesis Research Session |
+| Релиз | v4.4 Research Report |
 | Era | Program Era |
 | Branch | main |
 | Дата | 2026-06-27 |
-| Тестов | **487 / 487 pass** |
+| Тестов | **543 / 543 pass** |
 
 ---
 
@@ -59,7 +59,7 @@
 | ResearchPipeline | `core/research_pipeline/` | ✅ Stable | v3.1 |
 | Hypothesis Generator Module | `core/hypothesis_generator/` | ✅ Stable | v3.3 |
 | Research Orchestrator | `core/research_orchestrator/` | ✅ Stable | v4.1 |
-| Research Session | `core/research_session/` | ✅ Stable | v4.3 |
+| Research Session | `core/research_session/` | ✅ Stable | v4.4 |
 
 ### Validation Core
 
@@ -99,7 +99,7 @@
 | Research Orchestrator | ✅ v4.1 | ResearchOrchestrator, ResearchPlan, DefaultResearchPolicy |
 | Knowledge-guided generation | ✅ v4.2 | KnowledgeRanker, KBTemplateStatisticsProvider, TemplateStats |
 | Multi-hypothesis Research Session | ✅ v4.3 | ResearchSession, PlanExecutor, SessionStatistics |
-| Research Report | ⏳ Phase 4.4 | ResearchReportBuilder |
+| Research Report | ✅ v4.4 | ResearchReportBuilder, ResearchReport, ValidationOutcome |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
 | Live broker execution | 🔜 Phase 8+ | |
 
@@ -117,7 +117,8 @@
 | Research Orchestrator | 47 |
 | Knowledge-Guided Generation (4.2) | 39 |
 | Research Session (4.3) | 43 |
-| **Итого** | **487** |
+| Research Report (4.4) | 56 |
+| **Итого** | **543** |
 
 ---
 
@@ -131,10 +132,10 @@
 
 ## Следующий релиз
 
-**Phase 4.4 — Research Report**
+**Phase 4.5 — Regime-Aware Data Selection**
 
-- `ResearchReportBuilder.build(session_result) → ResearchReport`
-- Топ-N гипотез по pass_rate, список на повторное исследование
+- `RegimeAwareDataSelector` — фильтрует датасет по доминирующему рыночному режиму
+- Prerequisite: OQ-005 (regime_context в CandidateRanker), OQ-006 (KB stats с dataset_id)
 
 ---
 
@@ -145,7 +146,7 @@
 
 | Измерение | Оценка | Комментарий |
 |-----------|--------|-------------|
-| **Core Integrity** | 9/10 | ADR-0002 (stdlib, clock injection) соблюдён во всех Capabilities; —1 за `_VALIDATION_PASS_THRESHOLD` дублирование (TD-001) |
+| **Core Integrity** | 10/10 | ADR-0002 (stdlib, clock injection) соблюдён во всех Capabilities; TD-001 закрыт в v4.4 (pass_threshold в config) |
 | **Capability Separation** | 9/10 | Чёткие границы 4.1/4.2/4.3 без пересечений; —1 за accept_all() — два уровня абстракции на одном классе |
 | **Extension Readiness** | 8/10 | PlanExecutor, CandidateRanker, TemplateStatisticsProvider, ResearchPolicy готовы; —2 за отсутствие Pipeline Protocol и OrchestrationObserver |
 | **Documentation Consistency** | 8/10 | ADR актуальны; —2 за QueueOrderPolicy в ADR-0008 (исправлено); OQ-004 gap в нумерации |
@@ -164,7 +165,7 @@
 | `docs/01_PROJECT_CONSTITUTION.md` | Модули, зависимости, правила расширения |
 | `docs/10_MASTER_DEVELOPMENT_PROGRAM.md` | Программа развития, Foundation/Program Era |
 | `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md` | Инженерная программа Phase 4 |
-| `docs/30_ARCHITECTURE_DECISION_LOG.md` | ADR-журнал (14 записей) |
+| `docs/30_ARCHITECTURE_DECISION_LOG.md` | ADR-журнал (18 записей) |
 | `docs/40_PHASE_4_BASELINE.md` | Phase 4 Baseline Snapshot (EWO-005) |
 | `docs/99_PROJECT_DASHBOARD.md` | Этот документ |
 | `docs/research/MOEX_RESEARCH_PROGRAM.md` | 35 гипотез, 7 категорий |
