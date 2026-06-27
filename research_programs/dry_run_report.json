@@ -1,0 +1,131 @@
+{
+  "generated_at": "2026-06-28T00:38:40",
+  "instrument_filter": "SBER",
+  "period_filter": "2023",
+  "ok": 23,
+  "warn": 1,
+  "fail": 0,
+  "dataset_gaps": 2,
+  "checks": [
+    {
+      "status": "OK",
+      "check": "research_universe.json",
+      "detail": "28 instruments"
+    },
+    {
+      "status": "OK",
+      "check": "research_budget.json",
+      "detail": ""
+    },
+    {
+      "status": "WARN",
+      "check": "Dataset coverage partial",
+      "detail": "1/3 cells — 2 gaps"
+    },
+    {
+      "status": "OK",
+      "check": "MacroAgent protocol",
+      "detail": "agent_id=macro-agent, confidence=0.33"
+    },
+    {
+      "status": "OK",
+      "check": "MacroAgent fixture",
+      "detail": "snapshot_id=macro_2023_1d, symbols=1"
+    },
+    {
+      "status": "OK",
+      "check": "CorrelationAgent protocol",
+      "detail": "agent_id=correlation-agent"
+    },
+    {
+      "status": "OK",
+      "check": "CorrelationAgent fixture",
+      "detail": "pairs=15, instrument_bars=12"
+    },
+    {
+      "status": "OK",
+      "check": "RegimeDetectionAgent protocol",
+      "detail": "agent_id=regime-detection-agent"
+    },
+    {
+      "status": "OK",
+      "check": "RegimeDetectionAgent fixture",
+      "detail": "segments=9"
+    },
+    {
+      "status": "OK",
+      "check": "KnowledgeAgent protocol",
+      "detail": "agent_id=knowledge-agent"
+    },
+    {
+      "status": "OK",
+      "check": "KnowledgeAgent empty",
+      "detail": "facts=0, patterns=0"
+    },
+    {
+      "status": "OK",
+      "check": "Existing KB snapshots",
+      "detail": "1 files found"
+    },
+    {
+      "status": "OK",
+      "check": "ExperimentPlanner protocol",
+      "detail": "agent_id=experiment-planner"
+    },
+    {
+      "status": "OK",
+      "check": "ExperimentPlanner empty",
+      "detail": "plans=0 (expected 0 — no patterns to plan)"
+    },
+    {
+      "status": "OK",
+      "check": "ValidationAgentAdapter protocol",
+      "detail": "agent_id=validation-agent-adapter"
+    },
+    {
+      "status": "OK",
+      "check": "ValidationAgentAdapter dry_run",
+      "detail": "dry_run_tasks=1, total=1"
+    },
+    {
+      "status": "OK",
+      "check": "ChiefScientist protocol",
+      "detail": "agent_id=chief-scientist"
+    },
+    {
+      "status": "OK",
+      "check": "ChiefScientist empty",
+      "detail": "decisions=0 (expected 0 on empty KB)"
+    },
+    {
+      "status": "OK",
+      "check": "Model chain integrity",
+      "detail": "AgentResult -> KnowledgeSnapshot pipeline OK"
+    },
+    {
+      "status": "OK",
+      "check": "Frozen dataclass invariant",
+      "detail": "All models are hashable and immutable"
+    },
+    {
+      "status": "OK",
+      "check": "research_programs/plans/",
+      "detail": "exists or created"
+    },
+    {
+      "status": "OK",
+      "check": "research_programs/decisions/",
+      "detail": "exists or created"
+    },
+    {
+      "status": "OK",
+      "check": "research_programs/validation_runs/",
+      "detail": "exists or created"
+    },
+    {
+      "status": "OK",
+      "check": "research_programs/waves/",
+      "detail": "exists or created"
+    }
+  ]
+}

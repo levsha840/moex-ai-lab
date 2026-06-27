@@ -1,0 +1,96 @@
+{
+  "wave_id": "wave_03",
+  "name": "Metals & Mining",
+  "tickers": [
+    "GMKN",
+    "CHMF",
+    "MAGN",
+    "NLMK",
+    "PLZL",
+    "ALRS"
+  ],
+  "timeframe": "1h",
+  "hypothesis_id": "H-ADX-CONTINUATION",
+  "priority_periods": [
+    "2023"
+  ],
+  "total_campaigns": 6,
+  "ready_campaigns": 3,
+  "blocked_campaigns": 3,
+  "status": "partial",
+  "generated_at": "2026-06-28T00:39:20",
+  "campaigns": [
+    {
+      "campaign_id": "wave_03_gmkn_2023",
+      "ticker": "GMKN",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "ready",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_03_chmf_2023",
+      "ticker": "CHMF",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "ready",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_03_magn_2023",
+      "ticker": "MAGN",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "ready",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_03_nlmk_2023",
+      "ticker": "NLMK",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_03_plzl_2023",
+      "ticker": "PLZL",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_03_alrs_2023",
+      "ticker": "ALRS",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    }
+  ]
+}

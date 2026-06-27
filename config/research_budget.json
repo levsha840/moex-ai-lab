@@ -1,0 +1,40 @@
+{
+  "version": "1",
+  "description": "Operational research limits for MOEX AI LAB",
+
+  "daily_limits": {
+    "max_experiments_per_day": 100,
+    "max_new_hypotheses_per_cycle": 10,
+    "max_rs_runs_per_campaign": 5,
+    "max_campaigns_per_day": 30
+  },
+
+  "per_campaign_limits": {
+    "max_tasks_per_plan": 5,
+    "max_plans_per_campaign": 3,
+    "max_decisions_per_run": 10,
+    "dry_run_default": true,
+    "allow_high_risk": false
+  },
+
+  "resource_limits": {
+    "max_bars_per_dataset": 100000,
+    "max_concurrent_fetches": 1,
+    "moex_request_delay_sec": 0.5,
+    "max_retries_per_request": 3,
+    "request_timeout_sec": 30
+  },
+
+  "stop_conditions": {
+    "stop_on_archive_rate_above": 0.80,
+    "stop_on_consecutive_failures": 10,
+    "stop_if_kb_stale_days": 7
+  },
+
+  "scheduling": {
+    "wave_order": ["wave_01", "wave_02", "wave_03", "wave_04", "wave_05", "wave_06"],
+    "priority_periods_first": true,
+    "skip_flagged_periods": ["LIVE"],
+    "skip_instruments_with_notes": ["suspended_2022"]
+  }
+}

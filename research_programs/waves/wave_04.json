@@ -1,0 +1,57 @@
+{
+  "wave_id": "wave_04",
+  "name": "Retail",
+  "tickers": [
+    "MGNT",
+    "FIVE",
+    "OZON"
+  ],
+  "timeframe": "1h",
+  "hypothesis_id": "H-ADX-CONTINUATION",
+  "priority_periods": [
+    "2023"
+  ],
+  "total_campaigns": 3,
+  "ready_campaigns": 0,
+  "blocked_campaigns": 3,
+  "status": "blocked",
+  "generated_at": "2026-06-28T00:39:20",
+  "campaigns": [
+    {
+      "campaign_id": "wave_04_mgnt_2023",
+      "ticker": "MGNT",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_04_five_2023",
+      "ticker": "FIVE",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_04_ozon_2023",
+      "ticker": "OZON",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    }
+  ]
+}

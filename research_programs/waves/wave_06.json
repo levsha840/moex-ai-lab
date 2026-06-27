@@ -1,0 +1,83 @@
+{
+  "wave_id": "wave_06",
+  "name": "Technology & Transport & Chemicals",
+  "tickers": [
+    "YDEX",
+    "AFLT",
+    "FLOT",
+    "PHOR",
+    "AKRN"
+  ],
+  "timeframe": "1h",
+  "hypothesis_id": "H-ADX-CONTINUATION",
+  "priority_periods": [
+    "2023"
+  ],
+  "total_campaigns": 5,
+  "ready_campaigns": 0,
+  "blocked_campaigns": 5,
+  "status": "blocked",
+  "generated_at": "2026-06-28T00:39:20",
+  "campaigns": [
+    {
+      "campaign_id": "wave_06_ydex_2023",
+      "ticker": "YDEX",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_aflt_2023",
+      "ticker": "AFLT",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_flot_2023",
+      "ticker": "FLOT",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_phor_2023",
+      "ticker": "PHOR",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_akrn_2023",
+      "ticker": "AKRN",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    }
+  ]
+}

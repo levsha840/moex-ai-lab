@@ -1,0 +1,70 @@
+{
+  "wave_id": "wave_01",
+  "name": "Banks",
+  "tickers": [
+    "SBER",
+    "VTBR",
+    "TCSG",
+    "MOEX"
+  ],
+  "timeframe": "1h",
+  "hypothesis_id": "H-ADX-CONTINUATION",
+  "priority_periods": [
+    "2023"
+  ],
+  "total_campaigns": 4,
+  "ready_campaigns": 2,
+  "blocked_campaigns": 2,
+  "status": "partial",
+  "generated_at": "2026-06-28T00:39:20",
+  "campaigns": [
+    {
+      "campaign_id": "wave_01_sber_2023",
+      "ticker": "SBER",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "ready",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_vtbr_2023",
+      "ticker": "VTBR",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "ready",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_tcsg_2023",
+      "ticker": "TCSG",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_moex_2023",
+      "ticker": "MOEX",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    }
+  ]
+}

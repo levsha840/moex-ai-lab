@@ -1,0 +1,103 @@
+{
+  "version": "1",
+  "description": "MOEX AI LAB Research Universe v1 — machine-readable source of truth",
+  "doc_ref": "docs/60_RESEARCH_UNIVERSE.md",
+
+  "instruments": [
+    {"ticker": "SBER",  "sector": "Banks",          "priority": "P1", "label": "Anchor", "note": ""},
+    {"ticker": "LKOH",  "sector": "Oil & Gas",       "priority": "P1", "label": "Anchor", "note": ""},
+    {"ticker": "GAZP",  "sector": "Oil & Gas",       "priority": "P1", "label": "Anchor", "note": "suspended_2022"},
+    {"ticker": "GMKN",  "sector": "Metals & Mining", "priority": "P1", "label": "Anchor", "note": ""},
+    {"ticker": "ROSN",  "sector": "Oil & Gas",       "priority": "P1", "label": "Anchor", "note": ""},
+    {"ticker": "NVTK",  "sector": "Oil & Gas",       "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "TATN",  "sector": "Oil & Gas",       "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "CHMF",  "sector": "Metals & Mining", "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "MAGN",  "sector": "Metals & Mining", "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "VTBR",  "sector": "Banks",           "priority": "P1", "label": "Core",   "note": "low_price_per_share"},
+    {"ticker": "MGNT",  "sector": "Retail",          "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "NLMK",  "sector": "Metals & Mining", "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "PLZL",  "sector": "Metals & Mining", "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "ALRS",  "sector": "Metals & Mining", "priority": "P1", "label": "Core",   "note": ""},
+    {"ticker": "MTSS",  "sector": "Telecom",         "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "IRAO",  "sector": "Energy",          "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "SNGS",  "sector": "Oil & Gas",       "priority": "P2", "label": "Extended", "note": "anomalous_balance"},
+    {"ticker": "FIVE",  "sector": "Retail",          "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "PHOR",  "sector": "Chemicals",       "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "AFLT",  "sector": "Transport",       "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "YDEX",  "sector": "Technology",      "priority": "P2", "label": "Extended", "note": "restructured_2024"},
+    {"ticker": "HYDR",  "sector": "Energy",          "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "MOEX",  "sector": "Financial Svcs",  "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "FLOT",  "sector": "Transport",       "priority": "P2", "label": "Extended", "note": ""},
+    {"ticker": "TCSG",  "sector": "Banks",           "priority": "P2", "label": "Extended", "note": "ticker_change_2024"},
+    {"ticker": "RTKM",  "sector": "Telecom",         "priority": "P3", "label": "Satellite", "note": ""},
+    {"ticker": "AKRN",  "sector": "Chemicals",       "priority": "P3", "label": "Satellite", "note": "mid_cap"},
+    {"ticker": "OZON",  "sector": "Retail",          "priority": "P3", "label": "Satellite", "note": "growth_equity"}
+  ],
+
+  "periods": [
+    {"year": "2019", "label": "PRE-COVID",     "flags": []},
+    {"year": "2020", "label": "COVID-CRASH",   "flags": ["EXTREME_VOL"]},
+    {"year": "2021", "label": "RECOVERY",      "flags": []},
+    {"year": "2022", "label": "SANCTIONS",     "flags": ["SUSPENDED_TRADING", "REGIME_BREAK"]},
+    {"year": "2023", "label": "ADAPTATION",    "flags": []},
+    {"year": "2024", "label": "HIGH-RATE",     "flags": []},
+    {"year": "2025", "label": "ONGOING",       "flags": ["LIVE"]}
+  ],
+
+  "timeframes": [
+    {"tf": "1h",  "label": "Intraday",      "use": "primary",   "bars_per_year": 1700},
+    {"tf": "4h",  "label": "Mid-frequency", "use": "secondary", "bars_per_year": 430},
+    {"tf": "1d",  "label": "Daily",         "use": "tertiary",  "bars_per_year": 247}
+  ],
+
+  "macro_symbols": [
+    {"symbol": "IMOEX",       "desc": "MOEX equity index",  "engine": "stock",    "board": "SNDX", "tf": "1d"},
+    {"symbol": "USD000UTSTOM","desc": "USD/RUB spot",        "engine": "currency", "board": "CETS", "tf": "1d"},
+    {"symbol": "RGBI",        "desc": "OFZ bond index",     "engine": "stock",    "board": "SNDX", "tf": "1d"}
+  ],
+
+  "waves": [
+    {
+      "wave_id": "wave_01",
+      "name": "Banks",
+      "tickers": ["SBER", "VTBR", "TCSG", "MOEX"],
+      "priority_periods": ["2023", "2021", "2019"],
+      "timeframe": "1h"
+    },
+    {
+      "wave_id": "wave_02",
+      "name": "Oil & Gas",
+      "tickers": ["LKOH", "ROSN", "NVTK", "TATN", "SNGS", "GAZP"],
+      "priority_periods": ["2023", "2021", "2019"],
+      "timeframe": "1h"
+    },
+    {
+      "wave_id": "wave_03",
+      "name": "Metals & Mining",
+      "tickers": ["GMKN", "CHMF", "MAGN", "NLMK", "PLZL", "ALRS"],
+      "priority_periods": ["2023", "2021", "2019"],
+      "timeframe": "1h"
+    },
+    {
+      "wave_id": "wave_04",
+      "name": "Retail",
+      "tickers": ["MGNT", "FIVE", "OZON"],
+      "priority_periods": ["2023", "2021", "2019"],
+      "timeframe": "1h"
+    },
+    {
+      "wave_id": "wave_05",
+      "name": "Energy & Telecom",
+      "tickers": ["IRAO", "HYDR", "MTSS", "RTKM"],
+      "priority_periods": ["2023", "2021"],
+      "timeframe": "1h"
+    },
+    {
+      "wave_id": "wave_06",
+      "name": "Technology & Transport & Chemicals",
+      "tickers": ["YDEX", "AFLT", "FLOT", "PHOR", "AKRN"],
+      "priority_periods": ["2023", "2021"],
+      "timeframe": "1h"
+    }
+  ]
+}

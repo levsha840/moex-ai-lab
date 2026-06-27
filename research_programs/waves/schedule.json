@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-06-28T00:39:20",
+  "period_filter": "2023",
+  "hypothesis_id": "H-ADX-CONTINUATION",
+  "total_campaigns": 28,
+  "ready_campaigns": 10,
+  "blocked": 18,
+  "waves": [
+    {
+      "wave_id": "wave_01",
+      "name": "Banks",
+      "total_campaigns": 4,
+      "ready_campaigns": 2,
+      "status": "partial",
+      "plan_file": "D:\\MOEX_AI\\research_programs\\waves\\wave_01.json"
+    },
+    {
+      "wave_id": "wave_02",
+      "name": "Oil & Gas",
+      "total_campaigns": 6,
+      "ready_campaigns": 5,
+      "status": "partial",
+      "plan_file": "D:\\MOEX_AI\\research_programs\\waves\\wave_02.json"
+    },
+    {
+      "wave_id": "wave_03",
+      "name": "Metals & Mining",
+      "total_campaigns": 6,
+      "ready_campaigns": 3,
+      "status": "partial",
+      "plan_file": "D:\\MOEX_AI\\research_programs\\waves\\wave_03.json"
+    },
+    {
+      "wave_id": "wave_04",
+      "name": "Retail",
+      "total_campaigns": 3,
+      "ready_campaigns": 0,
+      "status": "blocked",
+      "plan_file": "D:\\MOEX_AI\\research_programs\\waves\\wave_04.json"
+    },
+    {
+      "wave_id": "wave_05",
+      "name": "Energy & Telecom",
+      "total_campaigns": 4,
+      "ready_campaigns": 0,
+      "status": "blocked",
+      "plan_file": "D:\\MOEX_AI\\research_programs\\waves\\wave_05.json"
+    },
+    {
+      "wave_id": "wave_06",
+      "name": "Technology & Transport & Chemicals",
+      "total_campaigns": 5,
+      "ready_campaigns": 0,
+      "status": "blocked",
+      "plan_file": "D:\\MOEX_AI\\research_programs\\waves\\wave_06.json"
+    }
+  ]
+}

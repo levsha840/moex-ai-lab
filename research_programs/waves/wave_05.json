@@ -1,0 +1,70 @@
+{
+  "wave_id": "wave_05",
+  "name": "Energy & Telecom",
+  "tickers": [
+    "IRAO",
+    "HYDR",
+    "MTSS",
+    "RTKM"
+  ],
+  "timeframe": "1h",
+  "hypothesis_id": "H-ADX-CONTINUATION",
+  "priority_periods": [
+    "2023"
+  ],
+  "total_campaigns": 4,
+  "ready_campaigns": 0,
+  "blocked_campaigns": 4,
+  "status": "blocked",
+  "generated_at": "2026-06-28T00:39:20",
+  "campaigns": [
+    {
+      "campaign_id": "wave_05_irao_2023",
+      "ticker": "IRAO",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_05_hydr_2023",
+      "ticker": "HYDR",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_05_mtss_2023",
+      "ticker": "MTSS",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_05_rtkm_2023",
+      "ticker": "RTKM",
+      "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    }
+  ]
+}
