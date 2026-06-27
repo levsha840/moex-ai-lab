@@ -33,18 +33,29 @@
 
 ## Capabilities Phase 4
 
-### 4.1 — Real Data Integration
+### 4.1 — Research Orchestrator ✅ Completed (2026-06-27)
 
-**Что:** подключить реальные OHLCV-данные MOEX к Research Pipeline.
+**Что:** sequence executor для управления жизненным циклом серии экспериментов.
 
-**Детали:**
-- Адаптер для загрузки candle данных из существующего `data_collector`
-  или плоских файлов (CSV / JSON) без зависимости от PostgreSQL в Core.
-- `DatasetProvider` Protocol — абстракция источника данных для Feature Provider.
-- Первые тикеры: SBER, GAZP, LKOH (А-приоритет из MOEX Research Program).
+**Компоненты:** `core/research_orchestrator/`
+- `ResearchTask` — единица работы: одна гипотеза + один `ExperimentConfig`;
+  жизненный цикл PENDING → IN_PROGRESS → COMPLETED | FAILED | SKIPPED.
+- `ResearchTaskSummary` — лёгкий указатель на результат: `knowledge_entry_id`,
+  `pass_rate`, `windows_total` (полный результат хранится в KnowledgeBase).
+- `ResearchPlan` — frozen-объект с упорядоченным `tuple[ResearchTask, ...]`.
+- `OrchestrationResult` — неизменяемый итоговый снимок выполненной сессии.
+- `ResearchPolicy` Protocol — `should_continue()` + `on_task_failure()`.
+- `DefaultResearchPolicy` — прервать после N последовательных pipeline-ошибок.
+- `ResearchOrchestrator.run(plan, registry, pipeline, *, policy)`.
 
-**Зависит от:** существующий `H13FeatureProvider` принимает `list[dict]` —
-адаптер только готовит эти данные.
+**Ключевые решения:**
+- Оркестратор — sequence executor, не decision maker (ADR-0008).
+- `KnowledgeBase` не является зависимостью оркестратора (ADR-0010).
+- `ResearchQueue` не создан: `ResearchPlan.tasks` (tuple) достаточен для v4.1;
+  `QueueOrderPolicy` отложен до Knowledge-driven Prioritization.
+- Validation FAIL → `ResearchTaskStatus.COMPLETED`; только исключение pipeline → FAILED.
+
+**Тесты:** 47 новых тестов (405 итого).
 
 ---
 
@@ -105,18 +116,30 @@
 
 ---
 
-## Предполагаемые компоненты
+## Компоненты Phase 4
 
-| Компонент | Тип | Путь |
-|-----------|-----|------|
-| `DatasetProvider` Protocol | Core Protocol | `core/research_pipeline/protocols.py` |
-| `FileDatasetProvider` | Adapter | `core/research_pipeline/adapters.py` |
-| `KnowledgeRanker` | Ranker impl | `core/hypothesis_generator/ranker.py` |
-| `ResearchSession` | Orchestrator | `core/research_pipeline/session.py` |
-| `ResearchSessionResult` | Model | `core/research_pipeline/models.py` |
-| `ResearchReportBuilder` | Builder | `core/research_pipeline/report.py` |
-| `ResearchReport` | Model | `core/research_pipeline/models.py` |
-| `RegimeAwareDataSelector` | Utility | `core/regime/selector.py` |
+### Реализованные (4.1)
+
+| Компонент | Тип | Путь | Статус |
+|-----------|-----|------|--------|
+| `ResearchTask` | Model | `core/research_orchestrator/models.py` | ✅ |
+| `ResearchTaskSummary` | Model | `core/research_orchestrator/models.py` | ✅ |
+| `ResearchPlan` | Model | `core/research_orchestrator/models.py` | ✅ |
+| `OrchestrationResult` | Model | `core/research_orchestrator/models.py` | ✅ |
+| `ResearchPolicy` | Protocol | `core/research_orchestrator/protocols.py` | ✅ |
+| `DefaultResearchPolicy` | impl | `core/research_orchestrator/policy.py` | ✅ |
+| `ResearchOrchestrator` | Orchestrator | `core/research_orchestrator/orchestrator.py` | ✅ |
+
+### Планируемые (4.2–4.5)
+
+| Компонент | Тип | Путь | Capability |
+|-----------|-----|------|------------|
+| `KnowledgeRanker` | Ranker impl | `core/hypothesis_generator/ranker.py` | 4.2 |
+| `ResearchSession` | Orchestrator | `core/research_pipeline/session.py` | 4.3 |
+| `ResearchSessionResult` | Model | `core/research_pipeline/models.py` | 4.3 |
+| `ResearchReportBuilder` | Builder | `core/research_pipeline/report.py` | 4.4 |
+| `ResearchReport` | Model | `core/research_pipeline/models.py` | 4.4 |
+| `RegimeAwareDataSelector` | Utility | `core/regime/selector.py` | 4.5 |
 
 Ни один из компонентов не нарушает существующий dependency graph.
 
@@ -142,14 +165,15 @@ ResearchPipeline и записывается в Knowledge Base.
 
 Phase 4 считается завершённой, когда выполнены **все** пункты:
 
-1. Минимум 3 гипотезы из MOEX Research Program прошли полный цикл
-   на реальных данных MOEX (не синтетических).
-2. Knowledge Base содержит минимум 5 записей типа `EXPERIMENT`.
-3. `KnowledgeRanker` использует данные KB при генерации новых кандидатов
-   и тест подтверждает, что порядок кандидатов меняется относительно `PriorityRanker`.
-4. `ResearchSession` запускает серию из 2+ гипотез и возвращает
-   корректный `ResearchSessionResult`.
-5. Все существующие тесты проходят (358+).
+1. ✅ `ResearchOrchestrator` реализован и покрыт тестами (Capability 4.1).
+2. Минимум 3 гипотезы из MOEX Research Program прошли полный цикл
+   через `ResearchOrchestrator` + `ResearchPipeline` (Capabilities 4.2–4.3).
+3. Knowledge Base содержит минимум 5 записей типа `EXPERIMENT`.
+4. `KnowledgeRanker` использует данные KB при генерации новых кандидатов
+   и тест подтверждает, что порядок кандидатов меняется относительно `PriorityRanker` (4.2).
+5. `ResearchSession` запускает серию из 2+ гипотез и возвращает
+   корректный `ResearchSessionResult` (4.3).
+6. Все существующие тесты проходят (405+).
 
 ---
 
@@ -162,6 +186,6 @@ Phase 4 считается завершённой, когда выполнены
 | `KnowledgeBase` (v2.4) | ✅ Готов |
 | `MarketRegimeEngine` (v2.1) | ✅ Готов |
 | `HypothesisRegistry` (v2.3) | ✅ Готов |
-| Реальные данные MOEX | ⏳ Phase 4.1 |
+| `ResearchOrchestrator` (v4.1) | ✅ Готов |
 | `KnowledgeRanker` | ⏳ Phase 4.2 |
 | `ResearchSession` | ⏳ Phase 4.3 |

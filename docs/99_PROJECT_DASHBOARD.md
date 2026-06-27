@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (FC-1)**
+> Последнее обновление: **2026-06-27 (v4.1)**
 
 ---
 
@@ -9,12 +9,13 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | v3.3 Hypothesis Generator Module |
+| Релиз | v4.1 Research Orchestrator |
 | Era | Program Era |
 | Branch | main |
-| Commit | 885ff90 |
+| Commit | ad11825 |
+| Tag | v4.1-research-orchestrator |
 | Дата | 2026-06-27 |
-| Тестов | **358 / 358 pass** |
+| Тестов | **405 / 405 pass** |
 
 ---
 
@@ -59,6 +60,7 @@
 | KnowledgeBase | `core/knowledge/` | ✅ Stable | v2.4 |
 | ResearchPipeline | `core/research_pipeline/` | ✅ Stable | v3.1 |
 | Hypothesis Generator Module | `core/hypothesis_generator/` | ✅ Stable | v3.3 |
+| Research Orchestrator | `core/research_orchestrator/` | ✅ Stable | v4.1 |
 
 ### Validation Core
 
@@ -95,7 +97,7 @@
 | Template-based hypothesis generation | ✅ | HypothesisGenerator Module |
 | ADX индикатор (Wilder) | ✅ | `core/features/technical_indicators` |
 | Синтетический H-13 эксперимент | ✅ | proof-of-pipeline |
-| Реальные данные MOEX | ⏳ Phase 4.1 | |
+| Research Orchestrator | ✅ v4.1 | ResearchOrchestrator, ResearchPlan, DefaultResearchPolicy |
 | Knowledge-guided generation | ⏳ Phase 4.2 | KnowledgeRanker |
 | Multi-hypothesis Research Session | ⏳ Phase 4.3 | ResearchSession |
 | Research Report | ⏳ Phase 4.4 | ResearchReportBuilder |
@@ -113,7 +115,8 @@
 | Research Core (regime, experiment, hypothesis, knowledge, research_pipeline) | ~100 |
 | H-13 experiment + ADX | ~34 |
 | Hypothesis Generator Module | ~52 |
-| **Итого** | **358** |
+| Research Orchestrator | 47 |
+| **Итого** | **405** |
 
 ---
 
@@ -127,12 +130,11 @@
 
 ## Следующий релиз
 
-**Phase 4.1 — Real Data Integration**
+**Phase 4.2 — Knowledge-Guided Generation**
 
-- `DatasetProvider` Protocol
-- Загрузка реальных OHLCV MOEX (SBER, GAZP, LKOH)
-- H-13 эксперимент на реальных данных
-- Обновление Knowledge Base
+- `KnowledgeRanker` — новая реализация `CandidateRanker` Protocol
+- Score boost для шаблонов с PASS в KB; penalty за повторные FAIL
+- Тест: порядок кандидатов при `KnowledgeRanker` отличается от `PriorityRanker`
 
 ---
 

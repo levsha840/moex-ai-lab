@@ -1,6 +1,6 @@
 # 01_PROJECT_STATE
 
-MOEX AI LAB — актуальное состояние после **FC-1 Foundation Closure** (2026-06-27).
+MOEX AI LAB — актуальное состояние после **v4.1 Research Orchestrator** (2026-06-27).
 
 ---
 
@@ -48,25 +48,26 @@ MOEX AI LAB — актуальное состояние после **FC-1 Founda
 
 ## Текущий статус тестов
 
-**358 / 358 passed.**
+**405 / 405 passed.**
 
 ---
 
 ## Текущий релиз
 
-**v3.3 Hypothesis Generator Module** (commit 885ff90)
+**v4.1 Research Orchestrator** (commit ad11825, tag v4.1-research-orchestrator)
 
-Добавлен `core/hypothesis_generator/`:
-- `HypothesisTemplate` с `instantiate()`;
-- `GenerationConfig` (frozen, validated);
-- `HypothesisCandidate` + `GenerationSession`;
-- `MemoryTemplateRepository` (deepcopy isolation);
-- `PriorityRanker` (sorted, non-mutating);
-- `HypothesisGenerator.generate()` → `GenerationSession`;
-- `HypothesisGenerator.accept()` → `Hypothesis` (IDEA, с template_id в metadata);
-- `HypothesisRegistry.create()` расширен backward-compatible `metadata` kwarg;
-- `experiments/h13_adx_continuation/template.py` — `H13_TEMPLATE`;
-- 52 новых теста.
+Добавлен `core/research_orchestrator/`:
+- `ResearchTaskStatus`, `FailureAction`, `OrchestrationStatus` (enums);
+- `ResearchTaskSummary` (frozen, lightweight — knowledge_entry_id + pass_rate + windows_total);
+- `ResearchTask` (PENDING → IN_PROGRESS → COMPLETED | FAILED | SKIPPED);
+- `ResearchPlan` (frozen, tuple[ResearchTask, ...]);
+- `OrchestrationResult` (frozen итоговый снимок);
+- `ResearchPolicy` Protocol (`should_continue` + `on_task_failure`);
+- `DefaultResearchPolicy` (abort после N последовательных pipeline-ошибок);
+- `ResearchOrchestrator.run(plan, registry, pipeline, *, policy)`;
+- 47 новых тестов.
+
+ADR добавлены: ADR-0008, ADR-0009, ADR-0010.
 
 ---
 
@@ -89,6 +90,7 @@ MOEX AI LAB — актуальное состояние после **FC-1 Founda
 - `core/knowledge/` — KnowledgeBase (v2.4)
 - `core/research_pipeline/` — ResearchPipeline (v3.1)
 - `core/hypothesis_generator/` — Hypothesis Generator Module (v3.3)
+- `core/research_orchestrator/` — Research Orchestrator (v4.1)
 
 ### Validation Core
 - `core/costs/` — ExecutionCostEngine (v1.9.1)
