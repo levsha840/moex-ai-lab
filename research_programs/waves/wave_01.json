@@ -10,13 +10,15 @@
   "timeframe": "1h",
   "hypothesis_id": "H-ADX-CONTINUATION",
   "priority_periods": [
-    "2023"
+    "2023",
+    "2021",
+    "2019"
   ],
-  "total_campaigns": 4,
+  "total_campaigns": 12,
   "ready_campaigns": 2,
-  "blocked_campaigns": 2,
+  "blocked_campaigns": 10,
   "status": "partial",
-  "generated_at": "2026-06-28T00:39:20",
+  "generated_at": "2026-06-28T00:46:13",
   "campaigns": [
     {
       "campaign_id": "wave_01_sber_2023",
@@ -24,6 +26,30 @@
       "period": "2023",
       "timeframe": "1h",
       "dataset_status": "ready",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_sber_2021",
+      "ticker": "SBER",
+      "period": "2021",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_sber_2019",
+      "ticker": "SBER",
+      "period": "2019",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
       "hypothesis_id": "H-ADX-CONTINUATION",
       "status": "pending",
       "created_at": "",
@@ -43,6 +69,30 @@
       "result_summary": ""
     },
     {
+      "campaign_id": "wave_01_vtbr_2021",
+      "ticker": "VTBR",
+      "period": "2021",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_vtbr_2019",
+      "ticker": "VTBR",
+      "period": "2019",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
       "campaign_id": "wave_01_tcsg_2023",
       "ticker": "TCSG",
       "period": "2023",
@@ -55,9 +105,57 @@
       "result_summary": ""
     },
     {
+      "campaign_id": "wave_01_tcsg_2021",
+      "ticker": "TCSG",
+      "period": "2021",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_tcsg_2019",
+      "ticker": "TCSG",
+      "period": "2019",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
       "campaign_id": "wave_01_moex_2023",
       "ticker": "MOEX",
       "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_moex_2021",
+      "ticker": "MOEX",
+      "period": "2021",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_01_moex_2019",
+      "ticker": "MOEX",
+      "period": "2019",
       "timeframe": "1h",
       "dataset_status": "needs_data",
       "hypothesis_id": "H-ADX-CONTINUATION",

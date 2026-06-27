@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-28T00:38:40",
+  "generated_at": "2026-06-28T00:46:41",
   "instrument_filter": "SBER",
   "period_filter": "2023",
-  "ok": 23,
-  "warn": 1,
+  "ok": 24,
+  "warn": 0,
   "fail": 0,
-  "dataset_gaps": 2,
+  "dataset_gaps": 0,
   "checks": [
     {
       "status": "OK",
@@ -18,9 +18,9 @@
       "detail": ""
     },
     {
-      "status": "WARN",
-      "check": "Dataset coverage partial",
-      "detail": "1/3 cells — 2 gaps"
+      "status": "OK",
+      "check": "Dataset coverage",
+      "detail": "3/3 cells complete"
     },
     {
       "status": "OK",

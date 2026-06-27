@@ -11,18 +11,31 @@
   "timeframe": "1h",
   "hypothesis_id": "H-ADX-CONTINUATION",
   "priority_periods": [
-    "2023"
+    "2023",
+    "2021"
   ],
-  "total_campaigns": 5,
+  "total_campaigns": 10,
   "ready_campaigns": 0,
-  "blocked_campaigns": 5,
+  "blocked_campaigns": 10,
   "status": "blocked",
-  "generated_at": "2026-06-28T00:39:20",
+  "generated_at": "2026-06-28T00:46:13",
   "campaigns": [
     {
       "campaign_id": "wave_06_ydex_2023",
       "ticker": "YDEX",
       "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_ydex_2021",
+      "ticker": "YDEX",
+      "period": "2021",
       "timeframe": "1h",
       "dataset_status": "needs_data",
       "hypothesis_id": "H-ADX-CONTINUATION",
@@ -44,9 +57,33 @@
       "result_summary": ""
     },
     {
+      "campaign_id": "wave_06_aflt_2021",
+      "ticker": "AFLT",
+      "period": "2021",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
       "campaign_id": "wave_06_flot_2023",
       "ticker": "FLOT",
       "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_flot_2021",
+      "ticker": "FLOT",
+      "period": "2021",
       "timeframe": "1h",
       "dataset_status": "needs_data",
       "hypothesis_id": "H-ADX-CONTINUATION",
@@ -68,9 +105,33 @@
       "result_summary": ""
     },
     {
+      "campaign_id": "wave_06_phor_2021",
+      "ticker": "PHOR",
+      "period": "2021",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
       "campaign_id": "wave_06_akrn_2023",
       "ticker": "AKRN",
       "period": "2023",
+      "timeframe": "1h",
+      "dataset_status": "needs_data",
+      "hypothesis_id": "H-ADX-CONTINUATION",
+      "status": "pending",
+      "created_at": "",
+      "completed_at": "",
+      "result_summary": ""
+    },
+    {
+      "campaign_id": "wave_06_akrn_2021",
+      "ticker": "AKRN",
+      "period": "2021",
       "timeframe": "1h",
       "dataset_status": "needs_data",
       "hypothesis_id": "H-ADX-CONTINUATION",

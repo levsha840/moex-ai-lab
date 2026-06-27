@@ -1,6 +1,6 @@
 # OPERATIONAL DASHBOARD — MOEX AI LAB
 
-> Generated: 2026-06-28T00:39:40
+> Generated: 2026-06-28T00:46:41
 > Era: Research Organization Era
 > Baseline: `v0.9-intelligence-alpha`
 
@@ -65,23 +65,46 @@
 
 ## 6. Dataset Coverage
 
-> No dataset manifest found.
-> Run: `python scripts/build_universe.py --dry-run` to assess coverage.
+**Total cells:** 42 / 42 (100%)
+**Last built:** 2026-06-28T00:44:32
+
+**By timeframe:**
+
+| Timeframe | Datasets |
+| --------- | -------- |
+| 1d        | 14       |
+| 1h        | 14       |
+| 4h        | 14       |
+
+**By period:**
+
+| Period | Datasets |
+| ------ | -------- |
+| 2023   | 42       |
+
+**By sector:**
+
+| Sector          | Datasets |
+| --------------- | -------- |
+| Banks           | 6        |
+| Metals & Mining | 18       |
+| Oil & Gas       | 15       |
+| Retail          | 3        |
 
 ---
 
 ## 7. Research Wave Schedule
 
-**Total campaigns:** 28 | **Ready:** 10 | **Blocked:** 18
+**Total campaigns:** 75 | **Ready:** 14 | **Blocked:** 61
 
 | Wave    | Name                               | Ready | Total | Pct | Status  |
 | ------- | ---------------------------------- | ----- | ----- | --- | ------- |
-| wave_01 | Banks                              | 2     | 4     | 50% | PARTIAL |
-| wave_02 | Oil & Gas                          | 5     | 6     | 83% | PARTIAL |
-| wave_03 | Metals & Mining                    | 3     | 6     | 50% | PARTIAL |
-| wave_04 | Retail                             | 0     | 3     | 0%  | BLOCKED |
-| wave_05 | Energy & Telecom                   | 0     | 4     | 0%  | BLOCKED |
-| wave_06 | Technology & Transport & Chemicals | 0     | 5     | 0%  | BLOCKED |
+| wave_01 | Banks                              | 2     | 12    | 16% | PARTIAL |
+| wave_02 | Oil & Gas                          | 5     | 18    | 27% | PARTIAL |
+| wave_03 | Metals & Mining                    | 6     | 18    | 33% | PARTIAL |
+| wave_04 | Retail                             | 1     | 9     | 11% | PARTIAL |
+| wave_05 | Energy & Telecom                   | 0     | 8     | 0%  | BLOCKED |
+| wave_06 | Technology & Transport & Chemicals | 0     | 10    | 0%  | BLOCKED |
 
 To unblock campaigns, run:
 ```
@@ -94,13 +117,13 @@ python scripts/build_universe.py --tier P1 --period 2023
 
 - [OK]   Research Universe defined (28 instruments)
 - [OK]   Config files present
-- [WAIT] Dataset manifest exists
+- [OK]   Dataset manifest exists
 - [OK]   Wave schedule exists
 - [OK]   KB snapshots present
 - [OK]   Research decisions logged
 - [WAIT] RS runs completed
 
-**Readiness score: 5/7**
+**Readiness score: 6/7**
 
 ---
 
