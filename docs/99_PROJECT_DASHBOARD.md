@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (Intelligence Era Phase 4 — RegimeDetectionAgent)**
+> Последнее обновление: **2026-06-27 (Intelligence Era Phase 6 — ExperimentPlanner)**
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | Intelligence Era Phase 4 |
+| Релиз | Intelligence Era Phase 6 |
 | Era | Intelligence Era |
 | Branch | main |
 | Дата | 2026-06-27 |
-| Тестов | **991 / 991 pass** |
+| Тестов | **1241 / 1241 pass** |
 
 ---
 
@@ -107,9 +107,9 @@
 | **MacroAgent (IMOEX, USDRUB, RGBI, fixture, 1d)** | ✅ IE Phase 2 | `agents/data/macro.py` |
 | **CorrelationAgent (Pearson r, lags ±1 ±5, fixture)** | ✅ IE Phase 3 | `agents/analysis/correlation.py` |
 | **RegimeDetectionAgent (Trend/Vol/Risk, 3 labels each, fixture)** | ✅ IE Phase 4 | `agents/analysis/regime.py` |
-| Knowledge Agent (Aggregator, PatternFinder) | 🔜 IE Phase 5 | |
-| Knowledge Agent (Aggregator, PatternFinder) | 🔜 IE Phase 3 | |
-| Chief Scientist v1 (rule-based) | 🔜 IE Phase 4 | |
+| **KnowledgeAgent (Aggregation, Patterns, Graph, Contradictions)** | ✅ IE Phase 5 | `agents/knowledge/agent.py` |
+| **ExperimentPlanner (Plans from KnowledgeSnapshot, 4 rule types)** | ✅ IE Phase 6 | `agents/research/planner.py` |
+| Chief Scientist v1 (rule-based) | 🔜 IE Phase 7 | |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
 | Live broker execution | 🔜 Phase 8+ | |
 
@@ -130,12 +130,15 @@
 | Research Report (4.4) | 56 |
 | Research Service (4.5-svc) | 71 |
 | sber_1h_2023 dataset smoke tests | 15 |
-| Agent models (Phase 1–4: EvidenceRef, ConfidenceScore, AgentResult, MacroSeries/Snapshot, CorrelationPair/Snapshot, RegimeLabel/Segment/Snapshot) | 60 |
+| Agent models (Phase 1–5: + KnowledgeFact, KnowledgeConnection, KnowledgePattern, KnowledgeSnapshot) | 90 |
 | MarketAgent (protocol, session filter, resample, run, DatasetLoader compat) | 55 |
 | MacroAgent (protocol, fixture source, missing data, persistence, evidence, determinism) | 51 |
 | CorrelationAgent (protocol, math helpers, alignment, lag, missing data, persistence) | 93 |
 | RegimeDetectionAgent (protocol, math helpers, trend/vol/risk classify, segment, persistence) | 116 |
-| **Итого** | **991** |
+| KnowledgeAgent (aggregation, connections, patterns, contradictions, recommendations, persistence) | 124 |
+| Agent models Phase 6 (StopCondition, OverfittingRisk, ExperimentTask, ExperimentPlan) | 36 |
+| ExperimentPlanner (protocol, rules, overfitting risk, stop conditions, persistence, determinism) | 90 |
+| **Итого** | **1241** |
 
 ---
 

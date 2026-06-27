@@ -1,7 +1,7 @@
 # 30_INTELLIGENCE_ARCHITECTURE — Intelligence Era
 
 > Архитектурный документ следующего поколения MOEX AI LAB.
-> Статус: **ACTIVE** — реализация начата (IE Phase 1 + Phase 2 ✅).
+> Статус: **ACTIVE** — IE Phase 1–6 реализованы ✅.
 > Дата: 2026-06-27
 
 **Реализованные компоненты:**
@@ -12,6 +12,10 @@
 | MacroSource Protocol | ✅ IE Phase 2 | `agents/protocols.py` |
 | MacroSeries + MacroSnapshot models | ✅ IE Phase 2 | `agents/models.py` |
 | MacroAgent (IMOEX, USDRUB, RGBI, 1d) | ✅ IE Phase 2 | `agents/data/macro.py` |
+| CorrelationAgent (Pearson r, lags ±1 ±5) | ✅ IE Phase 3 | `agents/analysis/correlation.py` |
+| RegimeDetectionAgent (Trend/Vol/Risk, 21d windows) | ✅ IE Phase 4 | `agents/analysis/regime.py` |
+| KnowledgeAgent (Aggregation, Patterns, Graph, Report) | ✅ IE Phase 5 | `agents/knowledge/agent.py` |
+| ExperimentPlanner (Plans from KnowledgeSnapshot, 4 rule types) | ✅ IE Phase 6 | `agents/research/planner.py` |
 
 ---
 
