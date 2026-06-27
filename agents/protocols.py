@@ -94,3 +94,27 @@ class CorrelationSource(Protocol):
 
     def load_macro_symbol(self, symbol: str, period: str) -> list[dict]:
         ...
+
+
+class ValidationSource(Protocol):
+    """Execution-backend abstraction for ValidationAgentAdapter.
+
+    Separates dataset I/O and Research Service invocation from adapter logic,
+    enabling deterministic fixture injection in tests.
+
+    dataset_exists: returns True if the dataset is ready for use.
+    run_task:       executes or simulates one ExperimentTask.
+                    dry_run=True  → status="dry_run", no Research Service call.
+                    dry_run=False → calls Research Service (FileValidationSource) or
+                                    returns fixture data (FixtureValidationSource).
+    """
+
+    def dataset_exists(self, dataset_id: str) -> bool:
+        ...
+
+    def run_task(
+        self,
+        task: "ExperimentTask",  # noqa: F821
+        dry_run: bool,
+    ) -> "ValidationTaskResult":  # noqa: F821
+        ...

@@ -1,4 +1,4 @@
-"""Tests for Intelligence Era domain models — Phase 1–6.
+"""Tests for Intelligence Era domain models — Phase 1–7.
 
 Validates structure, immutability, and invariants of all models
 in agents/models.py. No I/O, no network.
@@ -30,6 +30,9 @@ from agents.models import (
     RegimeSegment,
     RegimeSnapshot,
     StopCondition,
+    ValidationBatchResult,
+    ValidationRun,
+    ValidationTaskResult,
 )
 
 
@@ -1184,3 +1187,186 @@ class TestExperimentPlan:
             "source_pattern_id",
         }
         assert required == set(_experiment_plan().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ValidationTaskResult
+# ---------------------------------------------------------------------------
+
+def _validation_task_result(status: str = "dry_run") -> ValidationTaskResult:
+    return ValidationTaskResult(
+        task_id="plan_0001_t00",
+        hypothesis_id="H-13",
+        dataset_id="sber_1h_2023_main",
+        status=status,
+        exit_code=-1 if status == "dry_run" else 0,
+        pass_rate=None if status == "dry_run" else 0.65,
+        report_path="" if status == "dry_run" else "reports/sber/report.json",
+        error="",
+        duration_seconds=0.0 if status == "dry_run" else 1.2,
+    )
+
+
+class TestValidationTaskResult:
+    def test_construction_dry_run(self) -> None:
+        r = _validation_task_result("dry_run")
+        assert r.status == "dry_run"
+        assert r.exit_code == -1
+        assert r.pass_rate is None
+
+    def test_construction_success(self) -> None:
+        r = _validation_task_result("success")
+        assert r.status == "success"
+        assert r.exit_code == 0
+        assert r.pass_rate == pytest.approx(0.65)
+
+    def test_is_frozen(self) -> None:
+        r = _validation_task_result()
+        with pytest.raises((AttributeError, TypeError)):
+            r.status = "error"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        r = _validation_task_result()
+        assert hash(r) is not None
+
+    def test_equality(self) -> None:
+        assert _validation_task_result() == _validation_task_result()
+
+    def test_blocked_status(self) -> None:
+        r = ValidationTaskResult(
+            task_id="t0", hypothesis_id="H-13", dataset_id="ds",
+            status="blocked", exit_code=-3, pass_rate=None,
+            report_path="", error="high overfitting risk", duration_seconds=0.0,
+        )
+        assert r.status == "blocked"
+        assert r.exit_code == -3
+
+    def test_required_fields(self) -> None:
+        required = {
+            "task_id", "hypothesis_id", "dataset_id", "status",
+            "exit_code", "pass_rate", "report_path", "error", "duration_seconds",
+        }
+        assert required == set(_validation_task_result().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ValidationRun
+# ---------------------------------------------------------------------------
+
+def _validation_run() -> ValidationRun:
+    return ValidationRun(
+        run_id="vrun_plan_0001_20260627T120000",
+        plan_id="plan_0001_filter_h13",
+        campaign_id="camp",
+        mode="dry_run",
+        task_results=(_validation_task_result(),),
+        stop_triggered=False,
+        stop_reason="",
+        created_at="2026-06-27T12:00:00",
+    )
+
+
+class TestValidationRun:
+    def test_construction(self) -> None:
+        r = _validation_run()
+        assert r.mode == "dry_run"
+        assert r.stop_triggered is False
+
+    def test_is_frozen(self) -> None:
+        r = _validation_run()
+        with pytest.raises((AttributeError, TypeError)):
+            r.mode = "execute"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        r = _validation_run()
+        assert hash(r) is not None
+
+    def test_task_results_is_tuple(self) -> None:
+        assert isinstance(_validation_run().task_results, tuple)
+
+    def test_stop_triggered_false_by_default(self) -> None:
+        r = _validation_run()
+        assert r.stop_triggered is False
+        assert r.stop_reason == ""
+
+    def test_equality(self) -> None:
+        assert _validation_run() == _validation_run()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "run_id", "plan_id", "campaign_id", "mode",
+            "task_results", "stop_triggered", "stop_reason", "created_at",
+        }
+        assert required == set(_validation_run().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ValidationBatchResult
+# ---------------------------------------------------------------------------
+
+def _validation_batch_result() -> ValidationBatchResult:
+    return ValidationBatchResult(
+        batch_id="vrun_plan_0001_20260627T120000_batch",
+        plan_id="plan_0001_filter_h13",
+        campaign_id="camp",
+        total_tasks=3,
+        completed_tasks=0,
+        stopped_tasks=0,
+        error_tasks=0,
+        dry_run_tasks=3,
+        blocked_tasks=0,
+        avg_pass_rate=None,
+        stop_triggered=False,
+        stop_reason="",
+        report_paths=(),
+        validation_run_path="research_programs/validation_runs/vrun_plan_0001.json",
+        created_at="2026-06-27T12:00:00",
+    )
+
+
+class TestValidationBatchResult:
+    def test_construction(self) -> None:
+        b = _validation_batch_result()
+        assert b.total_tasks == 3
+        assert b.dry_run_tasks == 3
+        assert b.avg_pass_rate is None
+
+    def test_is_frozen(self) -> None:
+        b = _validation_batch_result()
+        with pytest.raises((AttributeError, TypeError)):
+            b.total_tasks = 0  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        assert hash(_validation_batch_result()) is not None
+
+    def test_report_paths_is_tuple(self) -> None:
+        assert isinstance(_validation_batch_result().report_paths, tuple)
+
+    def test_avg_pass_rate_can_be_none(self) -> None:
+        assert _validation_batch_result().avg_pass_rate is None
+
+    def test_avg_pass_rate_as_float(self) -> None:
+        b = ValidationBatchResult(
+            batch_id="b", plan_id="p", campaign_id="c",
+            total_tasks=2, completed_tasks=2,
+            stopped_tasks=0, error_tasks=0, dry_run_tasks=0, blocked_tasks=0,
+            avg_pass_rate=0.72,
+            stop_triggered=False, stop_reason="",
+            report_paths=("reports/r1.json", "reports/r2.json"),
+            validation_run_path="runs/v.json",
+            created_at="2026-06-27T12:00:00",
+        )
+        assert b.avg_pass_rate == pytest.approx(0.72)
+
+    def test_equality(self) -> None:
+        assert _validation_batch_result() == _validation_batch_result()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "batch_id", "plan_id", "campaign_id",
+            "total_tasks", "completed_tasks", "stopped_tasks",
+            "error_tasks", "dry_run_tasks", "blocked_tasks",
+            "avg_pass_rate", "stop_triggered", "stop_reason",
+            "report_paths", "validation_run_path", "created_at",
+        }
+        assert required == set(_validation_batch_result().__dataclass_fields__.keys())

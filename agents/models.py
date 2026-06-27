@@ -282,6 +282,87 @@ class ExperimentPlan:
     source_pattern_id: str
 
 
+@dataclass(frozen=True)
+class ValidationTaskResult:
+    """Result for one ExperimentTask executed (or dry-run) by ValidationAgentAdapter.
+
+    status:
+      "dry_run" — plan was validated but task was not executed (default safe mode)
+      "success" — Research Service completed with exit_code=0
+      "error"   — Research Service raised an exception or returned non-zero
+      "stopped" — task was not reached because a stop_condition fired
+      "blocked" — task was not reached because high overfitting_risk was not overridden
+
+    exit_code:
+       0  — success
+       1  — error from Research Service
+      -1  — not run (dry_run)
+      -2  — stopped by stop_condition
+      -3  — blocked by safety guard
+
+    pass_rate: None when status != "success" or when Research Service did not
+               produce a measurable pass_rate for this single run.
+    report_path: absolute path to the Research Report JSON, "" when not produced.
+    """
+
+    task_id: str
+    hypothesis_id: str
+    dataset_id: str
+    status: str
+    exit_code: int
+    pass_rate: Optional[float]
+    report_path: str
+    error: str
+    duration_seconds: float
+
+
+@dataclass(frozen=True)
+class ValidationRun:
+    """Full execution trace for one ExperimentPlan run by ValidationAgentAdapter.
+
+    mode: "dry_run" | "execute" | "fixture"
+    stop_triggered: True if any stop_condition fired before all tasks completed.
+    stop_reason:    human-readable description of the triggered stop_condition, "" otherwise.
+    Saved to research_programs/validation_runs/{run_id}.json
+    """
+
+    run_id: str
+    plan_id: str
+    campaign_id: str
+    mode: str
+    task_results: tuple[ValidationTaskResult, ...]
+    stop_triggered: bool
+    stop_reason: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class ValidationBatchResult:
+    """Aggregate statistics over all ValidationTaskResult entries for one plan run.
+
+    Output of ValidationAgentAdapter — returned as AgentResult.output.
+    report_paths: paths to all Research Report JSON files produced (empty in dry_run).
+    validation_run_path: path to the ValidationRun JSON.
+    avg_pass_rate: None when no tasks reported a pass_rate.
+    """
+
+    batch_id: str
+    plan_id: str
+    campaign_id: str
+    total_tasks: int
+    completed_tasks: int
+    stopped_tasks: int
+    error_tasks: int
+    dry_run_tasks: int
+    blocked_tasks: int
+    avg_pass_rate: Optional[float]
+    stop_triggered: bool
+    stop_reason: str
+    report_paths: tuple[str, ...]
+    validation_run_path: str
+    created_at: str
+
+
 class RegimeLabel:
     """String constants for every possible regime label.
 
