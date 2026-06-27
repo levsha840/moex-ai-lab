@@ -43,7 +43,12 @@ MOEX AI LAB — roadmap после **FC-1 Foundation Closure** (2026-06-27).
 | Knowledge-Guided Generation | 4.2 | ✅ Completed (v4.2) |
 | Multi-Hypothesis Research Session | 4.3 | ✅ Completed (v4.3) |
 | Research Report | 4.4 | ✅ Completed (v4.4) |
-| Regime-Aware Data Selection | 4.5 | 🔜 |
+| **Research Service Alpha** | **4.5-svc** | ✅ **Completed (v4.5-svc)** |
+| Regime-Aware Data Selection | 4.5 | 🔜 (после первых реальных данных) |
+
+**Стратегическое решение (2026-06-27):**
+Следующий приоритет — реальные данные MOEX и первый полный цикл через Research Service.
+Capability 4.5+ возобновляются после получения реальных результатов.
 
 Детали: `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md`
 

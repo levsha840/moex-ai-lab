@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (v4.4)**
+> Последнее обновление: **2026-06-27 (v4.5-svc)**
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | v4.4 Research Report |
+| Релиз | v4.5-svc Research Service Alpha |
 | Era | Program Era |
 | Branch | main |
 | Дата | 2026-06-27 |
-| Тестов | **543 / 543 pass** |
+| Тестов | **614 / 614 pass** |
 
 ---
 
@@ -100,6 +100,7 @@
 | Knowledge-guided generation | ✅ v4.2 | KnowledgeRanker, KBTemplateStatisticsProvider, TemplateStats |
 | Multi-hypothesis Research Session | ✅ v4.3 | ResearchSession, PlanExecutor, SessionStatistics |
 | Research Report | ✅ v4.4 | ResearchReportBuilder, ResearchReport, ValidationOutcome |
+| **Research Service** | ✅ v4.5-svc | `python -m services.research run --dataset <id>` |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
 | Live broker execution | 🔜 Phase 8+ | |
 
@@ -118,7 +119,8 @@
 | Knowledge-Guided Generation (4.2) | 39 |
 | Research Session (4.3) | 43 |
 | Research Report (4.4) | 56 |
-| **Итого** | **543** |
+| Research Service (4.5-svc) | 71 |
+| **Итого** | **614** |
 
 ---
 
@@ -126,16 +128,30 @@
 
 | ID | Название | Тикер | Статус | Тип данных |
 |----|----------|-------|--------|------------|
-| H-13 | ADX Trend Continuation + RSI pullback | SYNTHETIC | ✅ Proof-of-pipeline | Синтетический |
+| H-13 | ADX Trend Continuation + RSI pullback | SYNTHETIC / SBER | ✅ | Синтетический + локальный CSV |
 
 ---
 
-## Следующий релиз
+## Services
 
-**Phase 4.5 — Regime-Aware Data Selection**
+| Сервис | Команда | Статус |
+|--------|---------|--------|
+| Research Service | `python -m services.research run --dataset <id>` | ✅ v4.5-svc |
 
-- `RegimeAwareDataSelector` — фильтрует датасет по доминирующему рыночному режиму
-- Prerequisite: OQ-005 (regime_context в CandidateRanker), OQ-006 (KB stats с dataset_id)
+Артефакты: `reports/`, `sessions/`, `knowledge/knowledge_base.json`, `runs/`
+
+---
+
+## Следующий шаг
+
+**Подключение реальных исторических данных MOEX + первый полный цикл.**
+
+Разместить данные в `data/datasets/sber_1h_2023/ohlcv.csv` + `metadata.json` и запустить:
+```bash
+python -m services.research run --dataset sber_1h_2023 --description "H-13 SBER 2023"
+```
+
+После получения первых результатов — продолжить развитие Capability Phase 4.5+.
 
 ---
 

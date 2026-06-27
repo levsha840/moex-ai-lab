@@ -620,10 +620,94 @@ reporting и task lifecycle.
 
 ---
 
+## SA-ADR-001: services/ — слой сборки над core/ и experiments/
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+Research Service Alpha (`services/research/`) является первым запускаемым приложением
+поверх Core. Необходимо зафиксировать место `services/` в dependency graph.
+
+**Решение:**
+`services/` — wiring layer: собирает Core-компоненты через их Protocol-интерфейсы
+и является точкой входа для запускаемых сервисов. Разрешённые зависимости:
+- `services/` → `core/` (любые модули через их Protocol-интерфейсы)
+- `services/` → `experiments/` (конкретные провайдеры для конкретного сервиса)
+
+Запрещено:
+- `core/` → `services/`
+- `experiments/` → `services/`
+
+**Обоснование:**
+Сервисный слой — это composition root: он знает о конкретных реализациях, но
+Core об этом знать не должен. Аналог Dependency Injection Container.
+
+**Последствия:**
+- `services/research/` импортирует `H13FeatureProvider` и другие конкретные провайдеры.
+- Core остаётся независимым от сервисного слоя и тестируется изолированно.
+- Добавление нового сервиса = новый пакет в `services/`, Core не меняется.
+
+---
+
+## SA-ADR-002: JsonKnowledgeStorage — KnowledgeRepository через структурную типизацию
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+Research Service нуждается в персистентном `KnowledgeRepository`. `KnowledgeBase`
+принимает любой объект, удовлетворяющий `KnowledgeRepository` Protocol (duck typing).
+Вопрос именования: назвать сервисный класс `JsonKnowledgeRepository` или иначе?
+
+**Решение:**
+`JsonKnowledgeStorage` в `services/research/persistence.py`.
+Имя `Storage` (не `Repository`) сигнализирует: это инфраструктурный компонент
+сервисного слоя, не реализация Core-домена. Satisfies `KnowledgeRepository` Protocol
+структурно (duck typing) — без наследования, без `__implements__`.
+
+**Обоснование:**
+Если назвать `JsonKnowledgeRepository`, класс визуально смешивается с Core-концептом.
+`Storage` — более точное описание роли: «хранить на диск», а не «управлять domain lifecycle».
+
+**Последствия:**
+- `KnowledgeBase(repository=JsonKnowledgeStorage(...))` — стандартное использование.
+- Замена на `SQLiteKnowledgeStorage` или `PostgresKnowledgeStorage` прозрачна для Core.
+
+---
+
+## SA-ADR-003: RegistryInfoProviderAdapter — адаптер без изменения Core
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+`ResearchReportBuilder` принимает `HypothesisInfoProvider` Protocol (ADR-0016).
+`HypothesisRegistry` не имеет метода `get_info()`. Варианты:
+(1) добавить `get_info()` в `HypothesisRegistry` (изменение Core),
+(2) создать адаптер в services/.
+
+**Решение:**
+`RegistryInfoProviderAdapter` в `services/research/providers.py`.
+Оборачивает `HypothesisRegistry`, реализует `get_info()` через `registry.get()`.
+Core не меняется.
+
+**Обоснование:**
+`HypothesisRegistry` — lifecycle manager, не информационный провайдер для отчётов.
+Добавление `get_info()` смешало бы две ответственности. Adapter — стандартный
+паттерн для несовместимых интерфейсов без изменения обоих сторон.
+
+**Последствия:**
+- `HypothesisRegistry` остаётся неизменным.
+- Adapter живёт в services/ — не в Core. Core остаётся независимым.
+- При необходимости `get_info()` в Core — отдельная ADR и обоснование.
+
+---
+
 ## Открытые вопросы (не ADR)
 
 > Реестр синхронизирован с `docs/40_PHASE_4_BASELINE.md §9` (2026-06-27, v4.3 baseline).
-> Обновлён по итогам Capability 4.4 (2026-06-27).
+> Обновлён по итогам Capability 4.4 (2026-06-27) и Research Service Alpha (2026-06-27).
 > Примечание: OQ-004 не существует — номер пропущен при создании реестра.
 
 | ID | Вопрос | Целевая Capability | Статус |

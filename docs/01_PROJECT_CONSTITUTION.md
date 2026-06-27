@@ -56,11 +56,23 @@
 |------|------------|
 | `experiments/h13_adx_continuation/` | H-13: ADX Trend Continuation |
 
+### Services
+
+Запускаемые сервисы-приложения поверх Core (wiring layer). SA-ADR-001.
+
+| Путь | Назначение |
+|------|------------|
+| `services/research/` | Research Service — первый запускаемый исследовательский сервис |
+
 ---
 
 ## Карта допустимых зависимостей
 
 ```
+services/research/
+    └─► core/                          (все модули через Protocol-интерфейсы)
+    └─► experiments/h13_adx_continuation/  (конкретные провайдеры — SA-ADR-001)
+
 experiments/
     └─► core/research_pipeline/
     └─► core/hypothesis_generator/
@@ -118,6 +130,8 @@ Production Core (strategy, allocation, risk, paper, position, persistence)
 **Запрещено:**
 
 - `core/` → `experiments/` (любой модуль ядра не импортирует из experiments)
+- `core/` → `services/` (Core не знает о сервисах)
+- `experiments/` → `services/` (experiments не зависят от services)
 - Research Core → Production Core (прямой доступ)
 - Production Core → Research Core (прямой доступ)
 - Любые циклические зависимости
