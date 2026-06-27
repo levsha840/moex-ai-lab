@@ -1,6 +1,6 @@
 # 01_PROJECT_STATE
 
-MOEX AI LAB — актуальное состояние после **Intelligence Era Phase 2** (2026-06-27).
+MOEX AI LAB — актуальное состояние после **v0.9-intelligence-alpha** (2026-06-27).
 
 ---
 
@@ -9,7 +9,49 @@ MOEX AI LAB — актуальное состояние после **Intelligenc
 | Era | Статус |
 |-----|--------|
 | Foundation Era | ✅ Completed |
-| Program Era | 🟡 Active (Phase 4) |
+| Program Era | ✅ Completed |
+| Intelligence Era v1 | ✅ Completed (v0.9-intelligence-alpha) |
+| Research Organization Era | 🟡 Active — Design Phase (RO-1) |
+
+---
+
+## Intelligence Era v1 — COMPLETED (v0.9-intelligence-alpha)
+
+| Phase | Agent | Статус |
+|-------|-------|--------|
+| IE Phase 1 | MarketAgent + AgentProtocol | ✅ |
+| IE Phase 2 | MacroAgent | ✅ |
+| IE Phase 3 | CorrelationAgent | ✅ |
+| IE Phase 4 | RegimeDetectionAgent | ✅ |
+| IE Phase 5 | KnowledgeAgent | ✅ |
+| IE Phase 6 | ExperimentPlanner | ✅ |
+| IE Phase 7 | ValidationAgentAdapter | ✅ |
+| IE Phase 8 | ChiefScientist v1 | ✅ |
+| Milestone | Autonomous Research Alpha (10 campaigns) | ✅ |
+
+**Tests: 1419 / 1419 passed.**
+**Tag: `v0.9-intelligence-alpha`**
+
+---
+
+## Research Organization Era — ACTIVE (RO-1: Design)
+
+Architecture document: `docs/50_RESEARCH_ORGANIZATION_ARCHITECTURE.md`
+
+| Phase | Deliverable | Статус |
+|-------|-------------|--------|
+| RO-1 | Architecture + Governance document | ✅ Design complete |
+| RO-2 | NewsAgent | 🔜 Pending ADR-RO-02 |
+| RO-3 | DividendsAgent | 🔜 |
+| RO-4 | SectorBreadthAgent | 🔜 |
+| RO-5 | FeatureDiscoveryAgent | 🔜 |
+| RO-6 | NoveltyDetector | 🔜 |
+| RO-7 | StatisticalSignificanceAgent | 🔜 |
+| RO-8 | RiskOfficer | 🔜 |
+| RO-9 | MetaKnowledgeAgent | 🔜 |
+| RO-10 | PolicyEvolutionAgent | 🔜 |
+
+**Freeze Policy active until RO-1 approved.**
 
 ---
 

@@ -1,6 +1,6 @@
 # 02_ROADMAP
 
-MOEX AI LAB — roadmap после **FC-1 Foundation Closure** (2026-06-27).
+MOEX AI LAB — roadmap после **v0.9-intelligence-alpha** (2026-06-27).
 
 ---
 
@@ -9,7 +9,33 @@ MOEX AI LAB — roadmap после **FC-1 Foundation Closure** (2026-06-27).
 | Era | Статус |
 |-----|--------|
 | Foundation Era | ✅ Completed |
-| Program Era | 🟡 Active |
+| Program Era | ✅ Completed |
+| Intelligence Era v1 | ✅ Completed — tag `v0.9-intelligence-alpha` |
+| Research Organization Era | 🟡 Active — RO-1 Design |
+
+---
+
+## Research Organization Era — Active
+
+Architecture: `docs/50_RESEARCH_ORGANIZATION_ARCHITECTURE.md`
+
+| Phase | Agent | Department | Status |
+|-------|-------|------------|--------|
+| RO-1 | Architecture + Governance | — | ✅ |
+| RO-2 | NewsAgent | Data Intelligence | 🔜 ADR required |
+| RO-3 | DividendsAgent | Data Intelligence | 🔜 |
+| RO-4 | SectorBreadthAgent | Analysis Intelligence | 🔜 |
+| RO-5 | FeatureDiscoveryAgent | Discovery Intelligence | 🔜 |
+| RO-6 | NoveltyDetector | Discovery Intelligence | 🔜 |
+| RO-7 | StatisticalSignificanceAgent | Analysis Intelligence | 🔜 |
+| RO-8 | RiskOfficer | Validation Intelligence | 🔜 |
+| RO-9 | MetaKnowledgeAgent | Knowledge Intelligence | 🔜 |
+| RO-10 | PolicyEvolutionAgent | Meta Intelligence | 🔜 |
+
+**Governance:** Each phase requires: agent code + tests + KPI baseline + ADR (if applicable).
+**Freeze Policy:** No new agents until RO-1 complete. No changes to IE v1 agents.
+
+---
 
 ---
 

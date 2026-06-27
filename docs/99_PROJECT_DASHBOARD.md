@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (Intelligence Era Phase 8 — ChiefScientist v1)**
+> Последнее обновление: **2026-06-27 (Research Organization Era — RO-1 Architecture Design)**
 
 ---
 
@@ -9,9 +9,10 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | Intelligence Era Phase 8 |
-| Era | Intelligence Era |
+| Релиз | RO-1 Architecture Design |
+| Era | Research Organization Era |
 | Branch | main |
+| Tag | `v0.9-intelligence-alpha` |
 | Дата | 2026-06-27 |
 | Тестов | **1419 / 1419 pass** |
 
@@ -23,7 +24,8 @@
 |-----|--------|--------|
 | Foundation Era | ✅ Completed (FC-1) | v1.0 – v3.3 |
 | Program Era | ✅ Completed | Phase 4+ |
-| Intelligence Era | 🟡 Active | Phase 1+ |
+| Intelligence Era v1 | ✅ Completed (v0.9-intelligence-alpha) | IE Phase 1–8 + Alpha |
+| Research Organization Era | 🟡 Active | RO-1 Design |
 
 ---
 
@@ -111,8 +113,17 @@
 | **ExperimentPlanner (Plans from KnowledgeSnapshot, 4 rule types)** | ✅ IE Phase 6 | `agents/research/planner.py` |
 | **ValidationAgentAdapter (dry_run + fixture + execute, stop conditions, risk guard)** | ✅ IE Phase 7 | `agents/research/adapter.py` |
 | **ChiefScientist v1 (7 rules: stop, archive, contradiction, filter, evidence, skip, expand)** | ✅ IE Phase 8 | `agents/research/chief.py` |
-| Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
-| Live broker execution | 🔜 Phase 8+ | |
+| **Autonomous Research Alpha (10 campaigns, full IE cycle validated)** | ✅ Milestone | `scripts/autonomous_research_alpha.py` |
+| **Research Organization Architecture (7 departments, 10-phase roadmap, governance)** | ✅ RO-1 | `docs/50_RESEARCH_ORGANIZATION_ARCHITECTURE.md` |
+| NewsAgent (rule-based headline sentiment) | 🔜 RO-2 | ADR required |
+| DividendsAgent (MOEX ISS dividends calendar) | 🔜 RO-3 | |
+| SectorBreadthAgent (MOEX sector breadth metrics) | 🔜 RO-4 | |
+| FeatureDiscoveryAgent (evidence-based feature ranking) | 🔜 RO-5 | |
+| NoveltyDetector (regime shift / deviation detection) | 🔜 RO-6 | |
+| StatisticalSignificanceAgent (p-value, effect size) | 🔜 RO-7 | |
+| RiskOfficer (pre-execution risk assessment) | 🔜 RO-8 | |
+| MetaKnowledgeAgent (cross-campaign synthesis) | 🔜 RO-9 | |
+| PolicyEvolutionAgent (policy proposal generation) | 🔜 RO-10 | |
 
 ---
 
