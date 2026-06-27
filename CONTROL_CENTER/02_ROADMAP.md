@@ -50,17 +50,63 @@ MOEX AI LAB — roadmap после **FC-1 Foundation Closure** (2026-06-27).
 Следующий приоритет — реальные данные MOEX и первый полный цикл через Research Service.
 Capability 4.5+ возобновляются после получения реальных результатов.
 
+**M1 First Research Run (2026-06-27): COMPLETED** ← synthetic rehearsal
+- Датасет: `data/datasets/sber_1h_2023/` (синтетический GBM, 2187 баров)
+- Результат: H-13 FAIL, pass_rate=0.311 — ожидаемо для GBM
+
+**M2 First Real Research Run (2026-06-27): COMPLETED** ← real MOEX data
+- Источник: MOEX ISS API (stdlib urllib, без зависимостей)
+- SBER 1H 2023: H-13 FAIL, pass_rate=0.202 (main session, 2540 bars)
+
+**Research Program 002 (2026-06-27): COMPLETED** ← H-13 Parameter Sensitivity
+- 5 controlled experiments (A: WF, B: RSI, C: ADX, D: Hold, E: Timeframe)
+- 20 parameter configurations x 10 tickers
+- train_size: NO EFFECT. test_size: +8%. RSI: +4%. ADX (<=25): REDUNDANT. Hold: +3%. TF: +12%.
+- H-13 CLOSED: avg best=23.9% (57 windows) — 3.3x below 80% threshold
+- Critical finding: ADX check in H13StrategyRunner is dead code when threshold<=25
+- Report: research_programs/002/H13_PARAMETER_SENSITIVITY.md
+
+**Research Campaign 001 (2026-06-27): COMPLETED** ← 10 instruments cross-analysis
+- SBER, GAZP, LKOH, ROSN, NVTK, TATN, MAGN, GMKN, CHMF, VTBR
+- 1H 2023, main session only, 2540 bars each, 124 WF windows each
+- Результат: 0 / 10 PASS. avg=15.8%, median=15.3%, std=2.9%
+- Best: SBER 20.2%. Worst: GAZP 9.7%.
+- H-13 REJECTED на MOEX large-cap 1H 2023 (структурный FAIL)
+- Артефакты: `campaigns/001/`. KB Campaign: 10 записей.
+- Вывод: необходим пересмотр WalkForward-конфигурации H-13 или новая гипотеза.
+
 Детали: `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md`
 
 ---
 
-### Phase 5 — Research Automation
+---
+
+## Intelligence Era — DESIGNED (2026-06-27)
+
+**Архитектурный документ:** `docs/30_INTELLIGENCE_ARCHITECTURE.md`
+
+Следующая эволюция: 6-слойная мультиагентная исследовательская система.
+
+| Слой | Агенты | Роль |
+|------|--------|------|
+| Layer 1 — Data Agents | Market, Macro, News, Fundamentals, OrderFlow, Correlation | Сбор и нормализация данных |
+| Layer 2 — Analysis Agents | Trend, Volatility, Liquidity, Sentiment, Regime, Correlation | Аналитический контекст |
+| Layer 3 — Research Agents | FeatureProposer, HypothesisSelector, ExperimentPlanner | Гипотезы и планы |
+| Layer 4 — Validation Agent | (существующий Research Service — без изменений) | Валидация |
+| Layer 5 — Knowledge Agent | Aggregator, PatternFinder, ConnectionTracer | Интерпретация KB |
+| Layer 6 — Chief Scientist | v1 rule-based, v2 ML (Phase 8+) | Стратегическое управление |
+
+**Принцип:** Core и Research Service не изменяются. Агенты строятся поверх платформы.
+
+---
+
+### Phase 5 — Research Automation / Intelligence Era Foundation
 
 **Capability-цель:**
-> Автоматический запуск последовательности экспериментов без ручного шага
-> для каждой гипотезы.
+> Определить agent protocols (interfaces) и реализовать Data Layer (Layer 1):
+> MarketAgent, MacroAgent, NewsAgent. Тонкий ValidationAgentAdapter к Research Service.
 
-Планирование начнётся после завершения Phase 4.
+Планирование начнётся при старте Intelligence Era.
 
 ---
 

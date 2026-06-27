@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (v4.5-svc)**
+> Последнее обновление: **2026-06-27 (Intelligence Era Phase 4 — RegimeDetectionAgent)**
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | v4.5-svc Research Service Alpha |
-| Era | Program Era |
+| Релиз | Intelligence Era Phase 4 |
+| Era | Intelligence Era |
 | Branch | main |
 | Дата | 2026-06-27 |
-| Тестов | **614 / 614 pass** |
+| Тестов | **991 / 991 pass** |
 
 ---
 
@@ -22,7 +22,8 @@
 | Era | Статус | Период |
 |-----|--------|--------|
 | Foundation Era | ✅ Completed (FC-1) | v1.0 – v3.3 |
-| Program Era | 🟡 Active | Phase 4+ |
+| Program Era | ✅ Completed | Phase 4+ |
+| Intelligence Era | 🟡 Active | Phase 1+ |
 
 ---
 
@@ -101,6 +102,14 @@
 | Multi-hypothesis Research Session | ✅ v4.3 | ResearchSession, PlanExecutor, SessionStatistics |
 | Research Report | ✅ v4.4 | ResearchReportBuilder, ResearchReport, ValidationOutcome |
 | **Research Service** | ✅ v4.5-svc | `python -m services.research run --dataset <id>` |
+| **Agent Protocol + Domain Models** | ✅ IE Phase 1 | `agents/protocols.py`, `agents/models.py` |
+| **MarketAgent (MOEX ISS, fixture, 1h/2h/4h/1d)** | ✅ IE Phase 1 | `agents/data/market.py` |
+| **MacroAgent (IMOEX, USDRUB, RGBI, fixture, 1d)** | ✅ IE Phase 2 | `agents/data/macro.py` |
+| **CorrelationAgent (Pearson r, lags ±1 ±5, fixture)** | ✅ IE Phase 3 | `agents/analysis/correlation.py` |
+| **RegimeDetectionAgent (Trend/Vol/Risk, 3 labels each, fixture)** | ✅ IE Phase 4 | `agents/analysis/regime.py` |
+| Knowledge Agent (Aggregator, PatternFinder) | 🔜 IE Phase 5 | |
+| Knowledge Agent (Aggregator, PatternFinder) | 🔜 IE Phase 3 | |
+| Chief Scientist v1 (rule-based) | 🔜 IE Phase 4 | |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
 | Live broker execution | 🔜 Phase 8+ | |
 
@@ -120,7 +129,13 @@
 | Research Session (4.3) | 43 |
 | Research Report (4.4) | 56 |
 | Research Service (4.5-svc) | 71 |
-| **Итого** | **614** |
+| sber_1h_2023 dataset smoke tests | 15 |
+| Agent models (Phase 1–4: EvidenceRef, ConfidenceScore, AgentResult, MacroSeries/Snapshot, CorrelationPair/Snapshot, RegimeLabel/Segment/Snapshot) | 60 |
+| MarketAgent (protocol, session filter, resample, run, DatasetLoader compat) | 55 |
+| MacroAgent (protocol, fixture source, missing data, persistence, evidence, determinism) | 51 |
+| CorrelationAgent (protocol, math helpers, alignment, lag, missing data, persistence) | 93 |
+| RegimeDetectionAgent (protocol, math helpers, trend/vol/risk classify, segment, persistence) | 116 |
+| **Итого** | **991** |
 
 ---
 
@@ -128,7 +143,7 @@
 
 | ID | Название | Тикер | Статус | Тип данных |
 |----|----------|-------|--------|------------|
-| H-13 | ADX Trend Continuation + RSI pullback | SYNTHETIC / SBER | ✅ | Синтетический + локальный CSV |
+| H-13 | ADX Trend Continuation + RSI pullback | 10 tickers | **CLOSED** | Sensitivity analysis complete. Best: 23.9% (vs 80%). FAIL structural. |
 
 ---
 
@@ -142,16 +157,32 @@
 
 ---
 
+## Research Campaign 001 — Completed (2026-06-27)
+
+**10 инструментов, H-13 ADX Continuation, MOEX ISS API, 1H 2023 main session.**
+
+| Ticker | pass_rate | 2023 return | Outcome |
+|--------|-----------|-------------|---------|
+| SBER | 20.2% | +91.3% | FAIL |
+| GAZP | 9.7% | -1.9% | FAIL |
+| LKOH | 16.1% | +65.8% | FAIL |
+| ROSN | 18.5% | +61.6% | FAIL |
+| NVTK | 18.5% | +35.8% | FAIL |
+| TATN | 15.3% | +102.9% | FAIL |
+| MAGN | 14.5% | +58.5% | FAIL |
+| GMKN | 15.3% | +5.4% | FAIL |
+| CHMF | 14.5% | +55.3% | FAIL |
+| VTBR | 15.3% | +39.3% | FAIL |
+
+**avg=15.8% | median=15.3% | std=2.9% | 0/10 PASS | 1240 WF windows total**
+
+H-13 REJECTED — структурный FAIL, не зависит от доходности инструмента.
+Артефакты: `campaigns/001/`. KB: 10 записей.
+
 ## Следующий шаг
 
-**Подключение реальных исторических данных MOEX + первый полный цикл.**
-
-Разместить данные в `data/datasets/sber_1h_2023/ohlcv.csv` + `metadata.json` и запустить:
-```bash
-python -m services.research run --dataset sber_1h_2023 --description "H-13 SBER 2023"
-```
-
-После получения первых результатов — продолжить развитие Capability Phase 4.5+.
+Пересмотр WalkForward-конфигурации H-13 (train_size=120+, test_size=40+)
+или тестирование новой гипотезы из MOEX Research Program.
 
 ---
 
@@ -182,7 +213,9 @@ python -m services.research run --dataset sber_1h_2023 --description "H-13 SBER 
 | `docs/10_MASTER_DEVELOPMENT_PROGRAM.md` | Программа развития, Foundation/Program Era |
 | `docs/20_PHASE_4_RESEARCH_INTELLIGENCE.md` | Инженерная программа Phase 4 |
 | `docs/30_ARCHITECTURE_DECISION_LOG.md` | ADR-журнал (18 записей) |
+| `docs/30_INTELLIGENCE_ARCHITECTURE.md` | **Intelligence Era — 6-layer agent architecture** |
 | `docs/40_PHASE_4_BASELINE.md` | Phase 4 Baseline Snapshot (EWO-005) |
 | `docs/99_PROJECT_DASHBOARD.md` | Этот документ |
 | `docs/research/MOEX_RESEARCH_PROGRAM.md` | 35 гипотез, 7 категорий |
+| `research_programs/002/H13_PARAMETER_SENSITIVITY.md` | H-13 Sensitivity Analysis Report |
 | `CONTROL_CENTER/` | Оперативное состояние проекта |
