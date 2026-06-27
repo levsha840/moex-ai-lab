@@ -14,10 +14,10 @@
     "2019"
   ],
   "total_campaigns": 9,
-  "ready_campaigns": 1,
-  "blocked_campaigns": 8,
+  "ready_campaigns": 3,
+  "blocked_campaigns": 6,
   "status": "partial",
-  "generated_at": "2026-06-28T00:46:13",
+  "generated_at": "2026-06-28T00:58:37",
   "campaigns": [
     {
       "campaign_id": "wave_04_mgnt_2023",
@@ -36,7 +36,7 @@
       "ticker": "MGNT",
       "period": "2021",
       "timeframe": "1h",
-      "dataset_status": "needs_data",
+      "dataset_status": "ready",
       "hypothesis_id": "H-ADX-CONTINUATION",
       "status": "pending",
       "created_at": "",
@@ -48,7 +48,7 @@
       "ticker": "MGNT",
       "period": "2019",
       "timeframe": "1h",
-      "dataset_status": "needs_data",
+      "dataset_status": "ready",
       "hypothesis_id": "H-ADX-CONTINUATION",
       "status": "pending",
       "created_at": "",

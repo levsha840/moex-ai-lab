@@ -1,6 +1,6 @@
 # OPERATIONAL DASHBOARD — MOEX AI LAB
 
-> Generated: 2026-06-28T00:46:41
+> Generated: 2026-06-28T00:58:43
 > Era: Research Organization Era
 > Baseline: `v0.9-intelligence-alpha`
 
@@ -66,7 +66,7 @@
 ## 6. Dataset Coverage
 
 **Total cells:** 42 / 42 (100%)
-**Last built:** 2026-06-28T00:44:32
+**Last built:** 2026-06-28T00:57:17
 
 **By timeframe:**
 
@@ -80,7 +80,7 @@
 
 | Period | Datasets |
 | ------ | -------- |
-| 2023   | 42       |
+| 2019   | 42       |
 
 **By sector:**
 
@@ -95,16 +95,16 @@
 
 ## 7. Research Wave Schedule
 
-**Total campaigns:** 75 | **Ready:** 14 | **Blocked:** 61
+**Total campaigns:** 75 | **Ready:** 42 | **Blocked:** 33
 
-| Wave    | Name                               | Ready | Total | Pct | Status  |
-| ------- | ---------------------------------- | ----- | ----- | --- | ------- |
-| wave_01 | Banks                              | 2     | 12    | 16% | PARTIAL |
-| wave_02 | Oil & Gas                          | 5     | 18    | 27% | PARTIAL |
-| wave_03 | Metals & Mining                    | 6     | 18    | 33% | PARTIAL |
-| wave_04 | Retail                             | 1     | 9     | 11% | PARTIAL |
-| wave_05 | Energy & Telecom                   | 0     | 8     | 0%  | BLOCKED |
-| wave_06 | Technology & Transport & Chemicals | 0     | 10    | 0%  | BLOCKED |
+| Wave    | Name                               | Ready | Total | Pct  | Status  |
+| ------- | ---------------------------------- | ----- | ----- | ---- | ------- |
+| wave_01 | Banks                              | 6     | 12    | 50%  | PARTIAL |
+| wave_02 | Oil & Gas                          | 15    | 18    | 83%  | PARTIAL |
+| wave_03 | Metals & Mining                    | 18    | 18    | 100% | READY   |
+| wave_04 | Retail                             | 3     | 9     | 33%  | PARTIAL |
+| wave_05 | Energy & Telecom                   | 0     | 8     | 0%   | BLOCKED |
+| wave_06 | Technology & Transport & Chemicals | 0     | 10    | 0%   | BLOCKED |
 
 To unblock campaigns, run:
 ```
