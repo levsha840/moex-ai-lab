@@ -8,7 +8,7 @@ No external dependencies: stdlib only.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -360,6 +360,70 @@ class ValidationBatchResult:
     stop_reason: str
     report_paths: tuple[str, ...]
     validation_run_path: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class DecisionReason:
+    """Explanation for one ResearchDecision — which rule fired and why.
+
+    rule_id:     stable identifier for the triggered rule (e.g. "R01_stop_condition")
+    description: human-readable explanation of the decision
+    evidence:    tuple of supporting facts (fact_id, connection_id, pass_rate strings, etc.)
+    """
+
+    rule_id: str
+    description: str
+    evidence: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ResearchPolicy:
+    """Configuration for ChiefScientist rule evaluation.
+
+    All fields have conservative defaults — no ML, no LLM, no trading.
+    allow_high_risk:          if True, high overfitting_risk plans are not skipped.
+    min_confidence:           plans below this threshold are skipped (R06 complement).
+    archive_fail_threshold:   consecutive FAIL KnowledgeFacts to trigger ARCHIVE_HYPOTHESIS.
+    archive_pass_rate_ceiling: avg pass_rate must be below this to trigger archive.
+    min_runs_for_evidence:    min KnowledgeFact count before a RUN_PLAN decision is allowed.
+    max_decisions_per_run:    cap on total decisions returned (highest priority wins).
+    """
+
+    allow_high_risk: bool = False
+    min_confidence: float = 0.3
+    archive_fail_threshold: int = 3
+    archive_pass_rate_ceiling: float = 0.2
+    min_runs_for_evidence: int = 3
+    max_decisions_per_run: int = 10
+
+
+@dataclass(frozen=True)
+class ResearchDecision:
+    """A single research decision produced by ChiefScientist.
+
+    decision_type:
+      "RUN_PLAN"             — execute a specific ExperimentPlan next
+      "SKIP_PLAN"            — skip a plan (high risk, low confidence, or policy)
+      "ARCHIVE_HYPOTHESIS"   — hypothesis has failed too many times — stop pursuing it
+      "REQUEST_MORE_EVIDENCE"— insufficient data to decide; run more baseline experiments
+      "STOP_RESEARCH_LINE"   — stop condition already triggered — do not continue
+
+    priority: "low" | "medium" | "high" | "critical"
+    plan_id:  ExperimentPlan.plan_id this decision refers to; "" if not plan-specific.
+    hypothesis_id: hypothesis this decision refers to; "" if not hypothesis-specific.
+    confidence: 0.0–1.0 derived from evidence count and rule certainty.
+
+    Saved individually to research_programs/decisions/{decision_id}.json.
+    """
+
+    decision_id: str
+    decision_type: str
+    priority: str
+    plan_id: str
+    hypothesis_id: str
+    reason: DecisionReason
+    confidence: float
     created_at: str
 
 

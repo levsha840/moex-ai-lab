@@ -1,4 +1,4 @@
-"""Tests for Intelligence Era domain models — Phase 1–7.
+"""Tests for Intelligence Era domain models — Phase 1–8.
 
 Validates structure, immutability, and invariants of all models
 in agents/models.py. No I/O, no network.
@@ -15,6 +15,7 @@ from agents.models import (
     CorrelationPair,
     CorrelationSnapshot,
     DatasetManifest,
+    DecisionReason,
     EvidenceRef,
     ExperimentPlan,
     ExperimentTask,
@@ -29,6 +30,8 @@ from agents.models import (
     RegimeLabel,
     RegimeSegment,
     RegimeSnapshot,
+    ResearchDecision,
+    ResearchPolicy,
     StopCondition,
     ValidationBatchResult,
     ValidationRun,
@@ -1370,3 +1373,154 @@ class TestValidationBatchResult:
             "report_paths", "validation_run_path", "created_at",
         }
         assert required == set(_validation_batch_result().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# DecisionReason
+# ---------------------------------------------------------------------------
+
+def _decision_reason() -> DecisionReason:
+    return DecisionReason(
+        rule_id="R03_contradiction_replication",
+        description="Contradiction detected — run plan to resolve",
+        evidence=("contradiction: H-13 shows conflict", "plan=plan_0001"),
+    )
+
+
+class TestDecisionReason:
+    def test_construction(self) -> None:
+        r = _decision_reason()
+        assert r.rule_id == "R03_contradiction_replication"
+
+    def test_is_frozen(self) -> None:
+        r = _decision_reason()
+        with pytest.raises((AttributeError, TypeError)):
+            r.rule_id = "other"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        r = _decision_reason()
+        assert hash(r) is not None
+
+    def test_evidence_is_tuple(self) -> None:
+        r = _decision_reason()
+        assert isinstance(r.evidence, tuple)
+
+    def test_equality(self) -> None:
+        assert _decision_reason() == _decision_reason()
+
+    def test_required_fields(self) -> None:
+        required = {"rule_id", "description", "evidence"}
+        assert required == set(_decision_reason().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ResearchPolicy
+# ---------------------------------------------------------------------------
+
+def _policy(**kwargs) -> ResearchPolicy:
+    defaults = dict(
+        allow_high_risk=False,
+        min_confidence=0.3,
+        archive_fail_threshold=3,
+        archive_pass_rate_ceiling=0.2,
+        min_runs_for_evidence=3,
+        max_decisions_per_run=10,
+    )
+    defaults.update(kwargs)
+    return ResearchPolicy(**defaults)
+
+
+class TestResearchPolicy:
+    def test_default_construction(self) -> None:
+        p = ResearchPolicy()
+        assert p.allow_high_risk is False
+        assert p.min_confidence == pytest.approx(0.3)
+        assert p.archive_fail_threshold == 3
+        assert p.archive_pass_rate_ceiling == pytest.approx(0.2)
+        assert p.min_runs_for_evidence == 3
+        assert p.max_decisions_per_run == 10
+
+    def test_is_frozen(self) -> None:
+        p = ResearchPolicy()
+        with pytest.raises((AttributeError, TypeError)):
+            p.allow_high_risk = True  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        p = ResearchPolicy()
+        assert hash(p) is not None
+
+    def test_custom_values(self) -> None:
+        p = ResearchPolicy(allow_high_risk=True, archive_fail_threshold=5)
+        assert p.allow_high_risk is True
+        assert p.archive_fail_threshold == 5
+
+    def test_equality(self) -> None:
+        assert ResearchPolicy() == ResearchPolicy()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "allow_high_risk", "min_confidence", "archive_fail_threshold",
+            "archive_pass_rate_ceiling", "min_runs_for_evidence", "max_decisions_per_run",
+        }
+        assert required == set(ResearchPolicy().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ResearchDecision
+# ---------------------------------------------------------------------------
+
+def _research_decision(
+    decision_type: str = "RUN_PLAN",
+    priority: str = "critical",
+) -> ResearchDecision:
+    return ResearchDecision(
+        decision_id="dec_0001_run_contradiction_h13",
+        decision_type=decision_type,
+        priority=priority,
+        plan_id="plan_0001_replicate_h13",
+        hypothesis_id="H-13",
+        reason=_decision_reason(),
+        confidence=0.6,
+        created_at="2026-06-27T12:00:00",
+    )
+
+
+class TestResearchDecision:
+    def test_construction(self) -> None:
+        d = _research_decision()
+        assert d.decision_type == "RUN_PLAN"
+        assert d.priority == "critical"
+
+    def test_is_frozen(self) -> None:
+        d = _research_decision()
+        with pytest.raises((AttributeError, TypeError)):
+            d.decision_type = "SKIP_PLAN"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        d = _research_decision()
+        assert hash(d) is not None
+
+    def test_reason_is_decision_reason(self) -> None:
+        d = _research_decision()
+        assert isinstance(d.reason, DecisionReason)
+
+    def test_all_decision_types_construct(self) -> None:
+        for dtype in ("RUN_PLAN", "SKIP_PLAN", "ARCHIVE_HYPOTHESIS",
+                      "REQUEST_MORE_EVIDENCE", "STOP_RESEARCH_LINE"):
+            d = _research_decision(decision_type=dtype)
+            assert d.decision_type == dtype
+
+    def test_equality(self) -> None:
+        assert _research_decision() == _research_decision()
+
+    def test_confidence_in_range(self) -> None:
+        d = _research_decision()
+        assert 0.0 <= d.confidence <= 1.0
+
+    def test_required_fields(self) -> None:
+        required = {
+            "decision_id", "decision_type", "priority",
+            "plan_id", "hypothesis_id", "reason",
+            "confidence", "created_at",
+        }
+        assert required == set(_research_decision().__dataclass_fields__.keys())

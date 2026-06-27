@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (Intelligence Era Phase 7 — ValidationAgentAdapter)**
+> Последнее обновление: **2026-06-27 (Intelligence Era Phase 8 — ChiefScientist v1)**
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | Intelligence Era Phase 7 |
+| Релиз | Intelligence Era Phase 8 |
 | Era | Intelligence Era |
 | Branch | main |
 | Дата | 2026-06-27 |
-| Тестов | **1328 / 1328 pass** |
+| Тестов | **1419 / 1419 pass** |
 
 ---
 
@@ -110,7 +110,7 @@
 | **KnowledgeAgent (Aggregation, Patterns, Graph, Contradictions)** | ✅ IE Phase 5 | `agents/knowledge/agent.py` |
 | **ExperimentPlanner (Plans from KnowledgeSnapshot, 4 rule types)** | ✅ IE Phase 6 | `agents/research/planner.py` |
 | **ValidationAgentAdapter (dry_run + fixture + execute, stop conditions, risk guard)** | ✅ IE Phase 7 | `agents/research/adapter.py` |
-| Chief Scientist v1 (rule-based) | 🔜 IE Phase 8 | |
+| **ChiefScientist v1 (7 rules: stop, archive, contradiction, filter, evidence, skip, expand)** | ✅ IE Phase 8 | `agents/research/chief.py` |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
 | Live broker execution | 🔜 Phase 8+ | |
 
@@ -141,7 +141,9 @@
 | ExperimentPlanner (protocol, rules, overfitting risk, stop conditions, persistence, determinism) | 90 |
 | Agent models Phase 7 (ValidationTaskResult, ValidationRun, ValidationBatchResult) | 21 |
 | ValidationAgentAdapter (protocol, load_plan, dry-run, fixture, risk guard, stop conditions, persistence) | 66 |
-| **Итого** | **1328** |
+| Agent models Phase 8 (DecisionReason, ResearchPolicy, ResearchDecision) | 19 |
+| ChiefScientist (protocol, R01–R07 rules, priority ordering, persistence, determinism, helper functions) | 72 |
+| **Итого** | **1419** |
 
 ---
 

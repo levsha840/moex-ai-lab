@@ -1,7 +1,7 @@
 # 30_INTELLIGENCE_ARCHITECTURE — Intelligence Era
 
 > Архитектурный документ следующего поколения MOEX AI LAB.
-> Статус: **ACTIVE** — IE Phase 1–7 реализованы ✅.
+> Статус: **ACTIVE** — IE Phase 1–8 реализованы ✅.
 > Дата: 2026-06-27
 
 **Реализованные компоненты:**
@@ -17,6 +17,7 @@
 | KnowledgeAgent (Aggregation, Patterns, Graph, Report) | ✅ IE Phase 5 | `agents/knowledge/agent.py` |
 | ExperimentPlanner (Plans from KnowledgeSnapshot, 4 rule types) | ✅ IE Phase 6 | `agents/research/planner.py` |
 | ValidationAgentAdapter (dry_run / fixture / execute, safety guards) | ✅ IE Phase 7 | `agents/research/adapter.py` |
+| ChiefScientist v1 (7 deterministic rules, priority ordering, ResearchDecision) | ✅ IE Phase 8 | `agents/research/chief.py` |
 
 ---
 
