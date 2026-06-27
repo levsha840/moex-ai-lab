@@ -18,11 +18,13 @@ MOEX AI LAB — roadmap после **v0.9-intelligence-alpha** (2026-06-27).
 ## Research Organization Era — Active
 
 Architecture: `docs/50_RESEARCH_ORGANIZATION_ARCHITECTURE.md`
+Research Universe: `docs/60_RESEARCH_UNIVERSE.md`
 
-| Phase | Agent | Department | Status |
-|-------|-------|------------|--------|
+| Phase | Deliverable | Department | Status |
+|-------|-------------|------------|--------|
 | RO-1 | Architecture + Governance | — | ✅ |
-| RO-2 | NewsAgent | Data Intelligence | 🔜 ADR required |
+| RO-UNIVERSE | Research Universe v1 (28 instruments) | — | ✅ |
+| RO-2 | NewsAgent | Data Intelligence | 🔜 ADR-RO-02 required |
 | RO-3 | DividendsAgent | Data Intelligence | 🔜 |
 | RO-4 | SectorBreadthAgent | Analysis Intelligence | 🔜 |
 | RO-5 | FeatureDiscoveryAgent | Discovery Intelligence | 🔜 |

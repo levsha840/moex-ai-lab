@@ -11,7 +11,7 @@ MOEX AI LAB — актуальное состояние после **v0.9-intell
 | Foundation Era | ✅ Completed |
 | Program Era | ✅ Completed |
 | Intelligence Era v1 | ✅ Completed (v0.9-intelligence-alpha) |
-| Research Organization Era | 🟡 Active — Design Phase (RO-1) |
+| Research Organization Era | 🟡 Active — RO-1 complete, Research Universe defined |
 
 ---
 
@@ -40,7 +40,8 @@ Architecture document: `docs/50_RESEARCH_ORGANIZATION_ARCHITECTURE.md`
 
 | Phase | Deliverable | Статус |
 |-------|-------------|--------|
-| RO-1 | Architecture + Governance document | ✅ Design complete |
+| RO-1 | Architecture + Governance document | ✅ |
+| RO-UNIVERSE | Research Universe v1 (28 instruments, 7 periods, 9 regimes) | ✅ |
 | RO-2 | NewsAgent | 🔜 Pending ADR-RO-02 |
 | RO-3 | DividendsAgent | 🔜 |
 | RO-4 | SectorBreadthAgent | 🔜 |

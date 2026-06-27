@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (Research Organization Era — RO-1 Architecture Design)**
+> Последнее обновление: **2026-06-27 (Research Organization Era — Research Universe v1)**
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | RO-1 Architecture Design |
+| Релиз | Research Universe v1 |
 | Era | Research Organization Era |
 | Branch | main |
 | Tag | `v0.9-intelligence-alpha` |
@@ -115,6 +115,7 @@
 | **ChiefScientist v1 (7 rules: stop, archive, contradiction, filter, evidence, skip, expand)** | ✅ IE Phase 8 | `agents/research/chief.py` |
 | **Autonomous Research Alpha (10 campaigns, full IE cycle validated)** | ✅ Milestone | `scripts/autonomous_research_alpha.py` |
 | **Research Organization Architecture (7 departments, 10-phase roadmap, governance)** | ✅ RO-1 | `docs/50_RESEARCH_ORGANIZATION_ARCHITECTURE.md` |
+| **Research Universe v1 (28 instruments, 9 sectors, 7 periods, Research Matrix)** | ✅ RO-UNIVERSE | `docs/60_RESEARCH_UNIVERSE.md` |
 | NewsAgent (rule-based headline sentiment) | 🔜 RO-2 | ADR required |
 | DividendsAgent (MOEX ISS dividends calendar) | 🔜 RO-3 | |
 | SectorBreadthAgent (MOEX sector breadth metrics) | 🔜 RO-4 | |
