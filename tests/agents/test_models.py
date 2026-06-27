@@ -1,4 +1,4 @@
-"""Tests for Intelligence Era domain models — Phase 1 + Phase 2 + Phase 3 + Phase 4.
+"""Tests for Intelligence Era domain models — Phase 1–6.
 
 Validates structure, immutability, and invariants of all models
 in agents/models.py. No I/O, no network.
@@ -16,12 +16,20 @@ from agents.models import (
     CorrelationSnapshot,
     DatasetManifest,
     EvidenceRef,
+    ExperimentPlan,
+    ExperimentTask,
+    KnowledgeConnection,
+    KnowledgeFact,
+    KnowledgePattern,
+    KnowledgeSnapshot,
     MacroSeries,
     MacroSnapshot,
     MarketSnapshot,
+    OverfittingRisk,
     RegimeLabel,
     RegimeSegment,
     RegimeSnapshot,
+    StopCondition,
 )
 
 
@@ -701,3 +709,478 @@ class TestRegimeSnapshot:
             "source_refs", "confidence",
         }
         assert required == set(_regime_snapshot().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# KnowledgeFact
+# ---------------------------------------------------------------------------
+
+def _knowledge_fact(
+    fact_id: str = "fact_0001_h13_sber_trend_up",
+    passed: bool | None = False,
+    confidence: float = 0.85,
+    regime: str = "TREND_UP",
+) -> KnowledgeFact:
+    return KnowledgeFact(
+        fact_id=fact_id,
+        source_type="research_report",
+        source_ref="reports/h13.json",
+        hypothesis_id="H-13",
+        instrument="SBER",
+        period="2023",
+        regime=regime,
+        metric="pass_rate",
+        value=0.239,
+        passed=passed,
+        confidence=confidence,
+        tags=("ADX", "momentum"),
+    )
+
+
+class TestKnowledgeFact:
+    def test_construction(self) -> None:
+        f = _knowledge_fact()
+        assert f.hypothesis_id == "H-13"
+        assert f.metric == "pass_rate"
+        assert f.value == pytest.approx(0.239)
+
+    def test_is_frozen(self) -> None:
+        f = _knowledge_fact()
+        with pytest.raises((AttributeError, TypeError)):
+            f.hypothesis_id = "H-14"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        f = _knowledge_fact()
+        assert hash(f) is not None
+        assert {f, f} == {f}
+
+    def test_passed_none_allowed(self) -> None:
+        f = _knowledge_fact(passed=None)
+        assert f.passed is None
+
+    def test_passed_true_allowed(self) -> None:
+        f = _knowledge_fact(passed=True)
+        assert f.passed is True
+
+    def test_passed_false_allowed(self) -> None:
+        f = _knowledge_fact(passed=False)
+        assert f.passed is False
+
+    def test_tags_is_tuple(self) -> None:
+        f = _knowledge_fact()
+        assert isinstance(f.tags, tuple)
+
+    def test_equality(self) -> None:
+        assert _knowledge_fact() == _knowledge_fact()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "fact_id", "source_type", "source_ref", "hypothesis_id",
+            "instrument", "period", "regime", "metric", "value",
+            "passed", "confidence", "tags",
+        }
+        assert required == set(_knowledge_fact().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# KnowledgeConnection
+# ---------------------------------------------------------------------------
+
+def _knowledge_connection() -> KnowledgeConnection:
+    return KnowledgeConnection(
+        connection_id="conn_h13_trend_up",
+        entity_a="H-13",
+        entity_b="TREND_UP",
+        relation="negative",
+        strength=0.9,
+        support_count=3,
+        evidence=("fact_0001", "fact_0002", "fact_0003"),
+    )
+
+
+class TestKnowledgeConnection:
+    def test_construction(self) -> None:
+        c = _knowledge_connection()
+        assert c.entity_a == "H-13"
+        assert c.relation == "negative"
+        assert c.strength == pytest.approx(0.9)
+
+    def test_is_frozen(self) -> None:
+        c = _knowledge_connection()
+        with pytest.raises((AttributeError, TypeError)):
+            c.relation = "positive"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        c = _knowledge_connection()
+        assert hash(c) is not None
+
+    def test_evidence_is_tuple(self) -> None:
+        c = _knowledge_connection()
+        assert isinstance(c.evidence, tuple)
+        assert len(c.evidence) == 3
+
+    def test_equality(self) -> None:
+        assert _knowledge_connection() == _knowledge_connection()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "connection_id", "entity_a", "entity_b", "relation",
+            "strength", "support_count", "evidence",
+        }
+        assert required == set(_knowledge_connection().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# KnowledgePattern
+# ---------------------------------------------------------------------------
+
+def _knowledge_pattern() -> KnowledgePattern:
+    return KnowledgePattern(
+        pattern_id="pat_0001",
+        description="H-13 consistently FAILS in TREND_UP",
+        pattern_type="regime_hypothesis",
+        entities=("H-13", "TREND_UP"),
+        occurrence_count=3,
+        confidence=0.6,
+        supporting_facts=("fact_0001", "fact_0002", "fact_0003"),
+        contradicting_facts=(),
+    )
+
+
+class TestKnowledgePattern:
+    def test_construction(self) -> None:
+        p = _knowledge_pattern()
+        assert p.pattern_type == "regime_hypothesis"
+        assert p.occurrence_count == 3
+
+    def test_is_frozen(self) -> None:
+        p = _knowledge_pattern()
+        with pytest.raises((AttributeError, TypeError)):
+            p.description = "changed"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        p = _knowledge_pattern()
+        assert hash(p) is not None
+
+    def test_entities_is_tuple(self) -> None:
+        p = _knowledge_pattern()
+        assert isinstance(p.entities, tuple)
+
+    def test_supporting_facts_is_tuple(self) -> None:
+        p = _knowledge_pattern()
+        assert isinstance(p.supporting_facts, tuple)
+
+    def test_contradicting_facts_empty_tuple(self) -> None:
+        p = _knowledge_pattern()
+        assert p.contradicting_facts == ()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "pattern_id", "description", "pattern_type", "entities",
+            "occurrence_count", "confidence", "supporting_facts",
+            "contradicting_facts",
+        }
+        assert required == set(_knowledge_pattern().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# KnowledgeSnapshot
+# ---------------------------------------------------------------------------
+
+def _knowledge_snapshot() -> KnowledgeSnapshot:
+    return KnowledgeSnapshot(
+        snapshot_id="knowledge_campaign_001",
+        campaign_id="campaign_001",
+        facts=(_knowledge_fact("f1"), _knowledge_fact("f2")),
+        connections=(_knowledge_connection(),),
+        patterns=(_knowledge_pattern(),),
+        strong_facts=("f2",),
+        weak_facts=(),
+        contradictions=(),
+        recommendations=("Avoid H-13 in TREND_UP",),
+        source_refs=(_evidence(),),
+        confidence=_confidence(0.72),
+    )
+
+
+class TestKnowledgeSnapshot:
+    def test_construction(self) -> None:
+        snap = _knowledge_snapshot()
+        assert snap.snapshot_id == "knowledge_campaign_001"
+        assert snap.campaign_id == "campaign_001"
+
+    def test_is_frozen(self) -> None:
+        snap = _knowledge_snapshot()
+        with pytest.raises((AttributeError, TypeError)):
+            snap.campaign_id = "other"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        snap = _knowledge_snapshot()
+        assert hash(snap) is not None
+
+    def test_all_collection_fields_are_tuples(self) -> None:
+        snap = _knowledge_snapshot()
+        for attr in (
+            "facts", "connections", "patterns",
+            "strong_facts", "weak_facts", "contradictions",
+            "recommendations", "source_refs",
+        ):
+            assert isinstance(getattr(snap, attr), tuple), f"{attr} should be tuple"
+
+    def test_facts_are_knowledge_facts(self) -> None:
+        snap = _knowledge_snapshot()
+        for f in snap.facts:
+            assert isinstance(f, KnowledgeFact)
+
+    def test_empty_snapshot(self) -> None:
+        snap = KnowledgeSnapshot(
+            snapshot_id="knowledge_empty",
+            campaign_id="empty",
+            facts=(),
+            connections=(),
+            patterns=(),
+            strong_facts=(),
+            weak_facts=(),
+            contradictions=(),
+            recommendations=(),
+            source_refs=(),
+            confidence=_confidence(0.0),
+        )
+        assert snap.facts == ()
+        assert snap.connections == ()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "snapshot_id", "campaign_id", "facts", "connections", "patterns",
+            "strong_facts", "weak_facts", "contradictions", "recommendations",
+            "source_refs", "confidence",
+        }
+        assert required == set(_knowledge_snapshot().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# StopCondition
+# ---------------------------------------------------------------------------
+
+def _stop_condition(
+    condition_type: str = "max_experiments",
+    value: float = 10.0,
+) -> StopCondition:
+    return StopCondition(
+        condition_type=condition_type,
+        value=value,
+        description="Stop after 10 runs",
+    )
+
+
+class TestStopCondition:
+    def test_construction(self) -> None:
+        sc = _stop_condition()
+        assert sc.condition_type == "max_experiments"
+        assert sc.value == pytest.approx(10.0)
+
+    def test_is_frozen(self) -> None:
+        sc = _stop_condition()
+        with pytest.raises((AttributeError, TypeError)):
+            sc.value = 5.0  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        sc = _stop_condition()
+        assert hash(sc) is not None
+        assert {sc, sc} == {sc}
+
+    def test_equality(self) -> None:
+        assert _stop_condition() == _stop_condition()
+
+    def test_description_is_str(self) -> None:
+        sc = _stop_condition()
+        assert isinstance(sc.description, str)
+
+    def test_required_fields(self) -> None:
+        required = {"condition_type", "value", "description"}
+        assert required == set(_stop_condition().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# OverfittingRisk
+# ---------------------------------------------------------------------------
+
+def _overfitting_risk(
+    level: str = "low",
+    parameter_count: int = 0,
+) -> OverfittingRisk:
+    return OverfittingRisk(
+        level=level,
+        parameter_count=parameter_count,
+        reasons=("No parameters changed",),
+    )
+
+
+class TestOverfittingRisk:
+    def test_construction_low(self) -> None:
+        r = _overfitting_risk("low", 0)
+        assert r.level == "low"
+        assert r.parameter_count == 0
+
+    def test_construction_high(self) -> None:
+        r = OverfittingRisk(
+            level="high",
+            parameter_count=3,
+            reasons=("3 parameters changed simultaneously", "curve-fitting risk"),
+        )
+        assert r.level == "high"
+        assert r.parameter_count == 3
+
+    def test_is_frozen(self) -> None:
+        r = _overfitting_risk()
+        with pytest.raises((AttributeError, TypeError)):
+            r.level = "high"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        r = _overfitting_risk()
+        assert hash(r) is not None
+
+    def test_reasons_is_tuple(self) -> None:
+        r = _overfitting_risk()
+        assert isinstance(r.reasons, tuple)
+
+    def test_equality(self) -> None:
+        assert _overfitting_risk() == _overfitting_risk()
+
+    def test_required_fields(self) -> None:
+        required = {"level", "parameter_count", "reasons"}
+        assert required == set(_overfitting_risk().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ExperimentTask
+# ---------------------------------------------------------------------------
+
+def _experiment_task(task_id: str = "plan_0001_t00") -> ExperimentTask:
+    return ExperimentTask(
+        task_id=task_id,
+        hypothesis_id="H-13",
+        instrument="SBER",
+        dataset_id="sber_1h_2023_main",
+        regime_filter="EXCLUDE_TREND_UP",
+        parameters=(),
+    )
+
+
+class TestExperimentTask:
+    def test_construction(self) -> None:
+        t = _experiment_task()
+        assert t.hypothesis_id == "H-13"
+        assert t.regime_filter == "EXCLUDE_TREND_UP"
+
+    def test_is_frozen(self) -> None:
+        t = _experiment_task()
+        with pytest.raises((AttributeError, TypeError)):
+            t.instrument = "GAZP"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        t = _experiment_task()
+        assert hash(t) is not None
+
+    def test_empty_regime_filter_allowed(self) -> None:
+        t = ExperimentTask(
+            task_id="t0", hypothesis_id="H-07", instrument="SBER",
+            dataset_id="sber_1h_2023_main", regime_filter="", parameters=(),
+        )
+        assert t.regime_filter == ""
+
+    def test_parameters_is_tuple_of_tuples(self) -> None:
+        t = ExperimentTask(
+            task_id="t1", hypothesis_id="H-07", instrument="SBER",
+            dataset_id="ds", regime_filter="",
+            parameters=(("adx_threshold", "30"),),
+        )
+        assert isinstance(t.parameters, tuple)
+        assert t.parameters[0] == ("adx_threshold", "30")
+
+    def test_equality(self) -> None:
+        assert _experiment_task() == _experiment_task()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "task_id", "hypothesis_id", "instrument",
+            "dataset_id", "regime_filter", "parameters",
+        }
+        assert required == set(_experiment_task().__dataclass_fields__.keys())
+
+
+# ---------------------------------------------------------------------------
+# ExperimentPlan
+# ---------------------------------------------------------------------------
+
+def _experiment_plan() -> ExperimentPlan:
+    return ExperimentPlan(
+        plan_id="plan_0001_filter_h13_trend_up",
+        plan_type="regime_filter",
+        objective="Test H-13 with TREND_UP excluded",
+        hypothesis_id="H-13",
+        instruments=("SBER",),
+        datasets=("sber_1h_2023_main",),
+        regime_filter="EXCLUDE_TREND_UP",
+        tasks=(_experiment_task(),),
+        parameters=(),
+        expected_evidence=("pass_rate > 0.5 when TREND_UP excluded",),
+        rationale="Negative H-13 ↔ TREND_UP connection detected",
+        priority="high",
+        overfitting_risk=_overfitting_risk(),
+        stop_conditions=(_stop_condition(), _stop_condition("min_pass_rate", 0.5)),
+        confidence=0.6,
+        source_pattern_id="conn_h13_trend_up",
+    )
+
+
+class TestExperimentPlan:
+    def test_construction(self) -> None:
+        p = _experiment_plan()
+        assert p.plan_type == "regime_filter"
+        assert p.priority == "high"
+        assert p.confidence == pytest.approx(0.6)
+
+    def test_is_frozen(self) -> None:
+        p = _experiment_plan()
+        with pytest.raises((AttributeError, TypeError)):
+            p.priority = "low"  # type: ignore[misc]
+
+    def test_is_hashable(self) -> None:
+        p = _experiment_plan()
+        assert hash(p) is not None
+
+    def test_all_collection_fields_are_tuples(self) -> None:
+        p = _experiment_plan()
+        for attr in (
+            "instruments", "datasets", "tasks",
+            "parameters", "expected_evidence", "stop_conditions",
+        ):
+            assert isinstance(getattr(p, attr), tuple), f"{attr} should be tuple"
+
+    def test_tasks_are_experiment_tasks(self) -> None:
+        p = _experiment_plan()
+        for t in p.tasks:
+            assert isinstance(t, ExperimentTask)
+
+    def test_overfitting_risk_is_correct_type(self) -> None:
+        p = _experiment_plan()
+        assert isinstance(p.overfitting_risk, OverfittingRisk)
+
+    def test_stop_conditions_are_correct_type(self) -> None:
+        p = _experiment_plan()
+        for sc in p.stop_conditions:
+            assert isinstance(sc, StopCondition)
+
+    def test_equality(self) -> None:
+        assert _experiment_plan() == _experiment_plan()
+
+    def test_required_fields(self) -> None:
+        required = {
+            "plan_id", "plan_type", "objective", "hypothesis_id",
+            "instruments", "datasets", "regime_filter", "tasks",
+            "parameters", "expected_evidence", "rationale", "priority",
+            "overfitting_risk", "stop_conditions", "confidence",
+            "source_pattern_id",
+        }
+        assert required == set(_experiment_plan().__dataclass_fields__.keys())

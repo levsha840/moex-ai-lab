@@ -64,6 +64,23 @@ class RegimeSource(Protocol):
         ...
 
 
+class KnowledgeSource(Protocol):
+    """Data-loading abstraction for KnowledgeAgent.
+
+    Reports: dicts with keys hypothesis_id, instrument, period, pass_rate,
+             passed, confidence, regime_label (opt), source_ref, features (opt).
+    KB entries: dicts with keys entry_id, hypothesis_id, finding, confidence,
+                source_ref.
+    Both methods return empty lists when no data is available.
+    """
+
+    def load_reports(self, campaign_id: str) -> list[dict]:
+        ...
+
+    def load_kb_entries(self, campaign_id: str) -> list[dict]:
+        ...
+
+
 class CorrelationSource(Protocol):
     """Data-loading abstraction for CorrelationAgent — enables fixture injection.
 
