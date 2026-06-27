@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (v4.2)**
+> Последнее обновление: **2026-06-27 (v4.3)**
 
 ---
 
@@ -9,11 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | v4.2 Knowledge-Guided Generation |
+| Релиз | v4.3 Multi-Hypothesis Research Session |
 | Era | Program Era |
 | Branch | main |
 | Дата | 2026-06-27 |
-| Тестов | **444 / 444 pass** |
+| Тестов | **487 / 487 pass** |
 
 ---
 
@@ -59,6 +59,7 @@
 | ResearchPipeline | `core/research_pipeline/` | ✅ Stable | v3.1 |
 | Hypothesis Generator Module | `core/hypothesis_generator/` | ✅ Stable | v3.3 |
 | Research Orchestrator | `core/research_orchestrator/` | ✅ Stable | v4.1 |
+| Research Session | `core/research_session/` | ✅ Stable | v4.3 |
 
 ### Validation Core
 
@@ -97,7 +98,7 @@
 | Синтетический H-13 эксперимент | ✅ | proof-of-pipeline |
 | Research Orchestrator | ✅ v4.1 | ResearchOrchestrator, ResearchPlan, DefaultResearchPolicy |
 | Knowledge-guided generation | ✅ v4.2 | KnowledgeRanker, KBTemplateStatisticsProvider, TemplateStats |
-| Multi-hypothesis Research Session | ⏳ Phase 4.3 | ResearchSession |
+| Multi-hypothesis Research Session | ✅ v4.3 | ResearchSession, PlanExecutor, SessionStatistics |
 | Research Report | ⏳ Phase 4.4 | ResearchReportBuilder |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
 | Live broker execution | 🔜 Phase 8+ | |
@@ -114,7 +115,9 @@
 | H-13 experiment + ADX | ~34 |
 | Hypothesis Generator Module | ~91 |
 | Research Orchestrator | 47 |
-| **Итого** | **444** |
+| Knowledge-Guided Generation (4.2) | 39 |
+| Research Session (4.3) | 43 |
+| **Итого** | **487** |
 
 ---
 
@@ -128,10 +131,10 @@
 
 ## Следующий релиз
 
-**Phase 4.3 — Multi-Hypothesis Research Session**
+**Phase 4.4 — Research Report**
 
-- `ResearchSession` — оркестратор над `ResearchPipeline`
-- `ResearchSessionResult` — сводка по серии экспериментов
+- `ResearchReportBuilder.build(session_result) → ResearchReport`
+- Топ-N гипотез по pass_rate, список на повторное исследование
 
 ---
 

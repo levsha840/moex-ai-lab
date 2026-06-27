@@ -88,18 +88,29 @@
 
 ---
 
-### 4.3 — Multi-Hypothesis Research Session
+### 4.3 — Multi-Hypothesis Research Session ✅ Completed (2026-06-27)
 
-**Что:** запускать серию экспериментов по списку гипотез и собирать сводку.
+**Что:** полный исследовательский цикл: генерация гипотез → ранжирование → план → оркестрация.
 
-**Детали:**
-- `ResearchSession` — оркестратор над `ResearchPipeline`:
-  принимает `list[Hypothesis]`, возвращает `ResearchSessionResult`.
-- `ResearchSessionResult` содержит: по одному `ResearchPipelineResult` на гипотезу,
-  сводные статистики (pass_count, fail_count, avg_pass_rate), список failed_experiments.
-- Не является новым Core Engine — это тонкий оркестратор.
+**Компоненты:** `core/research_session/`
+- `ResearchSessionConfig` — frozen: `GenerationConfig` + `ExperimentConfig` + description.
+- `ResearchSessionStatus` — CREATED / RUNNING / COMPLETED / ABORTED / FAILED.
+- `SessionStatistics` — агрегат: кандидаты, принятые гипотезы, задачи (completed/failed/skipped),
+  validation_pass/fail/inconclusive, `avg_pass_rate`, `validation_pass_rate` (property),
+  `kb_entries_created`, `duration_seconds`.
+- `ResearchSessionResult` — frozen снимок: session_id, config, orchestration_result, statistics.
+- `PlanExecutor` Protocol — stateless executor; `ResearchOrchestrator` реализует структурно.
+- `ResearchSession.run(config, registry, pipeline, *, policy)` — coordination facade.
+- `HypothesisGenerator.accept_all(session, registry)` — инкапсулирует bulk acceptance.
 
-**Зависит от:** `ResearchPipeline.run()` — уже существует.
+**Ключевые решения:**
+- ResearchSession — coordination facade, не новый engine (ADR-0013).
+- PlanExecutor Protocol обеспечивает заменяемость стратегии выполнения (ADR-0014).
+- PlanExecutor stateless: хранение состояния между вызовами запрещено (ADR-0014).
+- `accept_all()` — одна операция уровня генерации вместо цикла в Session (Change 1).
+- `validation_pass_rate` — property на SessionStatistics (Change 2).
+
+**Тесты:** 43 новых теста (487 итого).
 
 ---
 
@@ -147,12 +158,22 @@
 | `KBTemplateStatisticsProvider` | impl | `core/hypothesis_generator/statistics.py` | ✅ |
 | `KnowledgeRanker` | Ranker impl | `core/hypothesis_generator/ranker.py` | ✅ |
 
-### Планируемые (4.3–4.5)
+### Реализованные (4.3)
+
+| Компонент | Тип | Путь | Статус |
+|-----------|-----|------|--------|
+| `ResearchSessionConfig` | Model | `core/research_session/models.py` | ✅ |
+| `ResearchSessionStatus` | Enum | `core/research_session/models.py` | ✅ |
+| `SessionStatistics` | Model | `core/research_session/models.py` | ✅ |
+| `ResearchSessionResult` | Model | `core/research_session/models.py` | ✅ |
+| `PlanExecutor` | Protocol | `core/research_session/protocols.py` | ✅ |
+| `ResearchSession` | Facade | `core/research_session/session.py` | ✅ |
+| `HypothesisGenerator.accept_all` | Method | `core/hypothesis_generator/engine.py` | ✅ |
+
+### Планируемые (4.4–4.5)
 
 | Компонент | Тип | Путь | Capability |
 |-----------|-----|------|------------|
-| `ResearchSession` | Orchestrator | `core/research_pipeline/session.py` | 4.3 |
-| `ResearchSessionResult` | Model | `core/research_pipeline/models.py` | 4.3 |
 | `ResearchReportBuilder` | Builder | `core/research_pipeline/report.py` | 4.4 |
 | `ResearchReport` | Model | `core/research_pipeline/models.py` | 4.4 |
 | `RegimeAwareDataSelector` | Utility | `core/regime/selector.py` | 4.5 |
@@ -203,5 +224,5 @@ Phase 4 считается завершённой, когда выполнены
 | `MarketRegimeEngine` (v2.1) | ✅ Готов |
 | `HypothesisRegistry` (v2.3) | ✅ Готов |
 | `ResearchOrchestrator` (v4.1) | ✅ Готов |
-| `KnowledgeRanker` | ⏳ Phase 4.2 |
-| `ResearchSession` | ⏳ Phase 4.3 |
+| `KnowledgeRanker` (v4.2) | ✅ Готов |
+| `ResearchSession` (v4.3) | ✅ Готов |

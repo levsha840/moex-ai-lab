@@ -103,6 +103,18 @@ class HypothesisGenerator:
             metadata={"template_id": candidate.template_id},
         )
 
+    def accept_all(
+        self,
+        session: GenerationSession,
+        registry: HypothesisRegistry,
+    ) -> list[Hypothesis]:
+        """Register all candidates in a GenerationSession as IDEA hypotheses.
+
+        Encapsulates bulk acceptance so coordination-layer callers (e.g. ResearchSession)
+        work at the session level rather than iterating over individual candidates.
+        """
+        return [self.accept(c, registry) for c in session.generated_candidates]
+
     # ──────────────────────────────────────────────────────────────────────────
     # Helpers
     # ──────────────────────────────────────────────────────────────────────────

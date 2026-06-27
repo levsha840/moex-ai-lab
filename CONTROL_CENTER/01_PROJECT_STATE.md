@@ -1,6 +1,6 @@
 # 01_PROJECT_STATE
 
-MOEX AI LAB — актуальное состояние после **v4.1 Research Orchestrator** (2026-06-27).
+MOEX AI LAB — актуальное состояние после **v4.3 Multi-Hypothesis Research Session** (2026-06-27).
 
 ---
 
@@ -48,22 +48,23 @@ MOEX AI LAB — актуальное состояние после **v4.1 Resear
 
 ## Текущий статус тестов
 
-**444 / 444 passed.**
+**487 / 487 passed.**
 
 ---
 
 ## Текущий релиз
 
-**v4.2 Knowledge-Guided Generation** (2026-06-27)
+**v4.3 Multi-Hypothesis Research Session** (2026-06-27)
 
-Добавлено в `core/hypothesis_generator/`:
-- `TemplateStats` (frozen dataclass — pass_count, fail_count, experiment_count, pass_rate, has_history);
-- `TemplateStatisticsProvider` Protocol (`get_stats() → dict[str, TemplateStats]`);
-- `KBTemplateStatisticsProvider` (impl: KnowledgeBase + HypothesisRegistry → TemplateStats);
-- `KnowledgeRanker` (реализация `CandidateRanker` Protocol; не зависит от KB/Registry напрямую);
-- 39 новых тестов.
+Новый модуль `core/research_session/`:
+- `ResearchSessionConfig`, `ResearchSessionStatus`, `SessionStatistics`, `ResearchSessionResult` (models);
+- `PlanExecutor` Protocol — stateless executor; `ResearchOrchestrator` реализует структурно;
+- `ResearchSession.run(config, registry, pipeline, *, policy)` — coordination facade;
+- `HypothesisGenerator.accept_all(session, registry)` — bulk acceptance, добавлено в engine.py;
+- 43 новых теста.
 
-ADR добавлены: ADR-0011, ADR-0012.
+ADR добавлены: ADR-0013 (facade), ADR-0014 (PlanExecutor stateless).
+Открытые вопросы: OQ-007, OQ-008, OQ-009.
 
 ---
 

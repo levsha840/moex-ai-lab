@@ -416,6 +416,70 @@ Guard «гипотеза уже в RESEARCH+» реализован через `
 
 ---
 
+## ADR-0013: ResearchSession — orchestration facade, не новый engine
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+ResearchSession координирует HypothesisGenerator и PlanExecutor (ResearchOrchestrator).
+Есть риск добавления бизнес-логики: фильтрации кандидатов, retry-правил, reporting,
+отбора по критериям KB — всё это выглядит уместным "рядом" с сессией.
+
+**Решение:**
+ResearchSession делегирует 100% генерации → HypothesisGenerator (включая `accept_all`),
+100% выполнения → PlanExecutor. Единственная ответственность Session — координация
+(шаги 1–4) и агрегация `SessionStatistics`. Reporting → ResearchReportBuilder (4.4).
+Стратегия фильтрации кандидатов → `GenerationConfig`. Retry-правила → `ResearchPolicy`.
+
+**Обоснование:**
+"Orchestration facade" — паттерн с единственной ответственностью: координировать,
+а не исполнять. Если появляется соблазн добавить логику в Session — это сигнал к
+созданию новой Capability или Protocol.
+
+**Последствия:**
+- Изменение бизнес-правил требует изменений в других компонентах, не в Session.
+- Session не имеет параметра "принять только если...".
+- Session не обрабатывает `ResearchPipelineException` — это ответственность Policy.
+
+---
+
+## ADR-0014: PlanExecutor Protocol абстрагирует стратегию выполнения плана
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+ResearchSession зависит от ResearchOrchestrator. В Phase 5 потребуется параллельное
+или распределённое выполнение. Прямая зависимость → замена требует изменения Session.
+
+**Решение:**
+`PlanExecutor` Protocol в `core/research_session/protocols.py`.
+`ResearchOrchestrator` реализует его структурно (duck typing) без изменения кода v4.1.
+`ResearchSession.__init__` принимает `executor: PlanExecutor`.
+
+**Явное требование: PlanExecutor является stateless-компонентом.**
+Реализации не должны хранить изменяемое состояние между вызовами. Один и тот же
+экземпляр `PlanExecutor` может быть вызван несколько раз с разными планами, registry
+и pipeline — и должен вести себя идентично каждый раз. Это ограничение обеспечивает
+возможность безопасной замены на `ParallelPlanExecutor`, `DistributedPlanExecutor` или
+`EventAwarePlanExecutor` без изменения контракта `ResearchSession`.
+
+`ResearchOrchestrator` удовлетворяет этому требованию: после конструктора он хранит
+только `_clock` (immutable после инициализации), всё состояние выполнения находится
+в параметрах `run()`.
+
+**Обоснование:**
+Structural typing (Protocol) позволяет ввести абстракцию без изменения
+`ResearchOrchestrator`. Statelessness — явный architectural contract, а не предположение.
+
+**Последствия:**
+- `ResearchOrchestrator` не изменяется.
+- `ParallelPlanExecutor` в Phase 5 реализует тот же Protocol без изменения Session API.
+- Реализации, нарушающие statelessness (хранящие результаты между вызовами), запрещены.
+
+---
+
 ## Открытые вопросы (не ADR)
 
 | ID | Вопрос | Контекст |
@@ -423,5 +487,8 @@ Guard «гипотеза уже в RESEARCH+» реализован через `
 | OQ-001 | PaperTradingEngine vs PositionManager | Два независимых учёта позиций; связь не определена (ADR-0012 в old log) |
 | OQ-002 | PostgresPositionRepository | Заглушка с v1.6.1; реализация не начата |
 | OQ-003 | Порог 80% для RANGE-режима | Может ли быть другой порог для стратегий, разработанных для RANGE? |
-| OQ-005 | CandidateRanker Protocol + context | Нужен ли keyword-only `context` параметр для Regime-Aware ранжирования (4.5)? Backward-compatible эволюция Protocol. |
-| OQ-006 | Агрегация KB stats по нескольким тикерам | Текущий дизайн суммирует по всем dataset_id. Корректно ли это при смешанных данных? Решение в 4.5. |
+| OQ-005 | CandidateRanker Protocol + context | Нужен ли keyword-only `context` параметр для Regime-Aware ранжирования (4.5)? |
+| OQ-006 | Агрегация KB stats по нескольким тикерам | Текущий дизайн суммирует по всем dataset_id. Решение в 4.5. |
+| OQ-007 | Порог 0.80 в SessionStatistics | Создаёт связанность с ValidationCore. Рассмотреть `pass_threshold` в ResearchSessionConfig? |
+| OQ-008 | Per-hypothesis ExperimentConfig | Когда гипотезы в одной сессии требуют разных конфигураций — нужен ExperimentConfigProvider Protocol? |
+| OQ-009 | Сохранение ResearchSessionResult | Нужен ли persist для audit trail? Через какой Protocol? |
