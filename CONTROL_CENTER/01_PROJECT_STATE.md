@@ -48,26 +48,22 @@ MOEX AI LAB — актуальное состояние после **v4.1 Resear
 
 ## Текущий статус тестов
 
-**405 / 405 passed.**
+**444 / 444 passed.**
 
 ---
 
 ## Текущий релиз
 
-**v4.1 Research Orchestrator** (commit ad11825, tag v4.1-research-orchestrator)
+**v4.2 Knowledge-Guided Generation** (2026-06-27)
 
-Добавлен `core/research_orchestrator/`:
-- `ResearchTaskStatus`, `FailureAction`, `OrchestrationStatus` (enums);
-- `ResearchTaskSummary` (frozen, lightweight — knowledge_entry_id + pass_rate + windows_total);
-- `ResearchTask` (PENDING → IN_PROGRESS → COMPLETED | FAILED | SKIPPED);
-- `ResearchPlan` (frozen, tuple[ResearchTask, ...]);
-- `OrchestrationResult` (frozen итоговый снимок);
-- `ResearchPolicy` Protocol (`should_continue` + `on_task_failure`);
-- `DefaultResearchPolicy` (abort после N последовательных pipeline-ошибок);
-- `ResearchOrchestrator.run(plan, registry, pipeline, *, policy)`;
-- 47 новых тестов.
+Добавлено в `core/hypothesis_generator/`:
+- `TemplateStats` (frozen dataclass — pass_count, fail_count, experiment_count, pass_rate, has_history);
+- `TemplateStatisticsProvider` Protocol (`get_stats() → dict[str, TemplateStats]`);
+- `KBTemplateStatisticsProvider` (impl: KnowledgeBase + HypothesisRegistry → TemplateStats);
+- `KnowledgeRanker` (реализация `CandidateRanker` Protocol; не зависит от KB/Registry напрямую);
+- 39 новых тестов.
 
-ADR добавлены: ADR-0008, ADR-0009, ADR-0010.
+ADR добавлены: ADR-0011, ADR-0012.
 
 ---
 

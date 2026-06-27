@@ -1,7 +1,7 @@
 # 99_PROJECT_DASHBOARD — MOEX AI LAB
 
 > Живая сводка состояния проекта. Обновляется после каждого релиза.
-> Последнее обновление: **2026-06-27 (v4.1)**
+> Последнее обновление: **2026-06-27 (v4.2)**
 
 ---
 
@@ -9,13 +9,11 @@
 
 | Поле | Значение |
 |------|---------|
-| Релиз | v4.1 Research Orchestrator |
+| Релиз | v4.2 Knowledge-Guided Generation |
 | Era | Program Era |
 | Branch | main |
-| Commit | ad11825 |
-| Tag | v4.1-research-orchestrator |
 | Дата | 2026-06-27 |
-| Тестов | **405 / 405 pass** |
+| Тестов | **444 / 444 pass** |
 
 ---
 
@@ -98,7 +96,7 @@
 | ADX индикатор (Wilder) | ✅ | `core/features/technical_indicators` |
 | Синтетический H-13 эксперимент | ✅ | proof-of-pipeline |
 | Research Orchestrator | ✅ v4.1 | ResearchOrchestrator, ResearchPlan, DefaultResearchPolicy |
-| Knowledge-guided generation | ⏳ Phase 4.2 | KnowledgeRanker |
+| Knowledge-guided generation | ✅ v4.2 | KnowledgeRanker, KBTemplateStatisticsProvider, TemplateStats |
 | Multi-hypothesis Research Session | ⏳ Phase 4.3 | ResearchSession |
 | Research Report | ⏳ Phase 4.4 | ResearchReportBuilder |
 | Operations Core (supervisor, drawdown) | 🔜 Phase 7 | |
@@ -114,9 +112,9 @@
 | Validation Core (validation, walkforward) | ~25 |
 | Research Core (regime, experiment, hypothesis, knowledge, research_pipeline) | ~100 |
 | H-13 experiment + ADX | ~34 |
-| Hypothesis Generator Module | ~52 |
+| Hypothesis Generator Module | ~91 |
 | Research Orchestrator | 47 |
-| **Итого** | **405** |
+| **Итого** | **444** |
 
 ---
 
@@ -130,11 +128,10 @@
 
 ## Следующий релиз
 
-**Phase 4.2 — Knowledge-Guided Generation**
+**Phase 4.3 — Multi-Hypothesis Research Session**
 
-- `KnowledgeRanker` — новая реализация `CandidateRanker` Protocol
-- Score boost для шаблонов с PASS в KB; penalty за повторные FAIL
-- Тест: порядок кандидатов при `KnowledgeRanker` отличается от `PriorityRanker`
+- `ResearchSession` — оркестратор над `ResearchPipeline`
+- `ResearchSessionResult` — сводка по серии экспериментов
 
 ---
 

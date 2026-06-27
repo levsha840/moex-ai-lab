@@ -40,8 +40,8 @@ MOEX AI LAB — roadmap после **FC-1 Foundation Closure** (2026-06-27).
 | Capability | ID | Статус |
 |------------|-----|--------|
 | Research Orchestrator | 4.1 | ✅ Completed (v4.1) |
-| Knowledge-Guided Generation | 4.2 | ⏳ Следующий |
-| Multi-Hypothesis Research Session | 4.3 | 🔜 |
+| Knowledge-Guided Generation | 4.2 | ✅ Completed (v4.2) |
+| Multi-Hypothesis Research Session | 4.3 | ⏳ Следующий |
 | Research Report | 4.4 | 🔜 |
 | Regime-Aware Data Selection | 4.5 | 🔜 |
 

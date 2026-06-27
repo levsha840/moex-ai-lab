@@ -344,6 +344,78 @@ Guard «гипотеза уже в RESEARCH+» реализован через `
 
 ---
 
+## ADR-0011: TemplateStatisticsProvider Protocol разделяет сбор данных и ранжирование
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+`KnowledgeRanker` требует агрегированной статистики по шаблонам (pass/fail).
+Первоначальный дизайн предполагал прямые зависимости `KnowledgeRanker → KnowledgeBase`
+и `KnowledgeRanker → HypothesisRegistry`. Архитектурное ревью указало: два домена
+(сбор данных и ранжирование) не должны находиться в одном классе.
+
+**Решение:**
+Ввести `TemplateStatisticsProvider` Protocol в `core/hypothesis_generator/protocols.py`.
+`KnowledgeRanker` зависит только от этого Protocol — не знает ни о `KnowledgeBase`,
+ни о `HypothesisRegistry`.
+`KBTemplateStatisticsProvider` (`core/hypothesis_generator/statistics.py`) реализует Protocol
+и несёт ответственность за разрешение цепочки:
+`KnowledgeEntry.reference_id → HypothesisRegistry.get() → hypothesis.metadata["template_id"]`.
+
+**Обоснование:**
+- Одна ответственность: `KnowledgeRanker` вычисляет score; `KBTemplateStatisticsProvider`
+  агрегирует данные. Каждый класс меняется по своей причине.
+- Расширяемость: будущий `SQLTemplateStatisticsProvider` или `RedisTemplateStatisticsProvider`
+  реализует тот же Protocol без изменения логики ранжирования.
+- Тестируемость: `KnowledgeRanker` тестируется со stub-провайдером, независимо от KB.
+- Альтернатива (двойная зависимость прямо в `KnowledgeRanker`) была отклонена на ревью.
+
+**Последствия:**
+- `KnowledgeRanker` не имеет зависимости на `KnowledgeBase` или `HypothesisRegistry`.
+- `hypothesis_generator → knowledge` и `hypothesis_generator → hypothesis`
+  зависимости ограничены `statistics.py`.
+- `TemplateStatisticsProvider` Protocol открыт для реализаций за пределами
+  `core/hypothesis_generator/`.
+
+---
+
+## ADR-0012: KB-корректировка score ограничена диапазоном [0.5, 1.5]
+
+**Дата:** 2026-06-27
+**Статус:** Accepted
+
+**Контекст:**
+Неограниченное усиление/ослабление сигнала из KB создаёт два риска:
+(1) feedback loop — успешные шаблоны всё сильнее доминируют;
+(2) starvation — новые шаблоны вытесняются накопленным сигналом.
+
+**Решение:**
+`knowledge_multiplier = 1.0 + (pass_rate − 0.5) × max_adjustment × confidence_factor`,
+где `max_adjustment ∈ [0.0, 2.0]`, default = 1.0.
+При default: диапазон `knowledge_multiplier = [0.5, 1.5]`.
+Новые шаблоны (нет истории, `experiment_count = 0`): `confidence_factor = 0`,
+`knowledge_multiplier = 1.0` — всегда нейтральный.
+`duplicate_penalty = max(floor=0.75, 1.0 − 0.05 × experiment_count)` — использует
+`experiment_count` (pass + fail), не только `pass_count`.
+
+**Обоснование:**
+- KB — один из факторов, не единственный determinant.
+- Базовый приоритет (A/B/C) остаётся первичным discriminant'ом.
+- Диапазон ±50% достаточен для полезного сигнала, но не переворачивает приоритетную структуру.
+- `duplicate_penalty` по `experiment_count` (не `pass_count`): повторное исследование
+  с FAIL-результатом имеет столь же убывающую ценность, что и с PASS-результатом.
+- При `max_adjustment = 0.0` `KnowledgeRanker` ведёт себя как `PriorityRanker` —
+  полная обратная совместимость.
+
+**Последствия:**
+- Система не может "научиться" полностью игнорировать низкоприоритетные шаблоны.
+- Новая приоритет-A гипотеза (score=1.0) всегда опережает приоритет-C с
+  максимальным PASS-бустом (0.4 × 1.5 × 0.75 = 0.45). Starvation невозможен.
+- Изменение весов является архитектурным событием, требующим обновления ADR.
+
+---
+
 ## Открытые вопросы (не ADR)
 
 | ID | Вопрос | Контекст |
@@ -351,3 +423,5 @@ Guard «гипотеза уже в RESEARCH+» реализован через `
 | OQ-001 | PaperTradingEngine vs PositionManager | Два независимых учёта позиций; связь не определена (ADR-0012 в old log) |
 | OQ-002 | PostgresPositionRepository | Заглушка с v1.6.1; реализация не начата |
 | OQ-003 | Порог 80% для RANGE-режима | Может ли быть другой порог для стратегий, разработанных для RANGE? |
+| OQ-005 | CandidateRanker Protocol + context | Нужен ли keyword-only `context` параметр для Regime-Aware ранжирования (4.5)? Backward-compatible эволюция Protocol. |
+| OQ-006 | Агрегация KB stats по нескольким тикерам | Текущий дизайн суммирует по всем dataset_id. Корректно ли это при смешанных данных? Решение в 4.5. |

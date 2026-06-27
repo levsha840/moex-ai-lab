@@ -59,19 +59,32 @@
 
 ---
 
-### 4.2 — Knowledge-Guided Generation
+### 4.2 — Knowledge-Guided Generation ✅ Completed (2026-06-27)
 
-**Что:** `HypothesisGenerator` начинает учитывать Knowledge Base при ранжировании
-кандидатов.
+**Что:** `HypothesisGenerator` учитывает Knowledge Base при ранжировании кандидатов.
 
-**Детали:**
-- Новый `CandidateRanker` реализация: `KnowledgeRanker`.
-- Логика: шаблоны, для которых в KnowledgeBase есть записи с `validation_status=PASS`,
-  получают score boost; шаблоны с повторными FAIL — penalize.
-- `KnowledgeRanker` инжектируется вместо `PriorityRanker` при наличии данных в KB.
-- `HypothesisGenerator.__init__` не меняется — только новая реализация Protocol.
+**Компоненты:** `core/hypothesis_generator/`
+- `TemplateStats` — frozen dataclass: `pass_count`, `fail_count`, `experiment_count`,
+  `pass_rate` (property), `has_history` (property). `experiment_count` = pass + fail (явное поле).
+- `TemplateStatisticsProvider` Protocol — `get_stats() → dict[str, TemplateStats]`.
+  Инкапсулирует сбор данных, изолируя `KnowledgeRanker` от источника.
+- `KBTemplateStatisticsProvider` — реализация Protocol через `KnowledgeBase` + `HypothesisRegistry`.
+  Разрешение: `KnowledgeEntry.reference_id → hypothesis.metadata["template_id"]`.
+- `KnowledgeRanker` — реализация `CandidateRanker` Protocol. Получает готовые `TemplateStats`,
+  вычисляет `final_score = base_score × knowledge_multiplier × duplicate_penalty`,
+  возвращает новые объекты с обновлённым `score` и `rationale`.
 
-**Зависит от:** `KnowledgeBase.find_by_type(EXPERIMENT)` — уже существует.
+**Ключевые решения:**
+- `KnowledgeRanker` не зависит от `KnowledgeBase` или `HypothesisRegistry` (ADR-0011).
+- `knowledge_multiplier ∈ [0.5, 1.5]` при default config (ADR-0012).
+- `duplicate_penalty` использует `experiment_count` (pass + fail), а не только `pass_count`.
+- Tie-breaking: `(-score, template_id, title)` — стабильные идентификаторы.
+- Новые шаблоны (нет истории): `knowledge_multiplier = 1.0` — starvation невозможен.
+- `HypothesisGenerator.__init__` не изменялся — только новые реализации Protocol.
+
+**Тесты:** 39 новых тестов (444 итого).
+
+**Зависит от:** `KnowledgeBase.find_by_type(EXPERIMENT)`, `HypothesisRegistry.get()` — существуют.
 
 ---
 
@@ -118,7 +131,7 @@
 
 ## Компоненты Phase 4
 
-### Реализованные (4.1)
+### Реализованные (4.1–4.2)
 
 | Компонент | Тип | Путь | Статус |
 |-----------|-----|------|--------|
@@ -129,12 +142,15 @@
 | `ResearchPolicy` | Protocol | `core/research_orchestrator/protocols.py` | ✅ |
 | `DefaultResearchPolicy` | impl | `core/research_orchestrator/policy.py` | ✅ |
 | `ResearchOrchestrator` | Orchestrator | `core/research_orchestrator/orchestrator.py` | ✅ |
+| `TemplateStats` | Model | `core/hypothesis_generator/models.py` | ✅ |
+| `TemplateStatisticsProvider` | Protocol | `core/hypothesis_generator/protocols.py` | ✅ |
+| `KBTemplateStatisticsProvider` | impl | `core/hypothesis_generator/statistics.py` | ✅ |
+| `KnowledgeRanker` | Ranker impl | `core/hypothesis_generator/ranker.py` | ✅ |
 
-### Планируемые (4.2–4.5)
+### Планируемые (4.3–4.5)
 
 | Компонент | Тип | Путь | Capability |
 |-----------|-----|------|------------|
-| `KnowledgeRanker` | Ranker impl | `core/hypothesis_generator/ranker.py` | 4.2 |
 | `ResearchSession` | Orchestrator | `core/research_pipeline/session.py` | 4.3 |
 | `ResearchSessionResult` | Model | `core/research_pipeline/models.py` | 4.3 |
 | `ResearchReportBuilder` | Builder | `core/research_pipeline/report.py` | 4.4 |

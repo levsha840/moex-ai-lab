@@ -69,6 +69,40 @@ class GenerationConfig:
             )
 
 
+@dataclass(frozen=True)
+class TemplateStats:
+    """Aggregate research history for a single hypothesis template.
+
+    experiment_count must equal pass_count + fail_count.
+    Only conclusive experiments (PASS or FAIL) are counted — inconclusive
+    runs with validation_status not in {PASS, FAIL} are excluded.
+    """
+
+    template_id: str
+    pass_count: int
+    fail_count: int
+    experiment_count: int
+
+    def __post_init__(self) -> None:
+        expected = self.pass_count + self.fail_count
+        if self.experiment_count != expected:
+            raise ValueError(
+                f"experiment_count ({self.experiment_count}) must equal "
+                f"pass_count + fail_count ({expected})"
+            )
+
+    @property
+    def pass_rate(self) -> float:
+        """Fraction of experiments that passed; 0.5 (neutral) when no history."""
+        if self.experiment_count == 0:
+            return 0.5
+        return self.pass_count / self.experiment_count
+
+    @property
+    def has_history(self) -> bool:
+        return self.experiment_count > 0
+
+
 @dataclass
 class HypothesisCandidate:
     """A generated hypothesis proposal — not yet in HypothesisRegistry."""

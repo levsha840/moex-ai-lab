@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from core.hypothesis_generator.models import HypothesisCandidate, HypothesisTemplate
+from core.hypothesis_generator.models import HypothesisCandidate, HypothesisTemplate, TemplateStats
 
 
 class TemplateRepository(Protocol):
@@ -19,3 +19,14 @@ class CandidateRanker(Protocol):
     """Ranks a list of candidates. Must not mutate the input list."""
 
     def rank(self, candidates: list[HypothesisCandidate]) -> list[HypothesisCandidate]: ...
+
+
+class TemplateStatisticsProvider(Protocol):
+    """Provides pre-computed TemplateStats indexed by template_id.
+
+    Implementations are responsible for gathering and aggregating raw data
+    (e.g. from KnowledgeBase + HypothesisRegistry). KnowledgeRanker only
+    consumes the result — it has no knowledge of the data source.
+    """
+
+    def get_stats(self) -> dict[str, TemplateStats]: ...
