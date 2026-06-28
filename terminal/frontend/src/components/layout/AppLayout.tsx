@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import {
-  IconChartCandle, IconDatabase, IconBrain, IconUser,
-  IconPlayerPlay, IconCircleDot,
+  IconChartCandle, IconDatabase, IconCircleDot,
+  IconPlayerPlay, IconBriefcase, IconShield,
+  IconFileText, IconSettings, IconHistory,
+  IconTestPipe,
 } from '@tabler/icons-react'
-import { useTerminal, type TopTab } from '../../context/TerminalContext'
+import { useTerminal, type TopTab, type BottomTab } from '../../context/TerminalContext'
 import LeftPanel from '../panels/LeftPanel'
 import RightPanel from '../panels/RightPanel'
 import BottomPanel from '../panels/BottomPanel'
@@ -14,12 +16,17 @@ import { lazy, Suspense } from 'react'
 const KnowledgeMap = lazy(() => import('../../pages/KnowledgeMap'))
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TABS: { id: TopTab | 'replay'; label: string; icon: React.ComponentType<any> }[] = [
-  { id: 'terminal',  label: 'Терминал',         icon: IconChartCandle },
-  { id: 'strategy',  label: 'Стратегии',         icon: IconDatabase    },
-  { id: 'knowledge', label: 'База знаний',        icon: IconBrain       },
-  { id: 'scientist', label: 'Аналитика',          icon: IconUser        },
-  { id: 'replay',    label: 'Воспроизведение',    icon: IconPlayerPlay  },
+type NavItem = { id: string; label: string; icon: React.ComponentType<any>; tab: TopTab; bottom?: BottomTab }
+
+const NAV_ITEMS: NavItem[] = [
+  { id: 'terminal',  label: 'Торговый терминал', icon: IconChartCandle,  tab: 'terminal'  },
+  { id: 'strategy',  label: 'Стратегии',          icon: IconDatabase,     tab: 'strategy'  },
+  { id: 'history',   label: 'История торгов',     icon: IconHistory,      tab: 'terminal', bottom: 'history' },
+  { id: 'backtests', label: 'Бэктесты',           icon: IconTestPipe,     tab: 'backtests' },
+  { id: 'portfolio', label: 'Портфель',            icon: IconBriefcase,    tab: 'portfolio' },
+  { id: 'risks',     label: 'Риски',               icon: IconShield,       tab: 'risks'     },
+  { id: 'reports',   label: 'Отчёты',             icon: IconFileText,     tab: 'reports'   },
+  { id: 'settings',  label: 'Настройки',           icon: IconSettings,     tab: 'settings'  },
 ]
 
 function Clock() {
@@ -36,43 +43,55 @@ function Clock() {
 }
 
 function TopBar() {
-  const { activeTab, setActiveTab, replayActive, setReplayActive, currentSummary } = useTerminal()
+  const { activeTab, setActiveTab, setBottomTab, replayActive, setReplayActive, currentSummary } = useTerminal()
+  const [activeNav, setActiveNav] = useState('terminal')
 
-  const handleTab = (id: TopTab | 'replay') => {
-    if (id === 'replay') { setReplayActive(!replayActive); return }
-    setActiveTab(id)
+  const handleNav = (item: NavItem) => {
+    setActiveNav(item.id)
+    setActiveTab(item.tab)
+    if (item.bottom) setBottomTab(item.bottom)
   }
+
+  useEffect(() => {
+    if (activeTab === 'strategy') setActiveNav('strategy')
+    else if (activeTab === 'reports' || activeTab === 'scientist') setActiveNav('reports')
+    else if (activeTab === 'settings') setActiveNav('settings')
+  }, [activeTab])
 
   return (
     <div style={{
       height: 36, flexShrink: 0, display: 'flex', alignItems: 'center',
       background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)',
-      padding: '0 10px', gap: 2,
+      padding: '0 10px', gap: 0,
     }}>
       {/* Логотип */}
       <div style={{
         fontFamily: 'var(--t-font-mono)', fontWeight: 700, fontSize: 12,
-        color: 'var(--t-accent)', letterSpacing: 2, marginRight: 14, flexShrink: 0,
+        color: 'var(--t-accent)', letterSpacing: 2, marginRight: 16, flexShrink: 0,
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
         <IconCircleDot size={12} />
         MOEX AI LAB
       </div>
 
-      {/* Вкладки */}
-      {TABS.map(t => {
-        const isActive = t.id === 'replay' ? replayActive : activeTab === t.id
+      {/* 8 навигационных вкладок */}
+      {NAV_ITEMS.map(item => {
+        const isActive = activeNav === item.id
         return (
-          <button key={t.id} onClick={() => handleTab(t.id)} style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            height: 36, padding: '0 10px', border: 'none', background: 'none',
-            cursor: 'pointer', fontSize: 10, fontFamily: 'var(--t-font-mono)',
-            color: isActive ? 'var(--t-text)' : 'var(--t-text-3)',
-            borderBottom: `2px solid ${isActive ? (t.id === 'replay' ? 'var(--t-amber)' : 'var(--t-accent)') : 'transparent'}`,
-            marginBottom: -1, letterSpacing: 0.3,
-          }}>
-            <t.icon size={11} />
-            {t.label}
+          <button
+            key={item.id}
+            onClick={() => handleNav(item)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              height: 36, padding: '0 9px', border: 'none', background: 'none',
+              cursor: 'pointer', fontSize: 10, fontFamily: 'var(--t-font-mono)',
+              color: isActive ? 'var(--t-text)' : 'var(--t-text-3)',
+              borderBottom: `2px solid ${isActive ? 'var(--t-accent)' : 'transparent'}`,
+              marginBottom: -1, letterSpacing: 0.2, whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            <item.icon size={10} />
+            {item.label}
           </button>
         )
       })}
@@ -81,7 +100,7 @@ function TopBar() {
 
       {/* Текущий инструмент */}
       {currentSummary && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 14, padding: '0 8px', background: 'var(--t-elevated)', borderRadius: 3, height: 22 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 12, padding: '0 8px', background: 'var(--t-elevated)', borderRadius: 3, height: 22, flexShrink: 0 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-text)', fontFamily: 'var(--t-font-mono)' }}>
             {currentSummary.ticker}
           </span>
@@ -93,14 +112,32 @@ function TopBar() {
       )}
 
       {/* Статус системы */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginRight: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginRight: 12, flexShrink: 0 }}>
         <span className="t-dot green pulse" />
         <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Исследование</span>
-        <span className="t-dot amber" style={{ marginLeft: 6 }} />
+        <span className="t-dot amber" style={{ marginLeft: 4 }} />
         <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Бумажный</span>
-        <span style={{ marginLeft: 6, width: 6, height: 6, borderRadius: '50%', background: 'var(--t-red)', display: 'inline-block' }} />
-        <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Реал: Блок.</span>
+        <span style={{ marginLeft: 4, width: 6, height: 6, borderRadius: '50%', background: 'var(--t-red)', display: 'inline-block' }} />
+        <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Live: Блок.</span>
       </div>
+
+      {/* Воспроизведение (иконка) */}
+      <button
+        onClick={() => setReplayActive(!replayActive)}
+        title="Воспроизведение"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 24, height: 24,
+          border: `1px solid ${replayActive ? 'var(--t-amber)' : 'var(--t-border)'}`,
+          borderRadius: 3,
+          background: replayActive ? 'rgba(255,184,0,0.1)' : 'var(--t-elevated)',
+          cursor: 'pointer',
+          color: replayActive ? 'var(--t-amber)' : 'var(--t-text-3)',
+          marginRight: 10, flexShrink: 0,
+        }}
+      >
+        <IconPlayerPlay size={11} />
+      </button>
 
       <Clock />
     </div>
@@ -117,43 +154,36 @@ function ChartToolbar() {
 
   return (
     <div style={{
-      height: 32, flexShrink: 0,
+      height: 30, flexShrink: 0,
       display: 'flex', alignItems: 'center',
       background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)',
-      padding: '0 10px', gap: 10,
+      padding: '0 10px', gap: 8,
     }}>
-      {/* Тикер-бейдж */}
       {currentSummary ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t-text)', fontFamily: 'var(--t-font-mono)' }}>
             {currentSummary.ticker}
           </span>
-          <span style={{ fontSize: 9, color: 'var(--t-text-3)', padding: '1px 4px', background: 'var(--t-elevated)', borderRadius: 2 }}>
+          <span style={{ fontSize: 9, color: 'var(--t-text-3)', padding: '1px 4px', background: 'var(--t-elevated)', borderRadius: 2, border: '1px solid var(--t-border)' }}>
             MOEX
           </span>
           {lastCandle && (
-            <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)' }}>
               {lastCandle.close.toFixed(2)}
             </span>
           )}
           {change !== null && (
-            <span style={{
-              fontSize: 10, fontFamily: 'var(--t-font-mono)',
-              color: change >= 0 ? 'var(--t-green)' : 'var(--t-red)',
-            }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', color: change >= 0 ? 'var(--t-green)' : 'var(--t-red)', fontWeight: 600 }}>
               {change >= 0 ? '+' : ''}{change.toFixed(2)}%
             </span>
           )}
         </div>
       ) : (
-        <span style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
-          Выберите инструмент
-        </span>
+        <span style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Выберите инструмент</span>
       )}
 
-      <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+      <div style={{ width: 1, height: 14, background: 'var(--t-border)' }} />
 
-      {/* Таймфреймы */}
       {['1ч', '4ч', '1д', '1н', '1м', '3м', '1г'].map((p, i) => (
         <button key={p} style={{
           padding: '2px 6px', borderRadius: 2,
@@ -166,10 +196,8 @@ function ChartToolbar() {
         </button>
       ))}
 
-      <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+      <div style={{ width: 1, height: 14, background: 'var(--t-border)' }} />
 
-      {/* Индикаторы */}
-      <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Индикаторы:</span>
       {['Объём', 'RSI', 'MACD', 'ATR'].map(ind => (
         <span key={ind} style={{
           fontSize: 9, padding: '1px 5px', borderRadius: 2,
@@ -195,9 +223,21 @@ function CenterPanel() {
   if (activeTab === 'knowledge') {
     return (
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-        <Suspense fallback={<div style={{ padding: 20, color: 'var(--t-text-3)', fontSize: 11 }}>Загрузка графа знаний…</div>}>
+        <Suspense fallback={<div style={{ padding: 20, color: 'var(--t-text-3)', fontSize: 11 }}>Загрузка…</div>}>
           <KnowledgeMap />
         </Suspense>
+      </div>
+    )
+  }
+
+  if (activeTab === 'settings') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: 'var(--t-bg)' }}>
+        <ChartToolbar />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--t-text-3)' }}>
+          <IconSettings size={36} style={{ opacity: 0.18 }} />
+          <div style={{ fontSize: 12, fontFamily: 'var(--t-font-mono)' }}>Настройки в разработке</div>
+        </div>
       </div>
     )
   }
@@ -205,22 +245,16 @@ function CenterPanel() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
       <ChartToolbar />
-      {/* График — 65% */}
       <div style={{ flex: 65, minHeight: 0, overflow: 'hidden' }}>
         {candles.length === 0 ? (
-          <div style={{
-            height: '100%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            color: 'var(--t-text-3)', fontSize: 12,
-          }}>
-            <IconChartCandle size={40} style={{ marginBottom: 16, opacity: 0.2 }} />
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', fontSize: 12, gap: 12 }}>
+            <IconChartCandle size={40} style={{ opacity: 0.15 }} />
             <div style={{ fontFamily: 'var(--t-font-mono)' }}>Выберите инструмент на левой панели</div>
           </div>
         ) : (
           <MainChart candles={candles} trades={trades} upToBar={upToBar} />
         )}
       </div>
-      {/* Нижняя панель — 35% */}
       <div style={{ flex: 35, minHeight: 0, overflow: 'hidden' }}>
         <BottomPanel />
       </div>

@@ -41,6 +41,12 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
   const macdRef = useRef<HTMLDivElement>(null)
   const atrRef  = useRef<HTMLDivElement>(null)
 
+  // Trade hover tooltip
+  const tradeTooltipRef = useRef<HTMLDivElement>(null)
+  // Mutable refs so crosshair callback always sees latest data
+  const tradesRef  = useRef<JournalEntry[]>(trades)
+  const candlesRef = useRef<Candle[]>(candles)
+
   const mcRef   = useRef<IChartApi | null>(null)
   const rcRef   = useRef<IChartApi | null>(null)
   const mc2Ref  = useRef<IChartApi | null>(null)
@@ -56,8 +62,11 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
 
   const prevUpToBar = useRef<number | undefined>(undefined)
 
-  // Sync with EquityChart via context
   const { mainChartRef, equityChartRef, chartSyncingRef, notifyCrosshairTime, subscribeCrosshairTime } = useTerminal()
+
+  // Keep mutable refs in sync with props
+  useEffect(() => { tradesRef.current = trades }, [trades])
+  useEffect(() => { candlesRef.current = candles }, [candles])
 
   useEffect(() => {
     if (!mainRef.current || !rsiRef.current || !macdRef.current || !atrRef.current) return
@@ -66,6 +75,7 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     const mc = mkChart(mainRef.current)
     mcRef.current = mc
     mainChartRef.current = mc
+
     csSeries.current = mc.addCandlestickSeries({
       upColor: '#089981', downColor: '#f23645',
       borderUpColor: '#089981', borderDownColor: '#f23645',
@@ -122,16 +132,72 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
       chartSyncingRef.current = false
     })
 
-    // ── Crosshair → notify equity ──────────────────────────────────────────
+    // ── Crosshair: notify equity + show trade tooltip ──────────────────────
     mc.subscribeCrosshairMove(param => {
       notifyCrosshairTime(param.time ? param.time as UTCTimestamp : null)
+
+      const tooltip = tradeTooltipRef.current
+      if (!tooltip) return
+
+      if (!param.time || !param.point) {
+        tooltip.style.display = 'none'
+        return
+      }
+
+      const barTime = param.time as number
+      const currentTrades = tradesRef.current
+      const currentCandles = candlesRef.current
+
+      const matched = currentTrades.filter(t =>
+        currentCandles[t.entry_bar]?.time === barTime ||
+        currentCandles[t.exit_bar]?.time === barTime
+      )
+
+      if (!matched.length) {
+        tooltip.style.display = 'none'
+        return
+      }
+
+      const t = matched[0]
+      const isEntry = currentCandles[t.entry_bar]?.time === barTime
+      const price = isEntry ? t.entry_price : (t.exit_price ?? 0)
+      const pnl = t.pnl ?? 0
+      const pnlPct = t.pnl_pct ?? 0
+      const pnlCol = pnl >= 0 ? '#089981' : '#f23645'
+
+      const dir = (t as any).direction ?? 'LONG'
+
+      tooltip.innerHTML = `
+        <div style="font-size:8px;color:#9598a1;font-family:monospace;letter-spacing:0.5px;margin-bottom:3px">
+          ${isEntry ? '▲ ВХОД' : '▼ ВЫХОД'} · ${dir}
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#e0e3ea;font-family:monospace;margin-bottom:2px">
+          ${price.toFixed(2)} ₽
+        </div>
+        ${!isEntry ? `
+          <div style="font-size:10px;color:${pnlCol};font-family:monospace;font-weight:600">
+            ${pnl >= 0 ? '+' : ''}${pnl.toFixed(0)} ₽ &nbsp;(${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%)
+          </div>
+        ` : ''}
+        ${!isEntry && t.exit_reason ? `
+          <div style="font-size:9px;color:#9598a1;margin-top:3px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${t.exit_reason}
+          </div>
+        ` : ''}
+      `
+      tooltip.style.display = 'block'
+
+      const containerRect = mainRef.current!.getBoundingClientRect()
+      const tw = 180
+      const x = Math.min(param.point.x + 14, containerRect.width - tw - 4)
+      const y = Math.max(param.point.y - 70, 4)
+      tooltip.style.left = x + 'px'
+      tooltip.style.top = y + 'px'
     })
 
-    // ── Receive crosshair from equity → apply to main chart ────────────────
-    const unsubCrosshair = subscribeCrosshairTime(time => {
-      if (!time || !csSeries.current) return
-      // LW Charts doesn't expose setCrosshairPosition on main chart directly,
-      // but we can use applyOptions to show time label — handled by sync above
+    // ── Receive crosshair from equity ──────────────────────────────────────
+    const unsubCrosshair = subscribeCrosshairTime(_time => {
+      // Main chart crosshair is driven by user mouse — no-op here
     })
 
     return () => {
@@ -152,9 +218,10 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
 
     volSer.current?.setData(slice.map(c => ({
       time: c.time as UTCTimestamp, value: c.volume,
-      color: c.close >= c.open ? '#08998166' : '#f2364566',
+      color: c.close >= c.open ? '#08998155' : '#f2364555',
     })))
 
+    // ── Compact markers: NO price text, just shape ─────────────────────────
     const markers = trades
       .filter(t => t.entry_bar < limit)
       .flatMap(t => {
@@ -163,10 +230,10 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
           out.push({
             time: slice[t.entry_bar].time as UTCTimestamp,
             position: 'belowBar', color: '#089981', shape: 'arrowUp',
-            text: `BUY ${t.entry_price.toFixed(2)}`, size: 1,
+            text: '', size: 1,
           })
         }
-        if (t.exit_bar < limit && slice[t.exit_bar]) {
+        if (t.exit_bar != null && t.exit_bar < limit && slice[t.exit_bar]) {
           const isStop = /stop|sl/i.test(t.exit_reason ?? '')
           const isTp   = /tp|take/i.test(t.exit_reason ?? '')
           out.push({
@@ -174,13 +241,19 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
             position: 'aboveBar',
             color: isStop ? '#f23645' : isTp ? '#089981' : t.is_winner ? '#2962ff' : '#f23645',
             shape: 'arrowDown',
-            text: `${isStop ? 'STOP' : isTp ? 'TAKE PROFIT' : 'EXIT'} ${t.exit_price.toFixed(2)}`,
-            size: 1,
+            text: '', size: 1,
           })
         }
         return out
       })
+      // Deduplicate same-time markers keeping last
+      .reduce<SeriesMarker<UTCTimestamp>[]>((acc, m) => {
+        const idx = acc.findIndex(x => x.time === m.time && x.position === m.position)
+        if (idx >= 0) acc[idx] = m; else acc.push(m)
+        return acc
+      }, [])
       .sort((a, b) => (a.time as number) - (b.time as number))
+
     csSeries.current.setMarkers(markers)
 
     const rsiVals = calcRsi(slice)
@@ -191,7 +264,7 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     sigSer.current?.setData(slice.map((c, i) => ({ time: c.time as UTCTimestamp, value: signal[i] ?? 0 })))
     histSer.current?.setData(slice.map((c, i) => ({
       time: c.time as UTCTimestamp, value: hist[i] ?? 0,
-      color: (hist[i] ?? 0) >= 0 ? '#08998166' : '#f2364566',
+      color: (hist[i] ?? 0) >= 0 ? '#08998155' : '#f2364555',
     })))
 
     const atrVals = calcAtr(slice)
@@ -209,17 +282,37 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
 
   const LabelRow = ({ text }: { text: string }) => (
     <div style={{
-      flexShrink: 0, height: 20, background: '#131722',
+      flexShrink: 0, height: 18, background: '#131722',
       display: 'flex', alignItems: 'center', padding: '0 8px',
       borderTop: '1px solid #1e222d', gap: 8,
     }}>
-      <span style={{ fontSize: 9, color: '#9598a1', fontFamily: 'monospace', letterSpacing: 1 }}>{text}</span>
+      <span style={{ fontSize: 9, color: '#434651', fontFamily: 'monospace', letterSpacing: 0.5 }}>{text}</span>
     </div>
   )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div ref={mainRef} style={{ flex: 3, minHeight: 0 }} />
+      {/* Main chart area — wrapped for tooltip positioning */}
+      <div style={{ flex: 3, minHeight: 0, position: 'relative' }}>
+        <div ref={mainRef} style={{ width: '100%', height: '100%' }} />
+        {/* Trade marker hover tooltip */}
+        <div
+          ref={tradeTooltipRef}
+          style={{
+            display: 'none',
+            position: 'absolute',
+            pointerEvents: 'none',
+            padding: '6px 10px',
+            background: 'rgba(19,23,34,0.96)',
+            border: '1px solid #2a2e39',
+            borderRadius: 4,
+            zIndex: 20,
+            lineHeight: 1.5,
+            backdropFilter: 'blur(4px)',
+            minWidth: 140,
+          }}
+        />
+      </div>
       <LabelRow text="RSI(14)" />
       <div ref={rsiRef} style={{ flex: 1, minHeight: 0 }} />
       <LabelRow text="MACD(12,26,9)" />

@@ -10,10 +10,21 @@ import type {
 } from '../api/client'
 import type { IChartApi, UTCTimestamp } from 'lightweight-charts'
 
-export type TopTab = 'terminal' | 'strategy' | 'knowledge' | 'scientist'
+// Nav tabs visible in the top bar (visual only)
+export type TopTab =
+  | 'terminal'   // Торговый терминал
+  | 'strategy'   // Стратегии
+  | 'history'    // История торгов
+  | 'backtests'  // Бэктесты
+  | 'portfolio'  // Портфель
+  | 'risks'      // Риски
+  | 'reports'    // Отчёты
+  | 'scientist'  // Аналитика (legacy)
+  | 'knowledge'  // База знаний (legacy)
+  | 'settings'   // Настройки
+
 export type BottomTab = 'trades' | 'history' | 'positions' | 'activity' | 'aibrain'
 
-// ── Chart sync types ──────────────────────────────────────────────────────────
 type RangeListener = (from: number, to: number) => void
 type CrosshairListener = (time: number | null) => void
 
@@ -28,6 +39,8 @@ interface Ctx {
   setExplainTradeId: (id: string | null) => void
   selectedNode: string | null
   setSelectedNode: (n: string | null) => void
+  selectedTradeId: string | null
+  setSelectedTradeId: (id: string | null) => void
   replayActive: boolean
   setReplayActive: (v: boolean) => void
   replayBar: number
@@ -43,11 +56,10 @@ interface Ctx {
   setCompareMode: (v: boolean) => void
   equityExpanded: boolean
   setEquityExpanded: (v: boolean) => void
-  // Chart sync (stable refs — do NOT use in render logic)
+  // Chart sync refs
   mainChartRef: React.MutableRefObject<IChartApi | null>
   equityChartRef: React.MutableRefObject<IChartApi | null>
   chartSyncingRef: React.MutableRefObject<boolean>
-  // Crosshair pub/sub (performant — no state updates on mouse move)
   notifyCrosshairTime: (t: UTCTimestamp | null) => void
   subscribeCrosshairTime: (cb: CrosshairListener) => () => void
   // data
@@ -76,6 +88,7 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [explainTradeId, setExplainTradeId] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
+  const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null)
   const [replayActive, setReplayActive] = useState(false)
   const [replayBar, setReplayBar] = useState(0)
   const [replayPlaying, setReplayPlaying] = useState(false)
@@ -84,12 +97,10 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const [equityExpanded, setEquityExpanded] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Chart sync refs (not state — mutations don't re-render)
   const mainChartRef = useRef<IChartApi | null>(null)
   const equityChartRef = useRef<IChartApi | null>(null)
   const chartSyncingRef = useRef(false)
 
-  // Crosshair pub/sub — no React state, uses DOM timing for performance
   const crosshairSubscribers = useRef<Set<CrosshairListener>>(new Set())
   const notifyCrosshairTime = useCallback((t: UTCTimestamp | null) => {
     crosshairSubscribers.current.forEach(cb => cb(t as number | null))
@@ -125,9 +136,7 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
 
   const { data: allFullReports = [] } = useQuery({
     queryKey: ['all-full-reports', reports.map(r => r.report_id).join(',')],
-    queryFn: () => Promise.all(
-      reports.map(r => fetchReport(r.hypothesis_id, r.ticker, r.period, r.timeframe))
-    ),
+    queryFn: () => Promise.all(reports.map(r => fetchReport(r.hypothesis_id, r.ticker, r.period, r.timeframe))),
     enabled: reports.length > 0,
   })
 
@@ -163,7 +172,11 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [replayPlaying, replayActive, replaySpeed, candles.length])
 
-  useEffect(() => { setReplayBar(0); setReplayPlaying(false) }, [selectedIdx])
+  useEffect(() => {
+    setReplayBar(0)
+    setReplayPlaying(false)
+    setSelectedTradeId(null)
+  }, [selectedIdx])
 
   const value: Ctx = {
     activeTab, setActiveTab,
@@ -171,6 +184,7 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     selectedIdx, setSelectedIdx,
     explainTradeId, setExplainTradeId,
     selectedNode, setSelectedNode,
+    selectedTradeId, setSelectedTradeId,
     replayActive, setReplayActive,
     replayBar, setReplayBar,
     replayPlaying, replaySpeed, startReplay, pauseReplay, stopReplay, setReplaySpeed,
