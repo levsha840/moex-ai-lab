@@ -13,7 +13,12 @@ import MainChart from '../chart/MainChart'
 import ReplayOverlay from '../overlays/ReplayOverlay'
 import EquityFullscreen from '../overlays/EquityFullscreen'
 import { lazy, Suspense } from 'react'
-const KnowledgeMap = lazy(() => import('../../pages/KnowledgeMap'))
+const KnowledgeMap  = lazy(() => import('../../pages/KnowledgeMap'))
+const HistoryPage   = lazy(() => import('../../pages/HistoryPage'))
+const BacktestsPage = lazy(() => import('../../pages/BacktestsPage'))
+const PortfolioPage = lazy(() => import('../../pages/PortfolioPage'))
+const RisksPage     = lazy(() => import('../../pages/RisksPage'))
+const SettingsPage  = lazy(() => import('../../pages/SettingsPage'))
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type NavItem = { id: string; label: string; icon: React.ComponentType<any>; tab: TopTab; bottom?: BottomTab }
@@ -21,7 +26,7 @@ type NavItem = { id: string; label: string; icon: React.ComponentType<any>; tab:
 const NAV_ITEMS: NavItem[] = [
   { id: 'terminal',  label: 'Торговый терминал', icon: IconChartCandle,  tab: 'terminal'  },
   { id: 'strategy',  label: 'Стратегии',          icon: IconDatabase,     tab: 'strategy'  },
-  { id: 'history',   label: 'История торгов',     icon: IconHistory,      tab: 'terminal', bottom: 'history' },
+  { id: 'history',   label: 'История торгов',     icon: IconHistory,      tab: 'history' },
   { id: 'backtests', label: 'Бэктесты',           icon: IconTestPipe,     tab: 'backtests' },
   { id: 'portfolio', label: 'Портфель',            icon: IconBriefcase,    tab: 'portfolio' },
   { id: 'risks',     label: 'Риски',               icon: IconShield,       tab: 'risks'     },
@@ -53,9 +58,13 @@ function TopBar() {
   }
 
   useEffect(() => {
-    if (activeTab === 'strategy') setActiveNav('strategy')
-    else if (activeTab === 'reports' || activeTab === 'scientist') setActiveNav('reports')
-    else if (activeTab === 'settings') setActiveNav('settings')
+    const map: Partial<Record<string, string>> = {
+      terminal: 'terminal', strategy: 'strategy',
+      history: 'history', backtests: 'backtests', portfolio: 'portfolio',
+      risks: 'risks', reports: 'reports', scientist: 'reports', settings: 'settings',
+    }
+    const nav = map[activeTab]
+    if (nav !== undefined) setActiveNav(nav)
   }, [activeTab])
 
   return (
@@ -220,6 +229,8 @@ function CenterPanel() {
   const { candles, trades, replayActive, replayBar, activeTab } = useTerminal()
   const upToBar = replayActive ? replayBar : undefined
 
+  const PAGE_STYLE: React.CSSProperties = { flex: 1, minHeight: 0, overflow: 'hidden' }
+
   if (activeTab === 'knowledge') {
     return (
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
@@ -230,17 +241,17 @@ function CenterPanel() {
     )
   }
 
-  if (activeTab === 'settings') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: 'var(--t-bg)' }}>
-        <ChartToolbar />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--t-text-3)' }}>
-          <IconSettings size={36} style={{ opacity: 0.18 }} />
-          <div style={{ fontSize: 12, fontFamily: 'var(--t-font-mono)' }}>Настройки в разработке</div>
-        </div>
-      </div>
-    )
-  }
+  const PageFallback = () => (
+    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>
+      Загрузка…
+    </div>
+  )
+
+  if (activeTab === 'history')   return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><HistoryPage /></Suspense></div>
+  if (activeTab === 'backtests') return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><BacktestsPage /></Suspense></div>
+  if (activeTab === 'portfolio') return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><PortfolioPage /></Suspense></div>
+  if (activeTab === 'risks')     return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><RisksPage /></Suspense></div>
+  if (activeTab === 'settings')  return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><SettingsPage /></Suspense></div>
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
@@ -262,14 +273,23 @@ function CenterPanel() {
   )
 }
 
+const FULL_WIDTH_TABS = new Set(['history', 'backtests', 'portfolio', 'risks', 'settings'])
+
 export default function AppLayout() {
+  const { activeTab } = useTerminal()
+  const fullWidth = FULL_WIDTH_TABS.has(activeTab)
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--t-bg)' }}>
       <TopBar />
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '210px 1fr 290px', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{
+        flex: 1, display: 'grid',
+        gridTemplateColumns: fullWidth ? '210px 1fr' : '210px 1fr 290px',
+        minHeight: 0, overflow: 'hidden',
+      }}>
         <LeftPanel />
         <CenterPanel />
-        <RightPanel />
+        {!fullWidth && <RightPanel />}
       </div>
       <ReplayOverlay />
       <EquityFullscreen />

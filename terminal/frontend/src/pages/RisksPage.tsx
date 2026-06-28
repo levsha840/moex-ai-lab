@@ -1,0 +1,236 @@
+import { useMemo } from 'react'
+import { IconShield, IconTrendingDown } from '@tabler/icons-react'
+import { useTerminal } from '../context/TerminalContext'
+import { metricsFromReport, metricsFromPaper } from '../utils/portfolio'
+import type { JournalEntry, ReportSummary, Report } from '../api/client'
+import type { PortfolioMetrics } from '../utils/portfolio'
+
+// ── Risk helpers ────────────────────────────────────────────────────────────────
+function losingStreak(trades: JournalEntry[]): number {
+  let max = 0, cur = 0
+  for (const t of trades) {
+    if (t.is_winner === false) { cur++; max = Math.max(max, cur) }
+    else cur = 0
+  }
+  return max
+}
+
+function winningStreak(trades: JournalEntry[]): number {
+  let max = 0, cur = 0
+  for (const t of trades) {
+    if (t.is_winner === true) { cur++; max = Math.max(max, cur) }
+    else cur = 0
+  }
+  return max
+}
+
+// ── Styling helpers ─────────────────────────────────────────────────────────────
+const TH: React.CSSProperties = {
+  padding: '6px 10px', color: 'var(--t-text-3)', fontWeight: 600, letterSpacing: 0.5,
+  fontSize: 9, textAlign: 'left', background: 'var(--t-panel)',
+  borderBottom: '1px solid var(--t-border)', fontFamily: 'var(--t-font-mono)',
+  position: 'sticky', top: 0, zIndex: 1,
+}
+const TD: React.CSSProperties = {
+  padding: '7px 10px', fontSize: 10, fontFamily: 'var(--t-font-mono)',
+}
+
+function RiskCard({ label, value, color, sub }: { label: string; value: string; color?: string; sub?: string }) {
+  return (
+    <div style={{ padding: '10px 12px', background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', letterSpacing: 0.5, fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: color ?? 'var(--t-text)' }}>{value}</span>
+      {sub && <span style={{ fontSize: 8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>{sub}</span>}
+    </div>
+  )
+}
+
+function SH({ label }: { label: string }) {
+  return (
+    <div style={{ fontSize: 9, letterSpacing: 0.8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, padding: '12px 0 8px' }}>
+      {label}
+    </div>
+  )
+}
+
+function noData(label: string) {
+  return <span style={{ color: 'var(--t-text-3)' }}>Нет данных</span>
+}
+
+function fmtF(n: number | null | undefined, dec = 2): string {
+  if (n == null || isNaN(n)) return '—'
+  return n.toFixed(dec)
+}
+
+// ── Main component ──────────────────────────────────────────────────────────────
+export default function RisksPage() {
+  const { fullReport, allFullReports, reports, trades, paper, setSelectedIdx, setActiveTab } = useTerminal()
+
+  const currentMetrics = useMemo(() => {
+    if (fullReport) { try { return metricsFromReport(fullReport) } catch { return null } }
+    if (paper) { try { return metricsFromPaper(paper) } catch { return null } }
+    return null
+  }, [fullReport, paper])
+
+  const allMetrics = useMemo(() =>
+    allFullReports.map(r => { try { return metricsFromReport(r) } catch { return null } })
+  , [allFullReports])
+
+  const worstTrade = useMemo(() => {
+    if (!trades.length) return null
+    return trades.reduce((w, t) => (t.pnl_pct ?? 0) < (w.pnl_pct ?? 0) ? t : w)
+  }, [trades])
+
+  const bestTrade = useMemo(() => {
+    if (!trades.length) return null
+    return trades.reduce((b, t) => (t.pnl_pct ?? 0) > (b.pnl_pct ?? 0) ? t : b)
+  }, [trades])
+
+  const lStreak = useMemo(() => losingStreak(trades), [trades])
+  const wStreak = useMemo(() => winningStreak(trades), [trades])
+
+  if (!currentMetrics && allFullReports.length === 0) {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--t-bg)', overflow: 'hidden' }}>
+        <div style={{ height: 44, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 16px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', gap: 10 }}>
+          <IconShield size={13} color="var(--t-text-3)" />
+          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 1 }}>РИСКИ</span>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--t-text-3)' }}>
+          <IconShield size={40} style={{ opacity: 0.15 }} />
+          <div style={{ fontSize: 12, fontFamily: 'var(--t-font-mono)' }}>Нет данных</div>
+          <div style={{ fontSize: 10, lineHeight: 1.6 }}>Запустите бэктест для получения риск-метрик</div>
+        </div>
+      </div>
+    )
+  }
+
+  const stratLabel = currentMetrics?.strategyLabel ?? 'Текущая стратегия'
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--t-bg)', overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ height: 44, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 16px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', gap: 10 }}>
+        <IconShield size={13} color="var(--t-text-3)" />
+        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 1 }}>РИСК-МЕТРИКИ</span>
+        {currentMetrics && (
+          <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
+            · {stratLabel}
+          </span>
+        )}
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+        {currentMetrics ? (
+          <>
+            {/* Main risk metrics */}
+            <SH label="КЛЮЧЕВЫЕ РИСКИ" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 8 }}>
+              <RiskCard label="MAX DRAWDOWN"  value={`${fmtF(currentMetrics.maxDrawdown)}%`}     color="var(--t-red)" />
+              <RiskCard label="ТЕКУЩИЙ DD"    value={`${fmtF(currentMetrics.currentDrawdown)}%`} color={currentMetrics.currentDrawdown > 5 ? 'var(--t-red)' : 'var(--t-text)'} />
+              <RiskCard label="VaR 95%"       value={`${fmtF(currentMetrics.var95)}%`}           color="var(--t-red)" sub="1-дневный" />
+              <RiskCard label="ЭКСПОЗИЦИЯ"    value={`${fmtF(currentMetrics.usedPct, 1)}%`}      sub="% времени в позиции" />
+            </div>
+
+            <SH label="КОЭФФИЦИЕНТЫ" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 8 }}>
+              <RiskCard label="SHARPE"  value={fmtF(currentMetrics.sharpe)}  color={currentMetrics.sharpe > 1 ? 'var(--t-green)' : currentMetrics.sharpe < 0 ? 'var(--t-red)' : undefined} />
+              <RiskCard label="SORTINO" value={fmtF(currentMetrics.sortino)} color={currentMetrics.sortino > 1 ? 'var(--t-green)' : undefined} />
+              <RiskCard label="CALMAR"  value={fmtF(currentMetrics.calmar)}  color={currentMetrics.calmar > 1 ? 'var(--t-green)' : undefined} />
+              <RiskCard label="PROFIT FACTOR" value={fmtF(currentMetrics.profitFactor)} color={currentMetrics.profitFactor >= 1.5 ? 'var(--t-green)' : currentMetrics.profitFactor < 1 ? 'var(--t-red)' : undefined} />
+            </div>
+
+            <SH label="ТОРГОВАЯ СТАТИСТИКА" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
+              <RiskCard label="WIN RATE"        value={`${fmtF(currentMetrics.winRate, 1)}%`} color={currentMetrics.winRate >= 50 ? 'var(--t-green)' : 'var(--t-red)'} />
+              <RiskCard label="СЕРИЯ УБЫТКОВ"   value={`${lStreak} подряд`} color={lStreak >= 5 ? 'var(--t-red)' : lStreak >= 3 ? 'var(--t-amber)' : undefined} />
+              <RiskCard label="СЕРИЯ ПРИБЫЛЕЙ"  value={`${wStreak} подряд`} color={wStreak >= 5 ? 'var(--t-green)' : undefined} />
+              <RiskCard label="ВСЕГО СДЕЛОК"    value={String(currentMetrics.numTrades)} />
+            </div>
+
+            {/* Worst / Best trade */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+              {worstTrade && (
+                <div style={{ padding: '10px 12px', background: 'rgba(242,54,69,0.07)', borderRadius: 4, border: '1px solid rgba(242,54,69,0.2)' }}>
+                  <div style={{ fontSize: 8, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>ХУДШАЯ СДЕЛКА</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-red)' }}>
+                    {fmtF(worstTrade.pnl_pct ?? 0)}%
+                  </div>
+                  <div style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginTop: 2 }}>
+                    {Math.round(worstTrade.pnl ?? 0).toLocaleString('ru-RU')} ₽
+                  </div>
+                </div>
+              )}
+              {bestTrade && (
+                <div style={{ padding: '10px 12px', background: 'rgba(8,153,129,0.07)', borderRadius: 4, border: '1px solid rgba(8,153,129,0.2)' }}>
+                  <div style={{ fontSize: 8, color: 'var(--t-green)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>ЛУЧШАЯ СДЕЛКА</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-green)' }}>
+                    +{fmtF(bestTrade.pnl_pct ?? 0)}%
+                  </div>
+                  <div style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginTop: 2 }}>
+                    +{Math.round(bestTrade.pnl ?? 0).toLocaleString('ru-RU')} ₽
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div style={{ padding: '12px', color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontSize: 10 }}>
+            Нет данных по текущей стратегии
+          </div>
+        )}
+
+        {/* Cross-strategy risk table */}
+        {allFullReports.length > 1 && (
+          <>
+            <SH label={`РИСК ПО СТРАТЕГИЯМ (${allFullReports.length})`} />
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['Стратегия', 'Инструмент', 'Max DD', 'Sharpe', 'Calmar', 'Win Rate', 'Сделок'].map(h => (
+                      <th key={h} style={TH}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {reports.map((r, i) => {
+                    const m = allMetrics[i]
+                    const name = r.hypothesis_id.replace('tmpl_h_', '').replace(/_/g, ' ')
+                    return (
+                      <tr
+                        key={r.report_id}
+                        onClick={() => { setSelectedIdx(i); setActiveTab('terminal') }}
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td style={{ ...TD, color: 'var(--t-text)' }}>{name}</td>
+                        <td style={{ ...TD, color: 'var(--t-text-3)' }}>{r.ticker}</td>
+                        <td style={{ ...TD, color: m ? 'var(--t-red)' : 'var(--t-text-3)' }}>
+                          {m ? `${fmtF(m.maxDrawdown)}%` : '—'}
+                        </td>
+                        <td style={{ ...TD, color: m ? (m.sharpe > 0 ? 'var(--t-green)' : 'var(--t-red)') : 'var(--t-text-3)' }}>
+                          {m ? fmtF(m.sharpe) : '—'}
+                        </td>
+                        <td style={{ ...TD, color: 'var(--t-text-2)' }}>
+                          {m ? fmtF(m.calmar) : '—'}
+                        </td>
+                        <td style={{ ...TD, color: m ? (m.winRate >= 50 ? 'var(--t-green)' : 'var(--t-red)') : 'var(--t-text-3)' }}>
+                          {m ? `${fmtF(m.winRate, 0)}%` : '—'}
+                        </td>
+                        <td style={{ ...TD, color: 'var(--t-text-3)' }}>
+                          {m?.numTrades ?? r.num_trades ?? '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
