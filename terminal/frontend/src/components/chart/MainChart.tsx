@@ -25,6 +25,7 @@ const COMMON: Parameters<typeof createChart>[1] = {
   timeScale: { borderColor: '#2a2e39', timeVisible: true, secondsVisible: false },
   rightPriceScale: { borderColor: '#2a2e39' },
   handleScroll: true, handleScale: true,
+  autoSize: true,  // auto-adapts to container resize via ResizeObserver
 }
 
 function mkChart(el: HTMLDivElement, extra: Partial<Parameters<typeof createChart>[1]> = {}): IChartApi {

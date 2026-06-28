@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
-import { IconHistory, IconDownload, IconSearch } from '@tabler/icons-react'
+import { IconHistory, IconDownload, IconSearch, IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { useTerminal } from '../context/TerminalContext'
 import type { JournalEntry } from '../api/client'
+
+const PAGE_SIZE = 75
 
 interface TradeRow {
   tradeId: string
@@ -116,6 +118,7 @@ export default function HistoryPage() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'win' | 'loss'>('all')
   const [sortKey, setSortKey]       = useState<SortKey>('date')
   const [sortDir, setSortDir]       = useState<SortDir>(-1)
+  const [page, setPage]             = useState(0)
 
   const allRows: TradeRow[] = useMemo(() =>
     allFullReports.flatMap((report, idx) => {
@@ -162,7 +165,16 @@ export default function HistoryPage() {
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 1 ? -1 : 1)
     else { setSortKey(key); setSortDir(-1) }
+    setPage(0)
   }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+  // Reset page on filter/search change
+  const setFilterTickerP = (v: string) => { setFilterTicker(v); setPage(0) }
+  const setFilterStatusP = (v: 'all'|'win'|'loss') => { setFilterStatus(v); setPage(0) }
+  const setSearchP = (v: string) => { setSearch(v); setPage(0) }
 
   const handleClick = (row: TradeRow) => {
     setSelectedIdx(row.reportIdx)
@@ -208,23 +220,23 @@ export default function HistoryPage() {
           <IconSearch size={10} color="var(--t-text-3)" />
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => setSearchP(e.target.value)}
             placeholder="Поиск..."
             style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--t-text)', fontSize: 9, fontFamily: 'var(--t-font-mono)', width: 100 }}
           />
         </div>
 
         {/* Ticker filter */}
-        <select value={filterTicker} onChange={e => setFilterTicker(e.target.value)} style={SEL}>
+        <select value={filterTicker} onChange={e => setFilterTickerP(e.target.value)} style={SEL}>
           <option value="">Все инструменты</option>
           {uniqueTickers.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
 
         {/* Status filter */}
         <div style={{ display: 'flex', gap: 3 }}>
-          <FilterBtn active={filterStatus === 'all'}  onClick={() => setFilterStatus('all')}>Все</FilterBtn>
-          <FilterBtn active={filterStatus === 'win'}  onClick={() => setFilterStatus('win')}>Прибыльные</FilterBtn>
-          <FilterBtn active={filterStatus === 'loss'} onClick={() => setFilterStatus('loss')}>Убыточные</FilterBtn>
+          <FilterBtn active={filterStatus === 'all'}  onClick={() => setFilterStatusP('all')}>Все</FilterBtn>
+          <FilterBtn active={filterStatus === 'win'}  onClick={() => setFilterStatusP('win')}>Прибыльные</FilterBtn>
+          <FilterBtn active={filterStatus === 'loss'} onClick={() => setFilterStatusP('loss')}>Убыточные</FilterBtn>
         </div>
 
         <div style={{ flex: 1 }} />
@@ -259,7 +271,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Table */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {filtered.length === 0 ? (
           <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t-text-3)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>
             Нет сделок по выбранным фильтрам
@@ -282,7 +294,7 @@ export default function HistoryPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row, i) => {
+              {paginated.map((row, i) => {
                 const t = row.trade
                 const entryTs = (t as any).entry_timestamp as string | undefined
                 const exitTs  = (t as any).exit_timestamp  as string | undefined
@@ -327,6 +339,41 @@ export default function HistoryPage() {
           </table>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--t-panel)', borderTop: '1px solid var(--t-border)' }}>
+          <button
+            disabled={page === 0}
+            onClick={() => setPage(p => p - 1)}
+            style={{ background: 'none', border: 'none', cursor: page === 0 ? 'default' : 'pointer', color: page === 0 ? 'var(--t-text-3)' : 'var(--t-text-2)', padding: '2px 4px', display: 'flex', alignItems: 'center' }}
+          >
+            <IconChevronLeft size={14} />
+          </button>
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            const p = totalPages <= 7 ? i : page < 4 ? i : page > totalPages - 5 ? totalPages - 7 + i : page - 3 + i
+            return (
+              <button key={p} onClick={() => setPage(p)} style={{
+                padding: '2px 7px', borderRadius: 2, cursor: 'pointer',
+                background: p === page ? 'var(--t-accent-soft)' : 'none',
+                color: p === page ? 'var(--t-accent)' : 'var(--t-text-3)',
+                border: p === page ? '1px solid var(--t-accent)' : '1px solid transparent',
+                fontSize: 9, fontFamily: 'var(--t-font-mono)',
+              }}>{p + 1}</button>
+            )
+          })}
+          <button
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage(p => p + 1)}
+            style={{ background: 'none', border: 'none', cursor: page >= totalPages - 1 ? 'default' : 'pointer', color: page >= totalPages - 1 ? 'var(--t-text-3)' : 'var(--t-text-2)', padding: '2px 4px', display: 'flex', alignItems: 'center' }}
+          >
+            <IconChevronRight size={14} />
+          </button>
+          <span style={{ fontSize: 8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginLeft: 4 }}>
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} из {filtered.length}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

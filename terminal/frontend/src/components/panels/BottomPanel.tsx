@@ -1,27 +1,32 @@
+import { useState, useMemo } from 'react'
 import { ScrollArea } from '@mantine/core'
 import { useTerminal, type BottomTab } from '../../context/TerminalContext'
 import type { JournalEntry, ActivityEvent } from '../../api/client'
 
 function pnlColor(v: number) { return v >= 0 ? 'var(--t-green)' : 'var(--t-red)' }
 
-const COL_TRADES = [
-  { key: '#',          w: 26 },
-  { key: 'Инструм.',  w: 62 },
-  { key: 'Напр.',     w: 46 },
-  { key: 'Вход ₽',   w: 70 },
-  { key: 'Выход ₽',  w: 70 },
-  { key: 'PnL%',     w: 54 },
-  { key: 'PnL ₽',    w: 64 },
-  { key: 'Капитал',  w: 82 },
-  { key: 'Причина',  w: 90 },
-  { key: 'Уд.',      w: 36 },
-  { key: 'Рез.',     w: 30 },
+type TradeSort = 'idx' | 'pnl' | 'pnlPct' | 'entry' | 'exit' | 'hold'
+
+const COL_TRADES: { key: string; w: number; sort?: TradeSort }[] = [
+  { key: '#',          w: 26,  sort: 'idx'    },
+  { key: 'Инструм.',  w: 62                   },
+  { key: 'Напр.',     w: 46                   },
+  { key: 'Вход ₽',   w: 70,  sort: 'entry'   },
+  { key: 'Выход ₽',  w: 70,  sort: 'exit'    },
+  { key: 'PnL%',     w: 54,  sort: 'pnlPct'  },
+  { key: 'PnL ₽',    w: 64,  sort: 'pnl'     },
+  { key: 'Капитал',  w: 82                   },
+  { key: 'Причина',  w: 90                   },
+  { key: 'Уд.',      w: 36,  sort: 'hold'    },
+  { key: 'Рез.',     w: 30                   },
 ]
 
 // ── Таблица сделок ────────────────────────────────────────────────────────────
 
 function TradeTable({ trades, ticker }: { trades: JournalEntry[]; ticker: string | undefined }) {
   const { selectedTradeId, setSelectedTradeId, candles } = useTerminal()
+  const [sortKey, setSortKey] = useState<TradeSort>('idx')
+  const [sortDir, setSortDir] = useState<1|-1>(1)
 
   if (trades.length === 0) {
     return (
@@ -33,17 +38,48 @@ function TradeTable({ trades, ticker }: { trades: JournalEntry[]; ticker: string
 
   const dirLabel = (t: JournalEntry): string => ((t as any).direction ?? 'LONG')
 
-  const holdLabel = (t: JournalEntry): string => {
-    if (t.exit_bar == null) return '—'
-    const entryC = candles[t.entry_bar]
-    const exitC = candles[t.exit_bar]
-    if (entryC && exitC) {
-      const h = (exitC.time - entryC.time) / 3600
-      return h < 48 ? `${Math.round(h)}ч` : `${(h / 24).toFixed(1)}д`
-    }
-    const bars = t.exit_bar - t.entry_bar
-    return bars > 0 ? `${bars}б` : '—'
+  const holdMs = (t: JournalEntry): number => {
+    if (t.exit_bar == null) return 0
+    const entryC = candles[t.entry_bar], exitC = candles[t.exit_bar]
+    if (entryC && exitC) return (exitC.time - entryC.time) * 1000
+    return (t.exit_bar - t.entry_bar) * 3_600_000
   }
+
+  const holdLabel = (t: JournalEntry): string => {
+    const ms = holdMs(t)
+    if (ms === 0) return '—'
+    const h = ms / 3_600_000
+    return h < 48 ? `${Math.round(h)}ч` : `${(h / 24).toFixed(1)}д`
+  }
+
+  const toggleSort = (k: TradeSort) => {
+    if (sortKey === k) setSortDir(d => d === 1 ? -1 : 1); else { setSortKey(k); setSortDir(-1) }
+  }
+
+  const sorted = useMemo(() => {
+    const copy = [...trades]
+    copy.sort((a, b) => {
+      let av = 0, bv = 0
+      if (sortKey === 'idx')    { av = a.entry_bar;      bv = b.entry_bar }
+      if (sortKey === 'pnl')    { av = a.pnl ?? 0;       bv = b.pnl ?? 0 }
+      if (sortKey === 'pnlPct') { av = a.pnl_pct ?? 0;   bv = b.pnl_pct ?? 0 }
+      if (sortKey === 'entry')  { av = a.entry_price;     bv = b.entry_price }
+      if (sortKey === 'exit')   { av = a.exit_price ?? 0; bv = b.exit_price ?? 0 }
+      if (sortKey === 'hold')   { av = holdMs(a);         bv = holdMs(b) }
+      return (av - bv) * sortDir
+    })
+    return copy
+  }, [trades, sortKey, sortDir, candles])
+
+  const thStyle = (sortable?: TradeSort): React.CSSProperties => ({
+    textAlign: 'left', padding: '4px 6px',
+    color: sortable && sortKey === sortable ? 'var(--t-accent)' : 'var(--t-text-3)',
+    fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 400,
+    background: 'var(--t-panel)', letterSpacing: 0.3,
+    position: 'sticky', top: 0, zIndex: 1, borderBottom: '1px solid var(--t-border)',
+    cursor: sortable ? 'pointer' : 'default', userSelect: 'none',
+    whiteSpace: 'nowrap',
+  })
 
   return (
     <table className="t-table" style={{ tableLayout: 'fixed', width: '100%' }}>
@@ -53,19 +89,18 @@ function TradeTable({ trades, ticker }: { trades: JournalEntry[]; ticker: string
       <thead>
         <tr>
           {COL_TRADES.map(c => (
-            <th key={c.key} style={{
-              textAlign: 'left', padding: '4px 6px',
-              color: 'var(--t-text-3)', fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 400,
-              background: 'var(--t-panel)', letterSpacing: 0.3,
-              position: 'sticky', top: 0, zIndex: 1, borderBottom: '1px solid var(--t-border)',
-            }}>
-              {c.key}
+            <th
+              key={c.key}
+              style={thStyle(c.sort)}
+              onClick={c.sort ? () => toggleSort(c.sort!) : undefined}
+            >
+              {c.key}{c.sort && sortKey === c.sort ? (sortDir === -1 ? '↓' : '↑') : ''}
             </th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {trades.map((t, i) => {
+        {sorted.map((t, i) => {
           const dir = dirLabel(t)
           const dirColor = dir === 'SHORT' ? 'var(--t-red)' : 'var(--t-cyan)'
           const isSelected = !!(t.trade_id && t.trade_id === selectedTradeId)
@@ -81,7 +116,7 @@ function TradeTable({ trades, ticker }: { trades: JournalEntry[]; ticker: string
                 outlineOffset: -1,
               }}
             >
-              <td style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', padding: '4px 6px' }}>{i + 1}</td>
+              <td style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', padding: '4px 6px' }}>{t.entry_bar + 1}</td>
               <td style={{ fontSize: 10, color: 'var(--t-text)', fontFamily: 'var(--t-font-mono)', padding: '4px 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {ticker ?? '—'}
               </td>
