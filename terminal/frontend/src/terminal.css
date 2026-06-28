@@ -327,3 +327,43 @@ html, body, #root {
   color: var(--t-text-2);
   margin-top: 3px;
 }
+
+/* ── Terminal table ── */
+.t-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 10px;
+}
+.t-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 5px 8px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--t-text-3);
+  background: var(--t-panel);
+  border-bottom: 1px solid var(--t-border);
+  white-space: nowrap;
+}
+.t-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--t-border-dim);
+  color: var(--t-text);
+  white-space: nowrap;
+}
+.t-table-row:hover td {
+  background: var(--t-hover);
+}
+
+/* ── Scrollbar global ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-elevated) transparent;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--t-elevated); border-radius: 2px; }
