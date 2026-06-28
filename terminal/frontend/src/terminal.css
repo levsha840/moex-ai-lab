@@ -1,0 +1,329 @@
+/* ══════════════════════════════════════════════════════════
+   MOEX AI TERMINAL — Global Design Tokens & Overrides
+   TradingView-inspired dark professional terminal
+   ══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Background layers */
+  --t-bg:          #131722;
+  --t-panel:       #1e222d;
+  --t-card:        #252b36;
+  --t-elevated:    #2a2e39;
+  --t-hover:       #363a45;
+
+  /* Borders */
+  --t-border:      #2a2e39;
+  --t-border-dim:  #1e222d;
+  --t-border-accent: #2962ff;
+
+  /* Accent palette */
+  --t-accent:      #2962ff;
+  --t-accent-soft: rgba(41,98,255,0.15);
+  --t-cyan:        #00b0ff;
+  --t-cyan-soft:   rgba(0,176,255,0.12);
+
+  /* Semantic colors */
+  --t-green:       #089981;
+  --t-green-soft:  rgba(8,153,129,0.15);
+  --t-red:         #f23645;
+  --t-red-soft:    rgba(242,54,69,0.15);
+  --t-amber:       #ffb800;
+  --t-amber-soft:  rgba(255,184,0,0.12);
+  --t-purple:      #7e57c2;
+
+  /* Text */
+  --t-text:        #d1d4dc;
+  --t-text-2:      #9598a1;
+  --t-text-3:      #5d6067;
+  --t-text-dim:    #3d4048;
+
+  /* Font */
+  --t-font-mono:   'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Consolas', monospace;
+  --t-font-ui:     -apple-system, 'Inter', system-ui, sans-serif;
+}
+
+/* ── Base reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--t-bg);
+  color: var(--t-text);
+  font-family: var(--t-font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar              { width: 4px; height: 4px; }
+::-webkit-scrollbar-track        { background: var(--t-bg); }
+::-webkit-scrollbar-thumb        { background: var(--t-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--t-elevated); }
+
+/* ── Selection ── */
+::selection { background: var(--t-accent-soft); color: var(--t-text); }
+
+/* ── Mantine overrides for terminal style ── */
+.mantine-Paper-root,
+.mantine-Card-root {
+  background: var(--t-card) !important;
+  border-color: var(--t-border) !important;
+  border-radius: 2px !important;
+}
+
+.mantine-Table-th {
+  background: var(--t-panel) !important;
+  color: var(--t-text-2) !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  padding: 5px 8px !important;
+  border-bottom: 1px solid var(--t-border) !important;
+  font-family: var(--t-font-mono) !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Table-td {
+  font-size: 11px !important;
+  padding: 5px 8px !important;
+  border-bottom: 1px solid var(--t-border-dim) !important;
+  font-family: var(--t-font-mono) !important;
+  color: var(--t-text) !important;
+}
+
+.mantine-Table-tr:hover td {
+  background: var(--t-hover) !important;
+}
+
+.mantine-ScrollArea-scrollbar { background: transparent !important; }
+
+.mantine-Badge-root {
+  font-family: var(--t-font-mono) !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 2px !important;
+}
+
+.mantine-Select-input,
+.mantine-TextInput-input {
+  background: var(--t-panel) !important;
+  border-color: var(--t-border) !important;
+  color: var(--t-text) !important;
+  font-family: var(--t-font-mono) !important;
+  font-size: 11px !important;
+  border-radius: 2px !important;
+}
+
+.mantine-Select-input:focus,
+.mantine-TextInput-input:focus {
+  border-color: var(--t-border-accent) !important;
+}
+
+.mantine-Select-dropdown {
+  background: var(--t-elevated) !important;
+  border-color: var(--t-border) !important;
+  border-radius: 2px !important;
+}
+
+.mantine-Select-option {
+  font-family: var(--t-font-mono) !important;
+  font-size: 11px !important;
+  color: var(--t-text) !important;
+}
+
+.mantine-Select-option:hover,
+.mantine-Select-option[data-selected] {
+  background: var(--t-hover) !important;
+}
+
+.mantine-Loader-root { color: var(--t-accent) !important; }
+
+.mantine-SegmentedControl-root {
+  background: var(--t-panel) !important;
+  border: 1px solid var(--t-border) !important;
+  border-radius: 2px !important;
+}
+
+.mantine-SegmentedControl-indicator {
+  background: var(--t-elevated) !important;
+  border-radius: 2px !important;
+}
+
+.mantine-SegmentedControl-label {
+  color: var(--t-text-2) !important;
+  font-family: var(--t-font-mono) !important;
+  font-size: 10px !important;
+}
+
+/* ── Terminal-specific classes ── */
+.t-panel {
+  background: var(--t-panel);
+  border: 1px solid var(--t-border);
+}
+
+.t-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--t-text-3);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--t-border-dim);
+  background: var(--t-bg);
+}
+
+.t-metric {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--t-border-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.t-metric:last-child { border-bottom: none; }
+
+.t-metric-label {
+  font-size: 10px;
+  color: var(--t-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.t-metric-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--t-font-mono);
+  color: var(--t-text);
+}
+
+.t-metric-value.up   { color: var(--t-green); }
+.t-metric-value.down { color: var(--t-red); }
+.t-metric-value.cyan { color: var(--t-cyan); }
+.t-metric-value.dim  { color: var(--t-text-2); }
+
+.t-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 36px;
+  background: var(--t-panel);
+  border-bottom: 1px solid var(--t-border);
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+
+.t-topbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--t-border);
+  margin: 0 10px;
+}
+
+.t-tab {
+  height: 36px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--t-text-2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.1s;
+  white-space: nowrap;
+  font-family: var(--t-font-mono);
+  user-select: none;
+}
+
+.t-tab:hover { color: var(--t-text); background: var(--t-hover); }
+.t-tab.active { color: var(--t-text); border-bottom-color: var(--t-accent); background: var(--t-bg); }
+
+.t-pricetag {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.t-pricetag-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--t-text);
+  font-family: var(--t-font-mono);
+}
+
+.t-pricetag-change.up   { font-size: 12px; color: var(--t-green); font-family: var(--t-font-mono); }
+.t-pricetag-change.down { font-size: 12px; color: var(--t-red);   font-family: var(--t-font-mono); }
+
+.t-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-family: var(--t-font-mono);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.t-chip.green  { background: var(--t-green-soft);  color: var(--t-green); }
+.t-chip.red    { background: var(--t-red-soft);    color: var(--t-red); }
+.t-chip.amber  { background: var(--t-amber-soft);  color: var(--t-amber); }
+.t-chip.blue   { background: var(--t-accent-soft); color: var(--t-accent); }
+.t-chip.cyan   { background: var(--t-cyan-soft);   color: var(--t-cyan); }
+.t-chip.gray   { background: var(--t-elevated);    color: var(--t-text-2); }
+
+.t-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.t-dot.green  { background: var(--t-green); box-shadow: 0 0 4px var(--t-green); }
+.t-dot.red    { background: var(--t-red); }
+.t-dot.amber  { background: var(--t-amber); }
+.t-dot.gray   { background: var(--t-text-3); }
+.t-dot.pulse  { animation: pulse 2s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.t-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  background: var(--t-border);
+  border: 1px solid var(--t-border);
+}
+
+.t-kpi-cell {
+  background: var(--t-panel);
+  padding: 10px 14px;
+}
+
+.t-kpi-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--t-text-3);
+  margin-bottom: 4px;
+}
+
+.t-kpi-val {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--t-font-mono);
+  color: var(--t-text);
+  line-height: 1;
+}
+
+.t-kpi-sub {
+  font-size: 10px;
+  color: var(--t-text-2);
+  margin-top: 3px;
+}

@@ -7,6 +7,7 @@ import { HashRouter } from 'react-router-dom'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 import '@mantine/charts/styles.css'
+import './terminal.css'
 import App from './App'
 import { theme } from './theme'
 

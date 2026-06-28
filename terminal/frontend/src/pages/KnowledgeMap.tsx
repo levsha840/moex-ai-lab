@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react'
-import { Group, Text, Badge, Paper, Stack, Loader, Center, SimpleGrid } from '@mantine/core'
+import { Loader, Center } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import { IconBrain } from '@tabler/icons-react'
 import ReactECharts from 'echarts-for-react'
 import { fetchKnowledgeGraph } from '../api/client'
 
@@ -17,7 +16,7 @@ const NODE_SHAPE: Record<string, string> = {
 export default function KnowledgeMap() {
   const { data, isLoading } = useQuery({ queryKey: ['knowledge-graph'], queryFn: fetchKnowledgeGraph })
 
-  if (isLoading) return <Center h="100vh"><Loader color="blue" /></Center>
+  if (isLoading) return <Center h="100%"><Loader /></Center>
   if (!data) return null
 
   const { nodes, edges } = data
@@ -49,12 +48,12 @@ export default function KnowledgeMap() {
   }))
 
   const option = {
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131722',
     tooltip: {
       trigger: 'item',
-      backgroundColor: '#161b22',
-      borderColor: '#30363d',
-      textStyle: { color: '#e6edf3', fontSize: 11, fontFamily: 'monospace' },
+      backgroundColor: '#1e222d',
+      borderColor: '#2a2e39',
+      textStyle: { color: '#d1d4dc', fontSize: 11, fontFamily: 'monospace' },
       formatter: (params: any) => {
         const n = nodes.find(nd => nd.id === params.data.id)
         if (!n) return params.data.name
@@ -84,21 +83,24 @@ export default function KnowledgeMap() {
     }],
   }
 
-  return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#0d1117' }}>
-      <div style={{ padding: '10px 16px', borderBottom: '1px solid #21262d', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <IconBrain size={16} color="#58a6ff" />
-        <Text size="sm" fw={700} c="#e6edf3" style={{ letterSpacing: 1 }}>KNOWLEDGE MAP</Text>
-        <Badge color="blue" size="sm">{nodes.length} nodes · {edges.length} connections</Badge>
-      </div>
+  const NODE_COLORS: Record<string, string> = {
+    root: '#2962ff', category: '#00b0ff', hypothesis: '#089981',
+    instrument: '#ffb800', regime: '#9c27b0', evidence: '#f23645',
+  }
 
-      {/* Legend */}
-      <div style={{ padding: '6px 16px', borderBottom: '1px solid #21262d', display: 'flex', gap: 16 }}>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--t-bg)' }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 38, padding: '0 12px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', flexShrink: 0 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-text-2)', textTransform: 'uppercase', letterSpacing: 1 }}>KNOWLEDGE MAP</span>
+        <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+        <span style={{ fontSize: 11, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)' }}>{nodes.length} nodes · {edges.length} edges</span>
+        <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
         {Object.entries(typeCounts).map(([type, count]) => (
-          <Group key={type} gap={6}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#58a6ff', opacity: 0.8 }} />
-            <Text size="10px" c="#8b949e">{type} ({count})</Text>
-          </Group>
+          <span key={type} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--t-text-2)' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: NODE_COLORS[type] ?? '#9598a1', display: 'inline-block' }} />
+            {type} {count}
+          </span>
         ))}
       </div>
 

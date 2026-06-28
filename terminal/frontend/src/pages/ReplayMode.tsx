@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Group, Text, Badge, Select, SegmentedControl, ActionIcon, Slider, Paper, Stack, Loader, Center } from '@mantine/core'
+import { Select, Slider, Loader, Center, ScrollArea } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { IconPlayerPlay, IconPlayerPause, IconPlayerStop } from '@tabler/icons-react'
 import { fetchReports, fetchReport, fetchCandles } from '../api/client'
@@ -7,12 +7,7 @@ import CandleChart from '../components/charts/CandleChart'
 import EquityLineChart from '../components/charts/EquityLineChart'
 import MetricCard from '../components/shared/MetricCard'
 
-const SPEEDS = [
-  { label: '×1', value: '1' },
-  { label: '×5', value: '5' },
-  { label: '×20', value: '20' },
-  { label: '×100', value: '100' },
-]
+const SPEEDS = ['1', '5', '20', '100']
 
 function computeCapital(trades: any[], bar: number, initial: number): number {
   let cap = initial
@@ -46,7 +41,7 @@ export default function ReplayMode() {
 
   const total = candles.length
   const trades = report?.trade_journal ?? []
-  const capital = report?.metrics.initial_capital ?? 1_000_000
+  const capital = report?.metrics?.initial_capital ?? 1_000_000
 
   const stop = useCallback(() => {
     setPlaying(false)
@@ -64,23 +59,18 @@ export default function ReplayMode() {
     const step = Number(speed)
     intervalRef.current = setInterval(() => {
       setBar(b => {
-        if (b + step >= total - 1) {
-          setPlaying(false)
-          return total - 1
-        }
+        if (b + step >= total - 1) { setPlaying(false); return total - 1 }
         return b + step
       })
     }, 50)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [playing, speed, total])
 
-  // Reset bar when report changes
   useEffect(() => { setBar(0); setPlaying(false) }, [selectedIdx])
 
   const currentCapital = computeCapital(trades, bar, capital)
-  const tradesExecuted = trades.filter(t => t.exit_bar <= bar)
-  const currentPnl = currentCapital - capital
-  const currentPnlPct = (currentPnl / capital) * 100
+  const tradesExecuted = trades.filter((t: any) => t.exit_bar <= bar)
+  const currentPnlPct = ((currentCapital - capital) / capital) * 100
 
   const reportOptions = reports.map((r, i) => ({
     value: String(i),
@@ -88,123 +78,104 @@ export default function ReplayMode() {
   }))
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#0d1117' }}>
-      {/* Header */}
-      <div style={{ padding: '10px 16px', borderBottom: '1px solid #21262d', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <IconPlayerPlay size={16} color="#58a6ff" />
-        <Text size="sm" fw={700} c="#e6edf3" style={{ letterSpacing: 1 }}>REPLAY MODE</Text>
-        {playing && <Badge color="green" variant="dot" size="sm">PLAYING</Badge>}
-        <div style={{ flex: 1 }} />
-        <Select
-          size="xs"
-          data={reportOptions}
-          value={String(selectedIdx)}
-          onChange={v => setSelectedIdx(Number(v ?? '0'))}
-          style={{ width: 360 }}
-          styles={{ input: { background: '#161b22', border: '1px solid #30363d', color: '#e6edf3', fontSize: 11 } }}
-        />
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--t-bg)' }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 38, padding: '0 12px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', flexShrink: 0 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-text-2)', textTransform: 'uppercase', letterSpacing: 1 }}>REPLAY</span>
+        <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+        <Select size="xs" data={reportOptions} value={String(selectedIdx)}
+          onChange={v => setSelectedIdx(Number(v ?? '0'))} style={{ width: 380, flexShrink: 0 }} />
+        <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
 
-      {/* Controls */}
-      <div style={{ padding: '8px 16px', borderBottom: '1px solid #21262d', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Group gap={6}>
-          <ActionIcon
-            size="sm" color="green" variant={playing ? 'light' : 'filled'}
-            onClick={() => { if (bar >= total - 1) setBar(0); setPlaying(true) }}
-            disabled={total === 0}
-          >
-            <IconPlayerPlay size={12} />
-          </ActionIcon>
-          <ActionIcon size="sm" color="yellow" variant="light" onClick={pause}>
-            <IconPlayerPause size={12} />
-          </ActionIcon>
-          <ActionIcon size="sm" color="red" variant="light" onClick={stop}>
-            <IconPlayerStop size={12} />
-          </ActionIcon>
-        </Group>
+        {/* Play controls */}
+        <button onClick={() => { if (bar >= total - 1) setBar(0); setPlaying(true) }}
+          disabled={total === 0}
+          style={{ background: playing ? 'var(--t-green)' : 'var(--t-elevated)', border: '1px solid var(--t-border)', borderRadius: 2, padding: '3px 8px', cursor: 'pointer', color: playing ? '#000' : 'var(--t-green)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+          <IconPlayerPlay size={10} />{playing ? 'PLAYING' : 'PLAY'}
+        </button>
+        <button onClick={pause}
+          style={{ background: 'var(--t-elevated)', border: '1px solid var(--t-border)', borderRadius: 2, padding: '3px 8px', cursor: 'pointer', color: 'var(--t-amber)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+          <IconPlayerPause size={10} />PAUSE
+        </button>
+        <button onClick={stop}
+          style={{ background: 'var(--t-elevated)', border: '1px solid var(--t-border)', borderRadius: 2, padding: '3px 8px', cursor: 'pointer', color: 'var(--t-red)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+          <IconPlayerStop size={10} />STOP
+        </button>
 
-        <SegmentedControl
-          size="xs"
-          value={speed}
-          onChange={setSpeed}
-          data={SPEEDS}
-          styles={{ root: { background: '#161b22', border: '1px solid #30363d' }, label: { fontSize: 11, color: '#8b949e' } }}
-        />
-
-        <div style={{ flex: 1, padding: '0 12px' }}>
-          <Slider
-            value={bar}
-            onChange={v => { pause(); setBar(v) }}
-            min={0}
-            max={Math.max(total - 1, 1)}
-            size="xs"
-            color="blue"
-            styles={{ track: { background: '#21262d' } }}
-          />
+        <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+        {/* Speed buttons */}
+        <div style={{ display: 'flex', gap: 2 }}>
+          {SPEEDS.map(s => (
+            <button key={s} onClick={() => setSpeed(s)}
+              style={{ background: speed === s ? 'var(--t-accent)' : 'var(--t-elevated)', border: '1px solid var(--t-border)', borderRadius: 2, padding: '3px 10px', cursor: 'pointer', color: speed === s ? '#fff' : 'var(--t-text-2)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>
+              ×{s}
+            </button>
+          ))}
         </div>
 
-        <Text size="11px" c="#8b949e" ff="monospace">
-          Bar {bar} / {total}
-          {candles[bar] && <span style={{ marginLeft: 8, color: '#58a6ff' }}>{candles[bar].ts?.slice(0, 16)}</span>}
-        </Text>
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
+          {bar} / {total} {candles[bar] ? `· ${candles[bar].ts?.slice(0, 10)}` : ''}
+        </span>
       </div>
 
-      {/* Main: chart + sidebar */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 240px', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Scrubber */}
+      <div style={{ padding: '6px 16px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', flexShrink: 0 }}>
+        <Slider value={bar} onChange={v => { pause(); setBar(v) }}
+          min={0} max={Math.max(total - 1, 1)} size="xs" color="blue"
+          styles={{ track: { background: 'var(--t-elevated)' } }} />
+      </div>
+
+      {/* Main area */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 220px', gap: 1, background: 'var(--t-border)', overflow: 'hidden' }}>
+        {/* Charts + recent trades */}
+        <div style={{ background: 'var(--t-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {isLoading ? (
-            <Center h="100%"><Loader color="blue" /></Center>
+            <Center h="100%"><Loader /></Center>
           ) : (
             <>
-              <div style={{ flex: '0 0 auto', padding: '8px 8px 0' }}>
-                <CandleChart candles={candles} trades={trades} height={320} upToBar={bar} />
+              <div style={{ flex: '0 0 58%', minHeight: 0 }}>
+                <CandleChart candles={candles} trades={trades} fillContainer upToBar={bar} />
               </div>
-              <div style={{ flex: '0 0 auto', padding: '4px 8px 0' }}>
-                <Text size="10px" c="#8b949e" mb={4} pl={4}>EQUITY CURVE</Text>
-                <EquityLineChart candles={candles} trades={trades} initialCapital={capital} height={150} upToBar={bar} />
+              <div style={{ flex: '0 0 28%', minHeight: 0 }}>
+                <div className="t-section-title">⬡ Equity Curve</div>
+                <div style={{ flex: 1, minHeight: 0, height: 'calc(100% - 24px)' }}>
+                  <EquityLineChart candles={candles} trades={trades} initialCapital={capital} fillContainer upToBar={bar} />
+                </div>
               </div>
-
-              {/* Replay trade log */}
-              <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
-                <Text size="10px" c="#8b949e" mb={6}>Executed: {tradesExecuted.length} trades</Text>
-                {tradesExecuted.slice(-5).reverse().map(t => (
-                  <Paper key={t.trade_id} p="xs" mb={4} style={{ background: '#0d1117', border: '1px solid #21262d' }}>
-                    <Group justify="space-between">
-                      <Text size="10px" c="#8b949e">{t.entry_timestamp?.slice(5, 16)} → {t.exit_timestamp?.slice(5, 16)}</Text>
-                      <Text size="10px" c={t.is_winner ? '#3fb950' : '#f85149'} ff="monospace">
+              <div style={{ flex: '0 0 14%', minHeight: 0, overflow: 'hidden' }}>
+                <div className="t-section-title">⬡ Recent Trades ({tradesExecuted.length})</div>
+                <ScrollArea style={{ height: 'calc(100% - 24px)' }} scrollbarSize={3}>
+                  {tradesExecuted.slice(-8).reverse().map((t: any) => (
+                    <div key={t.trade_id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 10px', borderBottom: '1px solid var(--t-border-dim)' }}>
+                      <span style={{ fontSize: 10, color: 'var(--t-text-2)', fontFamily: 'var(--t-font-mono)' }}>{t.entry_timestamp?.slice(5, 16)} → {t.exit_timestamp?.slice(5, 16)}</span>
+                      <span style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', color: t.is_winner ? 'var(--t-green)' : 'var(--t-red)' }}>
                         {t.pnl_pct >= 0 ? '+' : ''}{t.pnl_pct.toFixed(2)}%
-                      </Text>
-                    </Group>
-                  </Paper>
-                ))}
+                      </span>
+                    </div>
+                  ))}
+                </ScrollArea>
               </div>
             </>
           )}
         </div>
 
-        {/* Right panel */}
-        <div style={{ borderLeft: '1px solid #21262d', padding: 12, overflow: 'auto', background: '#010409' }}>
-          <Stack gap={8}>
-            <MetricCard label="Bar" value={bar} color="#8b949e" />
-            <MetricCard
-              label="Capital"
-              value={`₽ ${currentCapital.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}`}
-              color="#e6edf3"
-            />
-            <MetricCard
-              label="Current PnL"
-              value={`${currentPnlPct >= 0 ? '+' : ''}${currentPnlPct.toFixed(2)}%`}
-              color={currentPnlPct >= 0 ? '#3fb950' : '#f85149'}
-              trend={currentPnlPct >= 0 ? 'up' : 'down'}
-            />
-            <MetricCard label="Trades Done" value={tradesExecuted.length} color="#58a6ff" />
-            {report && (
-              <>
-                <MetricCard label="Final Return" value={`${report.metrics.total_return_pct >= 0 ? '+' : ''}${report.metrics.total_return_pct.toFixed(2)}%`} color="#8b949e" sub="(full backtest)" />
-                <MetricCard label="Max DD (full)" value={`${report.metrics.max_drawdown_pct.toFixed(2)}%`} color="#f85149" />
-              </>
-            )}
-          </Stack>
+        {/* Right: live metrics */}
+        <div style={{ background: 'var(--t-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="t-section-title">⬡ Live Metrics</div>
+          <MetricCard label="Bar" value={bar} cls="dim" />
+          <MetricCard label="Capital" value={`₽ ${currentCapital.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}`} cls="cyan" />
+          <MetricCard label="PnL" value={`${currentPnlPct >= 0 ? '+' : ''}${currentPnlPct.toFixed(2)}%`} cls={currentPnlPct >= 0 ? 'up' : 'down'} />
+          <MetricCard label="Trades Done" value={tradesExecuted.length} cls="dim" />
+          {report?.metrics && (
+            <>
+              <div className="t-section-title" style={{ marginTop: 8 }}>⬡ Full Backtest</div>
+              <MetricCard label="Final Return" value={`${report.metrics.total_return_pct >= 0 ? '+' : ''}${report.metrics.total_return_pct.toFixed(2)}%`} cls={report.metrics.total_return_pct >= 0 ? 'up' : 'down'} sub="complete" />
+              <MetricCard label="Max DD" value={`${report.metrics.max_drawdown_pct.toFixed(2)}%`} cls="down" />
+              <MetricCard label="Win Rate" value={`${(report.metrics.win_rate * 100).toFixed(1)}%`} cls={report.metrics.win_rate >= 0.5 ? 'up' : 'dim'} />
+              <MetricCard label="Total Trades" value={report.metrics.num_trades} cls="dim" />
+            </>
+          )}
         </div>
       </div>
     </div>

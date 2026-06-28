@@ -2,45 +2,71 @@ import { createTheme, rem } from '@mantine/core'
 
 export const theme = createTheme({
   primaryColor: 'blue',
-  fontFamily: "'Roboto Mono', 'Consolas', 'Monaco', monospace",
-  fontFamilyMonospace: "'Roboto Mono', 'Consolas', monospace",
+  fontFamily: "'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Consolas', monospace",
+  fontFamilyMonospace: "'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Consolas', monospace",
   headings: {
-    fontFamily: "'Roboto Mono', 'Consolas', monospace",
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Consolas', monospace",
   },
   colors: {
     dark: [
-      '#C1C2C5', '#A6A7AB', '#909296', '#5C5F66',
-      '#373A40', '#2C2E33', '#25262b', '#1A1B1E',
-      '#141517', '#101113',
+      '#d1d4dc', '#9598a1', '#787b86', '#5d6067',
+      '#3d4048', '#2a2e39', '#1e222d', '#161b26',
+      '#131722', '#0f1219',
+    ],
+    blue: [
+      '#ebf3ff', '#c3d9ff', '#9fbfff', '#6a9fff',
+      '#4680ff', '#2962ff', '#1a4fd4', '#0f3ab0',
+      '#0a2a8c', '#061d6a',
     ],
   },
   components: {
     Paper: {
-      defaultProps: { radius: 'sm' },
+      defaultProps: { radius: 0 },
       styles: {
         root: {
-          backgroundColor: '#161b22',
-          border: '1px solid #30363d',
+          backgroundColor: '#252b36',
+          border: '1px solid #2a2e39',
+          borderRadius: 2,
         },
       },
     },
     Card: {
-      defaultProps: { radius: 'sm', p: 'md' },
+      defaultProps: { radius: 0, p: 'xs' },
       styles: {
         root: {
-          backgroundColor: '#161b22',
-          border: '1px solid #30363d',
+          backgroundColor: '#252b36',
+          border: '1px solid #2a2e39',
+          borderRadius: 2,
+        },
+      },
+    },
+    Badge: {
+      defaultProps: { size: 'xs', radius: 2 },
+      styles: {
+        root: {
+          fontFamily: "'JetBrains Mono', 'Consolas', monospace",
+          letterSpacing: '0.5px',
+          textTransform: 'uppercase',
         },
       },
     },
     Table: {
+      defaultProps: { highlightOnHover: true, striped: false },
+    },
+    Tooltip: {
       styles: {
-        th: { backgroundColor: '#0d1117', color: '#8b949e', fontSize: rem(11) },
-        td: { fontSize: rem(12), padding: '6px 10px' },
+        tooltip: {
+          backgroundColor: '#2a2e39',
+          border: '1px solid #3d4048',
+          color: '#d1d4dc',
+          fontSize: 11,
+          fontFamily: 'monospace',
+          borderRadius: 2,
+        },
       },
     },
-    Badge: {
-      defaultProps: { size: 'xs', radius: 'sm' },
+    Loader: {
+      defaultProps: { size: 'sm' },
     },
   },
 })

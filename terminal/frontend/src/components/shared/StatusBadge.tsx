@@ -1,29 +1,22 @@
-import { Badge } from '@mantine/core'
+type Cls = 'green' | 'red' | 'amber' | 'blue' | 'cyan' | 'gray'
 
-const STATUS_COLORS: Record<string, string> = {
-  RESEARCH_PASS: 'green',
-  RESEARCH_FAIL: 'red',
-  VISUAL_BACKTEST: 'blue',
-  APPROVED: 'green',
-  REJECT: 'red',
-  ARCHIVE: 'gray',
-  REQUEST_MORE_EVIDENCE: 'yellow',
-  PENDING: 'gray',
-  NOT_STARTED: 'dark',
-  CANDIDATE_RESEARCH_PASSED: 'teal',
-  active: 'green',
-  completed: 'blue',
-  fail: 'red',
-  pass: 'green',
-  info: 'gray',
+const MAP: Record<string, Cls> = {
+  RESEARCH_PASS: 'green',     RESEARCH_FAIL: 'red',
+  VISUAL_BACKTEST: 'blue',    APPROVE: 'green',
+  APPROVED: 'green',          REJECT: 'red',
+  ARCHIVE: 'gray',            REQUEST_MORE_EVIDENCE: 'amber',
+  MONITOR: 'blue',            PENDING: 'gray',
+  NOT_STARTED: 'gray',        CANDIDATE_RESEARCH_PASSED: 'cyan',
+  active: 'green',            completed: 'blue',
+  fail: 'red',                pass: 'green',
+  info: 'gray',               STANDBY: 'amber',
 }
 
 export default function StatusBadge({ status }: { status: string }) {
-  const color = STATUS_COLORS[status] ?? 'gray'
-  const label = status.replace(/_/g, ' ')
+  const cls: Cls = MAP[status] ?? 'gray'
   return (
-    <Badge size="xs" color={color} variant="light" radius="sm">
-      {label}
-    </Badge>
+    <span className={`t-chip ${cls}`}>
+      {status.replace(/_/g, ' ')}
+    </span>
   )
 }

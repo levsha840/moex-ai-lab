@@ -1,9 +1,9 @@
-import { AppShell, Burger, Group, Text, UnstyledButton, Badge, Stack, Divider, rem } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import {
-  IconLayoutDashboard, IconChartCandle, IconDatabase, IconWallet,
-  IconBrain, IconUser, IconPlayerPlay, IconSearch, IconActivity,
+  IconLayoutDashboard, IconChartCandle, IconDatabase,
+  IconWallet, IconBrain, IconUser, IconPlayerPlay,
+  IconSearch, IconActivity, IconCircleDot,
 } from '@tabler/icons-react'
 import Dashboard from '../../pages/Dashboard'
 import LiveResearch from '../../pages/LiveResearch'
@@ -14,86 +14,101 @@ import ChiefScientist from '../../pages/ChiefScientist'
 import ReplayMode from '../../pages/ReplayMode'
 import ExplainDecision from '../../pages/ExplainDecision'
 
-const NAV = [
-  { path: '/',           label: 'Dashboard',       icon: IconLayoutDashboard, tag: null },
-  { path: '/research',   label: 'Live Research',   icon: IconChartCandle,     tag: 'LIVE' },
-  { path: '/strategies', label: 'Strategy Vault',  icon: IconDatabase,        tag: null },
-  { path: '/paper',      label: 'Paper Portfolio', icon: IconWallet,          tag: null },
-  { path: '/knowledge',  label: 'Knowledge Map',   icon: IconBrain,           tag: null },
-  { path: '/scientist',  label: 'Chief Scientist', icon: IconUser,            tag: 'AI' },
-  { path: '/replay',     label: 'Replay Mode',     icon: IconPlayerPlay,      tag: null },
-  { path: '/explain',    label: 'Explain Decision',icon: IconSearch,          tag: null },
+const TABS = [
+  { path: '/',           label: 'Dashboard',       icon: IconLayoutDashboard },
+  { path: '/research',   label: 'Live Research',   icon: IconChartCandle     },
+  { path: '/strategies', label: 'Strategy Vault',  icon: IconDatabase        },
+  { path: '/paper',      label: 'Paper Portfolio', icon: IconWallet          },
+  { path: '/knowledge',  label: 'Knowledge Map',   icon: IconBrain           },
+  { path: '/scientist',  label: 'Chief Scientist', icon: IconUser            },
+  { path: '/replay',     label: 'Replay',          icon: IconPlayerPlay      },
+  { path: '/explain',    label: 'Explain',         icon: IconSearch          },
 ]
 
+function Clock() {
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <span style={{ color: 'var(--t-text-2)', fontFamily: 'var(--t-font-mono)', fontSize: 11 }}>
+      {now.toLocaleTimeString('ru-RU', { hour12: false })} MSK
+    </span>
+  )
+}
+
 export default function AppLayout() {
-  const [opened, { toggle }] = useDisclosure()
   const navigate = useNavigate()
   const location = useLocation()
 
   return (
-    <AppShell
-      navbar={{ width: 200, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding={0}
-      styles={{
-        main: { background: '#0d1117', minHeight: '100vh', paddingLeft: 200 },
-        navbar: { background: '#010409', borderRight: '1px solid #21262d' },
-      }}
-    >
-      <AppShell.Navbar p="xs">
-        <Group mb="sm" px="xs" pt="xs">
-          <IconActivity size={20} color="#58a6ff" />
-          <Text size="sm" fw={700} c="#58a6ff" style={{ letterSpacing: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--t-bg)', overflow: 'hidden' }}>
+      {/* ── Top Navigation Bar ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', height: 36,
+        background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)',
+        flexShrink: 0, userSelect: 'none',
+      }}>
+        {/* Logo */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '0 16px', borderRight: '1px solid var(--t-border)',
+          height: '100%', minWidth: 180, flexShrink: 0,
+        }}>
+          <IconActivity size={14} color="var(--t-accent)" />
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t-text)', letterSpacing: 2 }}>
             MOEX AI LAB
-          </Text>
-          <Badge size="xs" color="green" variant="dot">v1.10</Badge>
-        </Group>
-        <Divider color="#21262d" mb="xs" />
+          </span>
+        </div>
 
-        <Stack gap={2}>
-          {NAV.map(item => {
-            const Icon = item.icon
-            const active = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path))
+        {/* Tabs */}
+        <div style={{ display: 'flex', height: '100%', flex: 1, overflowX: 'auto' }}>
+          {TABS.map(tab => {
+            const Icon = tab.icon
+            const active = tab.path === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(tab.path)
             return (
-              <UnstyledButton
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: rem(8),
-                  padding: '7px 10px',
-                  borderRadius: 6,
-                  fontSize: rem(12),
-                  fontFamily: 'inherit',
-                  color: active ? '#e6edf3' : '#8b949e',
-                  background: active ? '#161b22' : 'transparent',
-                  borderLeft: active ? '2px solid #58a6ff' : '2px solid transparent',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = '#c9d1d9' }}
-                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = '#8b949e' }}
+              <button
+                key={tab.path}
+                onClick={() => navigate(tab.path)}
+                className={`t-tab ${active ? 'active' : ''}`}
+                style={{ border: 'none', outline: 'none', cursor: 'pointer' }}
               >
-                <Icon size={14} />
-                <Text size="xs" style={{ flex: 1 }}>{item.label}</Text>
-                {item.tag && (
-                  <Badge size="xs" color={item.tag === 'LIVE' ? 'green' : 'blue'} variant="filled">
-                    {item.tag}
-                  </Badge>
-                )}
-              </UnstyledButton>
+                <Icon size={12} />
+                {tab.label}
+              </button>
             )
           })}
-        </Stack>
+        </div>
 
-        <div style={{ flex: 1 }} />
-        <Divider color="#21262d" mt="xs" mb="xs" />
-        <Text size="10px" c="#484f58" px="xs" pb="xs">
-          Research Terminal v1.0 · No Real Trading
-        </Text>
-      </AppShell.Navbar>
+        {/* Right side: status + clock */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 14,
+          padding: '0 14px', borderLeft: '1px solid var(--t-border)',
+          height: '100%', flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span className="t-dot green pulse" />
+            <span style={{ fontSize: 10, color: 'var(--t-text-2)' }}>RESEARCH</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span className="t-dot amber" />
+            <span style={{ fontSize: 10, color: 'var(--t-text-2)' }}>PAPER STANDBY</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <IconCircleDot size={10} color="var(--t-red)" />
+            <span style={{ fontSize: 10, color: 'var(--t-red)' }}>REAL: BLOCKED</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+          <Clock />
+        </div>
+      </div>
 
-      <AppShell.Main>
+      {/* ── Content ── */}
+      <div style={{ flex: 1, overflow: 'hidden' }}>
         <Routes>
           <Route path="/"           element={<Dashboard />} />
           <Route path="/research/*" element={<LiveResearch />} />
@@ -104,7 +119,7 @@ export default function AppLayout() {
           <Route path="/replay"     element={<ReplayMode />} />
           <Route path="/explain"    element={<ExplainDecision />} />
         </Routes>
-      </AppShell.Main>
-    </AppShell>
+      </div>
+    </div>
   )
 }

@@ -1,15 +1,15 @@
-import { Group, Text, Badge, Paper, Stack, ScrollArea, Loader, Center, SimpleGrid, Progress } from '@mantine/core'
+import { ScrollArea, Loader, Center } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import { IconUser, IconCheck, IconX, IconHelp, IconArchive } from '@tabler/icons-react'
+import { IconCheck, IconX, IconHelp, IconArchive } from '@tabler/icons-react'
 import { fetchDecisions, fetchScientistStats } from '../api/client'
 import StatusBadge from '../components/shared/StatusBadge'
 
-const DECISION_ICONS: Record<string, { icon: typeof IconCheck; color: string }> = {
-  APPROVE:               { icon: IconCheck,   color: '#3fb950' },
-  REJECT:                { icon: IconX,       color: '#f85149' },
-  REQUEST_MORE_EVIDENCE: { icon: IconHelp,    color: '#f0883e' },
-  ARCHIVE:               { icon: IconArchive, color: '#8b949e' },
-  MONITOR:               { icon: IconHelp,    color: '#58a6ff' },
+const DECISION_META: Record<string, { cls: string; icon: typeof IconCheck }> = {
+  APPROVE:               { cls: 'green', icon: IconCheck   },
+  REJECT:                { cls: 'red',   icon: IconX       },
+  REQUEST_MORE_EVIDENCE: { cls: 'amber', icon: IconHelp    },
+  ARCHIVE:               { cls: 'gray',  icon: IconArchive },
+  MONITOR:               { cls: 'blue',  icon: IconHelp    },
 }
 
 export default function ChiefScientist() {
@@ -21,97 +21,104 @@ export default function ChiefScientist() {
     return acc
   }, {})
 
-  if (isLoading) return <Center h="100vh"><Loader color="blue" /></Center>
+  if (isLoading) return <Center h="100%"><Loader /></Center>
+
+  const COLOR_VAR: Record<string, string> = {
+    green: 'var(--t-green)', red: 'var(--t-red)', amber: 'var(--t-amber)',
+    blue: 'var(--t-accent)', gray: 'var(--t-text-3)',
+  }
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#0d1117' }}>
-      <div style={{ padding: '10px 16px', borderBottom: '1px solid #21262d' }}>
-        <Group gap={10}>
-          <IconUser size={16} color="#58a6ff" />
-          <Text size="sm" fw={700} c="#e6edf3" style={{ letterSpacing: 1 }}>CHIEF SCIENTIST</Text>
-          <Badge color="blue" size="sm">{decisions.length} decisions</Badge>
-        </Group>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--t-bg)' }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 38, padding: '0 12px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', flexShrink: 0 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-text-2)', textTransform: 'uppercase', letterSpacing: 1 }}>CHIEF SCIENTIST</span>
+        <div style={{ width: 1, height: 16, background: 'var(--t-border)' }} />
+        <span style={{ fontSize: 11, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)' }}>{decisions.length} decisions</span>
+        <div style={{ flex: 1 }} />
+        {Object.entries(DECISION_META).map(([type, meta]) => {
+          const count = byType[type] ?? 0
+          if (!count) return null
+          return <span key={type} className={`t-chip ${meta.cls}`}>{type.replace(/_/g, ' ')} {count}</span>
+        })}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', flex: 1, overflow: 'hidden' }}>
-        {/* Left: stats */}
-        <div style={{ borderRight: '1px solid #21262d', padding: 12, overflow: 'auto' }}>
-          <Text size="10px" c="#8b949e" tt="uppercase" mb={10} style={{ letterSpacing: 1 }}>Decision Summary</Text>
-          <Stack gap={10}>
-            {Object.entries(DECISION_ICONS).map(([type, cfg]) => {
-              const Icon = cfg.icon
-              const count = byType[type] ?? 0
-              const total = decisions.length || 1
-              return (
-                <div key={type}>
-                  <Group justify="space-between" mb={4}>
-                    <Group gap={6}>
-                      <Icon size={12} color={cfg.color} />
-                      <Text size="11px" c="#c9d1d9">{type.replace(/_/g, ' ')}</Text>
-                    </Group>
-                    <Text size="11px" c={cfg.color} fw={700} ff="monospace">{count}</Text>
-                  </Group>
-                  <Progress value={count / total * 100} color={cfg.color === '#3fb950' ? 'green' : cfg.color === '#f85149' ? 'red' : 'blue'} size="xs" radius="xs" />
+      {/* Two-panel layout */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '220px 1fr', gap: 1, background: 'var(--t-border)', overflow: 'hidden' }}>
+        {/* Left: summary */}
+        <div style={{ background: 'var(--t-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="t-section-title">⬡ Decision Summary</div>
+          {Object.entries(DECISION_META).map(([type, meta]) => {
+            const count = byType[type] ?? 0
+            const total = decisions.length || 1
+            const pct = count / total * 100
+            return (
+              <div key={type} style={{ padding: '8px 12px', borderBottom: '1px solid var(--t-border-dim)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, color: 'var(--t-text-2)' }}>{type.replace(/_/g, ' ')}</span>
+                  <span style={{ fontSize: 11, fontFamily: 'var(--t-font-mono)', color: COLOR_VAR[meta.cls] ?? 'var(--t-text)' }}>{count}</span>
                 </div>
-              )
-            })}
-          </Stack>
+                <div style={{ height: 3, background: 'var(--t-elevated)', borderRadius: 2 }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: COLOR_VAR[meta.cls] ?? 'var(--t-accent)', borderRadius: 2 }} />
+                </div>
+              </div>
+            )
+          })}
 
-          <Text size="10px" c="#8b949e" tt="uppercase" mt={20} mb={10} style={{ letterSpacing: 1 }}>AI Persona</Text>
-          <Paper p="sm" style={{ background: '#0d1117', border: '1px solid #21262d' }}>
-            <Text size="11px" c="#c9d1d9" lh={1.6}>
-              Chief Scientist evaluates research findings against the Alpha Library criteria.
-              Each hypothesis is judged on pass rate, statistical significance, and regime consistency.
-              Only strategies with pass_rate ≥ 40% proceed to Visual Backtest stage.
-            </Text>
-          </Paper>
+          <div className="t-section-title" style={{ marginTop: 8 }}>⬡ AI Persona</div>
+          <div style={{ padding: '10px 12px', fontSize: 11, color: 'var(--t-text-2)', lineHeight: 1.6 }}>
+            Chief Scientist evaluates research findings against Alpha Library criteria.
+            Hypotheses with pass_rate ≥ 40% proceed to Visual Backtest.
+            Decisions are final — no human override.
+          </div>
         </div>
 
         {/* Right: decision log */}
-        <ScrollArea style={{ flex: 1 }} p="md">
-          <Stack gap={8}>
+        <div style={{ background: 'var(--t-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="t-section-title">⬡ Decision Log</div>
+          <ScrollArea style={{ flex: 1 }} scrollbarSize={3}>
             {decisions.length === 0 && (
-              <Center h={200}>
-                <Text size="12px" c="#484f58">No decisions recorded yet. Run a research campaign to generate decisions.</Text>
+              <Center h={200} style={{ color: 'var(--t-text-3)', fontSize: 11 }}>
+                No decisions yet — run a research campaign
               </Center>
             )}
-            {decisions.map((d: any, i: number) => {
-              const cfg = DECISION_ICONS[d.type] ?? DECISION_ICONS['MONITOR']
-              const Icon = cfg.icon
+            {(decisions as any[]).map((d, i) => {
+              const meta = DECISION_META[d.type] ?? DECISION_META['MONITOR']
+              const Icon = meta.icon
+              const accentColor = COLOR_VAR[meta.cls] ?? 'var(--t-text-2)'
               return (
-                <Paper key={i} p="md" style={{ background: '#161b22', border: `1px solid #30363d`, borderLeft: `3px solid ${cfg.color}` }}>
-                  <Group justify="space-between" mb={6}>
-                    <Group gap={8}>
-                      <Icon size={14} color={cfg.color} />
-                      <Badge size="xs" color={cfg.color === '#3fb950' ? 'green' : cfg.color === '#f85149' ? 'red' : 'orange'}>
-                        {d.type}
-                      </Badge>
-                      <Text size="12px" c="#e6edf3" fw={600} style={{ maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {d.hypothesis_title || d.hypothesis_id}
-                      </Text>
-                    </Group>
-                    <Text size="10px" c="#8b949e" ff="monospace">
+                <div key={i} style={{ padding: '10px 12px', borderBottom: '1px solid var(--t-border-dim)', borderLeft: `3px solid ${accentColor}`, marginLeft: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--t-hover)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <Icon size={11} color={accentColor} />
+                    <StatusBadge status={d.type} />
+                    <span style={{ fontSize: 11, color: 'var(--t-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 400 }}>
+                      {d.hypothesis_title || d.hypothesis_id}
+                    </span>
+                    <div style={{ flex: 1 }} />
+                    <span style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', whiteSpace: 'nowrap' }}>
                       {d.timestamp ? new Date(d.timestamp).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' }) : ''}
-                    </Text>
-                  </Group>
-                  <Text size="11px" c="#8b949e" lh={1.5}>{d.rationale}</Text>
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--t-text-2)', lineHeight: 1.5 }}>{d.rationale}</div>
                   {d.stats?.pass_rate !== null && d.stats?.pass_rate !== undefined && (
-                    <Group mt={6} gap={12}>
-                      <Text size="10px" c="#484f58">
-                        pass_rate: <span style={{ color: '#58a6ff', fontFamily: 'monospace' }}>{(d.stats.pass_rate * 100).toFixed(1)}%</span>
-                      </Text>
+                    <div style={{ marginTop: 6, display: 'flex', gap: 12 }}>
+                      <span style={{ fontSize: 10, color: 'var(--t-text-3)' }}>
+                        pass_rate: <span style={{ color: 'var(--t-cyan)', fontFamily: 'var(--t-font-mono)' }}>{(d.stats.pass_rate * 100).toFixed(1)}%</span>
+                      </span>
                       {d.stats.windows_total && (
-                        <Text size="10px" c="#484f58">
-                          windows: <span style={{ color: '#8b949e', fontFamily: 'monospace' }}>{d.stats.windows_total}</span>
-                        </Text>
+                        <span style={{ fontSize: 10, color: 'var(--t-text-3)' }}>
+                          windows: <span style={{ fontFamily: 'var(--t-font-mono)', color: 'var(--t-text-2)' }}>{d.stats.windows_total}</span>
+                        </span>
                       )}
-                    </Group>
+                    </div>
                   )}
-                </Paper>
+                </div>
               )
             })}
-          </Stack>
-        </ScrollArea>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   )
