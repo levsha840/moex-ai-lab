@@ -9,6 +9,7 @@ import RightPanel from '../panels/RightPanel'
 import BottomPanel from '../panels/BottomPanel'
 import MainChart from '../chart/MainChart'
 import ReplayOverlay from '../overlays/ReplayOverlay'
+import EquityFullscreen from '../overlays/EquityFullscreen'
 import { lazy, Suspense } from 'react'
 const KnowledgeMap = lazy(() => import('../../pages/KnowledgeMap'))
 
@@ -237,6 +238,7 @@ export default function AppLayout() {
         <RightPanel />
       </div>
       <ReplayOverlay />
+      <EquityFullscreen />
     </div>
   )
 }

@@ -8,9 +8,14 @@ import type {
   LabStatus, ActivityEvent, ReportSummary, Report, DatasetCell,
   Candle, JournalEntry, Strategy, PaperSummary, Decision, KnowledgeGraph,
 } from '../api/client'
+import type { IChartApi, UTCTimestamp } from 'lightweight-charts'
 
 export type TopTab = 'terminal' | 'strategy' | 'knowledge' | 'scientist'
 export type BottomTab = 'trades' | 'history' | 'positions' | 'activity' | 'aibrain'
+
+// ── Chart sync types ──────────────────────────────────────────────────────────
+type RangeListener = (from: number, to: number) => void
+type CrosshairListener = (time: number | null) => void
 
 interface Ctx {
   activeTab: TopTab
@@ -33,6 +38,18 @@ interface Ctx {
   pauseReplay: () => void
   stopReplay: () => void
   setReplaySpeed: (s: number) => void
+  // Equity UI state
+  compareMode: boolean
+  setCompareMode: (v: boolean) => void
+  equityExpanded: boolean
+  setEquityExpanded: (v: boolean) => void
+  // Chart sync (stable refs — do NOT use in render logic)
+  mainChartRef: React.MutableRefObject<IChartApi | null>
+  equityChartRef: React.MutableRefObject<IChartApi | null>
+  chartSyncingRef: React.MutableRefObject<boolean>
+  // Crosshair pub/sub (performant — no state updates on mouse move)
+  notifyCrosshairTime: (t: UTCTimestamp | null) => void
+  subscribeCrosshairTime: (cb: CrosshairListener) => () => void
   // data
   status: LabStatus | undefined
   reports: ReportSummary[]
@@ -63,17 +80,34 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const [replayBar, setReplayBar] = useState(0)
   const [replayPlaying, setReplayPlaying] = useState(false)
   const [replaySpeed, setReplaySpeed] = useState(5)
+  const [compareMode, setCompareMode] = useState(false)
+  const [equityExpanded, setEquityExpanded] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Chart sync refs (not state — mutations don't re-render)
+  const mainChartRef = useRef<IChartApi | null>(null)
+  const equityChartRef = useRef<IChartApi | null>(null)
+  const chartSyncingRef = useRef(false)
+
+  // Crosshair pub/sub — no React state, uses DOM timing for performance
+  const crosshairSubscribers = useRef<Set<CrosshairListener>>(new Set())
+  const notifyCrosshairTime = useCallback((t: UTCTimestamp | null) => {
+    crosshairSubscribers.current.forEach(cb => cb(t as number | null))
+  }, [])
+  const subscribeCrosshairTime = useCallback((cb: CrosshairListener) => {
+    crosshairSubscribers.current.add(cb)
+    return () => { crosshairSubscribers.current.delete(cb) }
+  }, [])
+
   // Queries
-  const { data: status }        = useQuery({ queryKey: ['status'],    queryFn: fetchStatus,        refetchInterval: 60_000 })
-  const { data: activity = [] } = useQuery({ queryKey: ['activity'],  queryFn: fetchActivity,      refetchInterval: 60_000 })
-  const { data: reports = [] }  = useQuery({ queryKey: ['reports'],   queryFn: fetchReports })
-  const { data: datasets = [] } = useQuery({ queryKey: ['datasets'],  queryFn: () => fetchDatasets() })
-  const { data: strategies = []}= useQuery({ queryKey: ['strategies'],queryFn: () => fetchStrategies() })
-  const { data: paper }         = useQuery({ queryKey: ['paper'],     queryFn: fetchPaperSummary })
-  const { data: decisions = []} = useQuery({ queryKey: ['decisions'], queryFn: fetchDecisions })
-  const { data: knowledgeGraph }= useQuery({ queryKey: ['kg'],        queryFn: fetchKnowledgeGraph })
+  const { data: status }        = useQuery({ queryKey: ['status'],     queryFn: fetchStatus,         refetchInterval: 60_000 })
+  const { data: activity = [] } = useQuery({ queryKey: ['activity'],   queryFn: fetchActivity,       refetchInterval: 60_000 })
+  const { data: reports = [] }  = useQuery({ queryKey: ['reports'],    queryFn: fetchReports })
+  const { data: datasets = [] } = useQuery({ queryKey: ['datasets'],   queryFn: () => fetchDatasets() })
+  const { data: strategies = []}= useQuery({ queryKey: ['strategies'], queryFn: () => fetchStrategies() })
+  const { data: paper }         = useQuery({ queryKey: ['paper'],      queryFn: fetchPaperSummary })
+  const { data: decisions = []} = useQuery({ queryKey: ['decisions'],  queryFn: fetchDecisions })
+  const { data: knowledgeGraph }= useQuery({ queryKey: ['kg'],         queryFn: fetchKnowledgeGraph })
 
   const currentSummary = reports[selectedIdx]
 
@@ -89,7 +123,6 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     enabled: !!currentSummary,
   })
 
-  // Fetch all full reports for sparklines (3 reports → 3 cached queries)
   const { data: allFullReports = [] } = useQuery({
     queryKey: ['all-full-reports', reports.map(r => r.report_id).join(',')],
     queryFn: () => Promise.all(
@@ -141,6 +174,10 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     replayActive, setReplayActive,
     replayBar, setReplayBar,
     replayPlaying, replaySpeed, startReplay, pauseReplay, stopReplay, setReplaySpeed,
+    compareMode, setCompareMode,
+    equityExpanded, setEquityExpanded,
+    mainChartRef, equityChartRef, chartSyncingRef,
+    notifyCrosshairTime, subscribeCrosshairTime,
     status, reports, currentSummary, fullReport, allFullReports, candles, trades,
     datasets, strategies, paper, decisions, activity, knowledgeGraph,
     isLoadingCandles, isLoadingReport,

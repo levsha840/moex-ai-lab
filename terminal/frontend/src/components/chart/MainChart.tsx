@@ -6,6 +6,7 @@ import {
 } from 'lightweight-charts'
 import type { Candle, JournalEntry } from '../../api/client'
 import { calcRsi, calcMacd, calcAtr } from '../../utils/indicators'
+import { useTerminal } from '../../context/TerminalContext'
 
 interface Props {
   candles: Candle[]
@@ -55,12 +56,16 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
 
   const prevUpToBar = useRef<number | undefined>(undefined)
 
+  // Sync with EquityChart via context
+  const { mainChartRef, equityChartRef, chartSyncingRef, notifyCrosshairTime, subscribeCrosshairTime } = useTerminal()
+
   useEffect(() => {
     if (!mainRef.current || !rsiRef.current || !macdRef.current || !atrRef.current) return
 
     // ── Main chart ─────────────────────────────────────────────────────────
     const mc = mkChart(mainRef.current)
     mcRef.current = mc
+    mainChartRef.current = mc
     csSeries.current = mc.addCandlestickSeries({
       upColor: '#089981', downColor: '#f23645',
       borderUpColor: '#089981', borderDownColor: '#f23645',
@@ -94,7 +99,7 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     ac.current = atrChart
     atrSer.current = atrChart.addLineSeries({ color: '#ffb800', lineWidth: 1 as 1, title: 'ATR' })
 
-    // ── Синхронизация осей времени ──────────────────────────────────────────
+    // ── Internal 4-chart sync ──────────────────────────────────────────────
     let syncing = false
     const syncAll = (others: IChartApi[]) => (range: LogicalRange | null) => {
       if (syncing || !range) return
@@ -107,7 +112,33 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     mc2.timeScale().subscribeVisibleLogicalRangeChange(syncAll([mc, rc, atrChart]))
     atrChart.timeScale().subscribeVisibleLogicalRangeChange(syncAll([mc, rc, mc2]))
 
-    return () => { mc.remove(); rc.remove(); mc2.remove(); atrChart.remove() }
+    // ── External sync with EquityChart (by visible TIME range) ───────────
+    mc.timeScale().subscribeVisibleTimeRangeChange(range => {
+      if (chartSyncingRef.current || !range) return
+      const eq = equityChartRef.current
+      if (!eq) return
+      chartSyncingRef.current = true
+      eq.timeScale().setVisibleRange(range)
+      chartSyncingRef.current = false
+    })
+
+    // ── Crosshair → notify equity ──────────────────────────────────────────
+    mc.subscribeCrosshairMove(param => {
+      notifyCrosshairTime(param.time ? param.time as UTCTimestamp : null)
+    })
+
+    // ── Receive crosshair from equity → apply to main chart ────────────────
+    const unsubCrosshair = subscribeCrosshairTime(time => {
+      if (!time || !csSeries.current) return
+      // LW Charts doesn't expose setCrosshairPosition on main chart directly,
+      // but we can use applyOptions to show time label — handled by sync above
+    })
+
+    return () => {
+      unsubCrosshair()
+      mainChartRef.current = null
+      mc.remove(); rc.remove(); mc2.remove(); atrChart.remove()
+    }
   }, [])
 
   useEffect(() => {
@@ -115,18 +146,15 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     const limit = upToBar !== undefined ? upToBar + 1 : candles.length
     const slice = candles.slice(0, limit)
 
-    // Свечи
     csSeries.current.setData(slice.map(c => ({
       time: c.time as UTCTimestamp, open: c.open, high: c.high, low: c.low, close: c.close,
     })))
 
-    // Объём
     volSer.current?.setData(slice.map(c => ({
       time: c.time as UTCTimestamp, value: c.volume,
       color: c.close >= c.open ? '#08998166' : '#f2364566',
     })))
 
-    // Маркеры сделок
     const markers = trades
       .filter(t => t.entry_bar < limit)
       .flatMap(t => {
@@ -155,11 +183,9 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
       .sort((a, b) => (a.time as number) - (b.time as number))
     csSeries.current.setMarkers(markers)
 
-    // RSI
     const rsiVals = calcRsi(slice)
     rsiSer.current?.setData(slice.map((c, i) => ({ time: c.time as UTCTimestamp, value: rsiVals[i] ?? 50 })))
 
-    // MACD
     const { macd, signal, hist } = calcMacd(slice)
     macdSer.current?.setData(slice.map((c, i) => ({ time: c.time as UTCTimestamp, value: macd[i] ?? 0 })))
     sigSer.current?.setData(slice.map((c, i) => ({ time: c.time as UTCTimestamp, value: signal[i] ?? 0 })))
@@ -168,11 +194,9 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
       color: (hist[i] ?? 0) >= 0 ? '#08998166' : '#f2364566',
     })))
 
-    // ATR
     const atrVals = calcAtr(slice)
     atrSer.current?.setData(slice.map((c, i) => ({ time: c.time as UTCTimestamp, value: atrVals[i] ?? 0 })))
 
-    // fitContent при загрузке или входе в replay
     const justEntered = upToBar !== undefined && prevUpToBar.current === undefined
     prevUpToBar.current = upToBar
     if (upToBar === undefined || justEntered) {
