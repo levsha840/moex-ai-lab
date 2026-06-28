@@ -3,29 +3,7 @@ import { IconTestPipe, IconTerminal2, IconChartLine, IconChevronDown, IconChevro
 import { useTerminal } from '../context/TerminalContext'
 import { metricsFromReport, equityFromReport } from '../utils/portfolio'
 import EquityChart from '../components/chart/EquityChart'
-
-function fmtPct(n: number | null | undefined) {
-  if (n == null) return '—'
-  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
-}
-function pnlCol(n: number | null | undefined) {
-  if (n == null) return 'var(--t-text-3)'
-  return n >= 0 ? 'var(--t-green)' : 'var(--t-red)'
-}
-function fmtF(n: number | null | undefined, dec = 2) {
-  if (n == null || isNaN(n)) return '—'
-  return n.toFixed(dec)
-}
-
-const TH: React.CSSProperties = {
-  padding: '7px 10px', color: 'var(--t-text-3)', fontWeight: 600, letterSpacing: 0.5,
-  fontSize: 9, textAlign: 'left', background: 'var(--t-panel)',
-  borderBottom: '1px solid var(--t-border)', fontFamily: 'var(--t-font-mono)',
-  position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap',
-}
-const TD: React.CSSProperties = {
-  padding: '7px 10px', fontSize: 10, fontFamily: 'var(--t-font-mono)',
-}
+import { TH, TD, TR_HOVER, fmtPct, fmtF, pnlColor as pnlCol } from '../styles/tokens'
 
 function ActionBtn({ onClick, children, accent }: { onClick: () => void; children: React.ReactNode; accent?: boolean }) {
   return (

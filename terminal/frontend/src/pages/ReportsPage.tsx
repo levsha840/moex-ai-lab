@@ -3,22 +3,7 @@ import { IconFileText, IconBook, IconBulb, IconSearch } from '@tabler/icons-reac
 import { useTerminal } from '../context/TerminalContext'
 import { metricsFromReport } from '../utils/portfolio'
 import type { Report, ActivityEvent, Decision } from '../api/client'
-
-// ── Styles ───────────────────────────────────────────────────────────────────
-const TH: React.CSSProperties = {
-  padding: '6px 10px', color: 'var(--t-text-3)', fontWeight: 600, letterSpacing: 0.4,
-  fontSize: 9, textAlign: 'left', background: 'var(--t-panel)',
-  borderBottom: '1px solid var(--t-border)', fontFamily: 'var(--t-font-mono)',
-  position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap',
-}
-const TD: React.CSSProperties = {
-  padding: '6px 10px', fontSize: 10, fontFamily: 'var(--t-font-mono)', whiteSpace: 'nowrap',
-}
-
-function fmtF(n: number | null | undefined, dec = 2): string {
-  if (n == null || isNaN(n)) return '—'
-  return n.toFixed(dec)
-}
+import { TH, TD, fmtF } from '../styles/tokens'
 
 function fmtDt(s: string | undefined): string {
   if (!s) return '—'

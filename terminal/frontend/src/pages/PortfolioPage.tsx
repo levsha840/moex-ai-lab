@@ -6,13 +6,7 @@ import EquityChart from '../components/chart/EquityChart'
 import type { ReportSummary, Report } from '../api/client'
 import type { PortfolioMetrics } from '../utils/portfolio'
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function fmtRub(n: number) {
-  return `${n >= 0 ? '+' : ''}${Math.round(n).toLocaleString('ru-RU')} ₽`
-}
-function fmtPct(n: number) { return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%` }
-function fmtFmt(n: number, d = 2) { return n.toFixed(d) }
-function pnlCol(n: number) { return n >= 0 ? 'var(--t-green)' : 'var(--t-red)' }
+import { fmtRub, fmtPct, fmtF as fmtFmt, pnlColor as pnlCol } from '../styles/tokens'
 
 function PageHeader({ badge }: { badge?: React.ReactNode }) {
   return (
