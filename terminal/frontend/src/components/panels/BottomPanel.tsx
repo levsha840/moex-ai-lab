@@ -2,237 +2,338 @@ import { ScrollArea } from '@mantine/core'
 import { useTerminal, type BottomTab } from '../../context/TerminalContext'
 import type { JournalEntry, ActivityEvent } from '../../api/client'
 
-function TabBar() {
-  const { bottomTab, setBottomTab } = useTerminal()
-  const tabs: { id: BottomTab; label: string }[] = [
-    { id: 'trades',    label: 'Open Trades'    },
-    { id: 'history',   label: 'Trade History'  },
-    { id: 'positions', label: 'Positions'      },
-    { id: 'activity',  label: 'Activity'       },
-    { id: 'aibrain',   label: 'AI Brain'       },
-  ]
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', height: 32,
-      borderBottom: '1px solid var(--t-border)', flexShrink: 0,
-      background: 'var(--t-panel)', paddingLeft: 4,
-    }}>
-      {tabs.map(t => (
-        <button
-          key={t.id}
-          onClick={() => setBottomTab(t.id)}
-          style={{
-            padding: '0 12px', height: '100%', border: 'none', background: 'none',
-            cursor: 'pointer', fontSize: 10, fontFamily: 'var(--t-font-mono)',
-            color: bottomTab === t.id ? 'var(--t-text)' : 'var(--t-text-3)',
-            borderBottom: `2px solid ${bottomTab === t.id ? 'var(--t-accent)' : 'transparent'}`,
-            letterSpacing: 0.5,
-          }}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  )
-}
+// ── Цвет PnL ─────────────────────────────────────────────────────────────────
 
-function TradeRow({ t, onExplain }: { t: JournalEntry; onExplain: (id: string) => void }) {
-  const pnlColor = (t.pnl ?? 0) >= 0 ? 'var(--t-green)' : 'var(--t-red)'
-  return (
-    <tr
-      onClick={() => onExplain(t.trade_id)}
-      style={{ cursor: 'pointer' }}
-      className="t-table-row"
-    >
-      <td>{t.trade_id?.slice(-4) ?? '—'}</td>
-      <td style={{ fontFamily: 'var(--t-font-mono)', fontSize: 10 }}>{t.entry_price?.toFixed(2) ?? '—'}</td>
-      <td style={{ fontFamily: 'var(--t-font-mono)', fontSize: 10 }}>{t.exit_price?.toFixed(2) ?? '—'}</td>
-      <td style={{ color: pnlColor, fontFamily: 'var(--t-font-mono)', fontSize: 10 }}>
-        {(t.pnl_pct ?? 0) >= 0 ? '+' : ''}{(t.pnl_pct ?? 0).toFixed(2)}%
-      </td>
-      <td style={{ color: pnlColor, fontFamily: 'var(--t-font-mono)', fontSize: 10 }}>
-        {(t.pnl ?? 0) >= 0 ? '+' : ''}₽{((t.pnl ?? 0) / 1000).toFixed(1)}k
-      </td>
-      <td style={{ fontFamily: 'var(--t-font-mono)', fontSize: 10 }}>
-        ₽{(t.capital_after / 1000).toFixed(1)}k
-      </td>
-      <td style={{ fontSize: 9, color: 'var(--t-text-3)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {t.exit_reason ?? '—'}
-      </td>
-      <td>
-        <span style={{
-          fontSize: 9, padding: '1px 4px', borderRadius: 2, fontFamily: 'var(--t-font-mono)',
-          background: t.is_winner ? 'var(--t-green-soft)' : 'var(--t-red-soft)',
-          color: t.is_winner ? 'var(--t-green)' : 'var(--t-red)',
-        }}>
-          {t.is_winner ? 'W' : 'L'}
-        </span>
-      </td>
-    </tr>
-  )
-}
+function pnlColor(v: number) { return v >= 0 ? 'var(--t-green)' : 'var(--t-red)' }
 
-function TradeTable({ trades, onExplain }: { trades: JournalEntry[]; onExplain: (id: string) => void }) {
-  if (!trades.length) return (
-    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 11 }}>
-      No trades in this report
-    </div>
-  )
+// ── Таблица сделок ────────────────────────────────────────────────────────────
+
+const COL_TRADES = [
+  { key: '#',            w: 28 },
+  { key: 'Инструмент',  w: 70 },
+  { key: 'Направление', w: 68 },
+  { key: 'Вход ₽',      w: 70 },
+  { key: 'Выход ₽',     w: 70 },
+  { key: 'PnL%',        w: 56 },
+  { key: 'PnL ₽',       w: 64 },
+  { key: 'Капитал',     w: 80 },
+  { key: 'Причина',     w: 80 },
+  { key: 'Рез.',        w: 34 },
+]
+
+function TradeTable({ trades, ticker }: { trades: JournalEntry[]; ticker: string | undefined }) {
+  if (trades.length === 0) {
+    return (
+      <div style={{ padding: '16px 12px', fontSize: 11, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
+        Нет данных сделок
+      </div>
+    )
+  }
+
+  const dirLabel = (t: JournalEntry) => {
+    const s = (t as any).direction ?? 'LONG'
+    return s === 'SHORT' ? 'SHORT' : 'LONG'
+  }
+
   return (
-    <table className="t-table" style={{ width: '100%', tableLayout: 'auto' }}>
+    <table className="t-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+      <colgroup>
+        {COL_TRADES.map(c => <col key={c.key} style={{ width: c.w }} />)}
+      </colgroup>
       <thead>
         <tr>
-          {['#', 'Entry ₽', 'Exit ₽', 'PnL%', 'PnL ₽', 'Capital', 'Reason', 'W/L'].map(h => (
-            <th key={h} style={{ fontSize: 9 }}>{h}</th>
+          {COL_TRADES.map(c => (
+            <th key={c.key} style={{ textAlign: 'left', padding: '5px 8px', color: 'var(--t-text-3)', fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 400, background: 'var(--t-panel)', letterSpacing: 0.3 }}>
+              {c.key}
+            </th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {[...trades].reverse().map(t => (
-          <TradeRow key={t.trade_id} t={t} onExplain={onExplain} />
-        ))}
+        {trades.map((t, i) => {
+          const dir = dirLabel(t)
+          const dirColor = dir === 'SHORT' ? 'var(--t-red)' : 'var(--t-cyan)'
+          return (
+            <tr key={t.trade_id ?? i} className="t-table-row">
+              <td style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', padding: '4px 8px' }}>{i + 1}</td>
+              <td style={{ fontSize: 10, color: 'var(--t-text)', fontFamily: 'var(--t-font-mono)', padding: '4px 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ticker ?? '—'}</td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: dirColor, fontWeight: 600 }}>{dir}</td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: 'var(--t-text-2)' }}>{t.entry_price.toFixed(2)}</td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: 'var(--t-text-2)' }}>{t.exit_price?.toFixed(2) ?? '—'}</td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', fontWeight: 600, color: pnlColor(t.pnl_pct ?? t.pnl ?? 0) }}>
+                {((t.pnl_pct ?? 0) >= 0 ? '+' : '')}{(t.pnl_pct ?? 0).toFixed(2)}%
+              </td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: pnlColor(t.pnl ?? 0) }}>
+                {(t.pnl ?? 0) >= 0 ? '+' : ''}{(t.pnl ?? 0).toFixed(0)} ₽
+              </td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: 'var(--t-text-2)' }}>
+                {t.capital_after?.toFixed(0) ?? '—'}
+              </td>
+              <td style={{ fontSize: 9, color: 'var(--t-text-3)', padding: '4px 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {t.exit_reason ?? '—'}
+              </td>
+              <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', fontWeight: 700, color: t.is_winner ? 'var(--t-green)' : 'var(--t-red)' }}>
+                {t.is_winner ? 'W' : 'L'}
+              </td>
+            </tr>
+          )
+        })}
       </tbody>
     </table>
   )
 }
 
-function ActivityFeed({ events }: { events: ActivityEvent[] }) {
-  if (!events.length) return (
-    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 11 }}>
-      No activity events
-    </div>
-  )
-  const statusColor = (s: string) => {
-    if (s === 'success' || s === 'pass') return 'var(--t-green)'
-    if (s === 'error' || s === 'fail') return 'var(--t-red)'
-    if (s === 'warning') return 'var(--t-amber)'
-    return 'var(--t-cyan)'
+// ── Вкладка «Сделки» (открытые) ──────────────────────────────────────────────
+
+function OpenTradesTab() {
+  const { trades, currentSummary, setBottomTab } = useTerminal()
+  const open = trades.filter(t => t.exit_bar == null || t.exit_price == null)
+  if (open.length === 0 && trades.length > 0) {
+    return (
+      <div style={{ padding: '16px 12px', color: 'var(--t-text-3)', fontSize: 11, fontFamily: 'var(--t-font-mono)' }}>
+        Нет открытых сделок — все позиции закрыты.{' '}
+        <span style={{ color: 'var(--t-accent)', cursor: 'pointer' }} onClick={() => setBottomTab('history')}>
+          Смотрите «История сделок»
+        </span>
+      </div>
+    )
+  }
+  return <TradeTable trades={open} ticker={currentSummary?.ticker} />
+}
+
+// ── Вкладка «Журнал событий» ──────────────────────────────────────────────────
+
+const LEVEL_COLOR: Record<string, string> = {
+  INFO:    'var(--t-text-3)',
+  WARNING: 'var(--t-amber)',
+  ERROR:   'var(--t-red)',
+  SUCCESS: 'var(--t-green)',
+}
+const LEVEL_RU: Record<string, string> = {
+  INFO: 'ИНФО', WARNING: 'ПРЕДУПР', ERROR: 'ОШИБКА', SUCCESS: 'ОК',
+}
+
+function EventLogTab() {
+  const { activity } = useTerminal()
+  if (activity.length === 0) {
+    return (
+      <div style={{ padding: '16px 12px', fontSize: 11, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
+        Нет событий
+      </div>
+    )
   }
   return (
-    <div style={{ padding: '4px 0' }}>
-      {events.slice(0, 60).map(e => (
-        <div key={e.id} style={{ display: 'flex', gap: 8, padding: '4px 10px', borderBottom: '1px solid var(--t-border-dim)', alignItems: 'flex-start' }}>
-          <div style={{
-            width: 6, height: 6, borderRadius: '50%', marginTop: 3, flexShrink: 0,
-            background: statusColor(e.status),
-          }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 10, color: 'var(--t-text)', fontWeight: 500 }}>{e.title}</span>
-              <span style={{ fontSize: 9, color: 'var(--t-text-3)', flexShrink: 0, marginLeft: 8 }}>
-                {new Date(e.timestamp).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <div style={{ fontSize: 9, color: 'var(--t-text-3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {e.detail}
-            </div>
-          </div>
+    <table className="t-table">
+      <thead>
+        <tr>
+          {['Время', 'Уровень', 'Агент', 'Событие'].map(h => (
+            <th key={h} style={{ textAlign: 'left', padding: '5px 8px', color: 'var(--t-text-3)', fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 400, background: 'var(--t-panel)' }}>
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {[...activity].reverse().map((e: ActivityEvent, i) => {
+          const level = (e.type ?? 'INFO').toUpperCase()
+          const color = LEVEL_COLOR[level] ?? 'var(--t-text-3)'
+          return (
+            <tr key={i} className="t-table-row">
+              <td style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', padding: '4px 8px', whiteSpace: 'nowrap', width: 70 }}>
+                {e.timestamp ? new Date(e.timestamp).toLocaleTimeString('ru-RU', { hour12: false }) : '—'}
+              </td>
+              <td style={{ fontSize: 9, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color, fontWeight: 700, width: 64 }}>
+                {LEVEL_RU[level] ?? level}
+              </td>
+              <td style={{ fontSize: 9, color: 'var(--t-accent)', fontFamily: 'var(--t-font-mono)', padding: '4px 8px', width: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {e.status}
+              </td>
+              <td style={{ fontSize: 10, color: 'var(--t-text-2)', padding: '4px 8px', lineHeight: 1.4 }}>
+                {e.title} {e.detail ? `— ${e.detail}` : ''}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
+// ── Вкладка «История сделок» ──────────────────────────────────────────────────
+
+function TradeHistoryTab() {
+  const { trades, currentSummary } = useTerminal()
+  const closed = trades.filter(t => t.exit_bar != null && t.exit_price != null)
+  return <TradeTable trades={closed} ticker={currentSummary?.ticker} />
+}
+
+// ── Вкладка «Активные позиции» ────────────────────────────────────────────────
+
+function PositionsTab() {
+  const { paper, reports } = useTerminal()
+  if (paper) {
+    return (
+      <div style={{ padding: '10px 12px' }}>
+        <div style={{ fontSize: 11, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginBottom: 6 }}>
+          Бумажный портфель · {paper.open_positions} позиций открыто
         </div>
-      ))}
-    </div>
-  )
-}
-
-function AIBrainTab() {
-  const { currentSummary, decisions, status, trades } = useTerminal()
-  const d = decisions[0]
-  const winCount = trades.filter(t => t.is_winner).length
-  const totalTrades = trades.length
-  const capital = trades[trades.length - 1]?.capital_after ?? (currentSummary?.metrics as any)?.initial_capital ?? 1_000_000
-
+        <table className="t-table">
+          <thead>
+            <tr>
+              {['Инструмент', 'Стратегия', 'Тип', 'PnL%', 'Статус'].map(h => (
+                <th key={h} style={{ textAlign: 'left', padding: '5px 8px', color: 'var(--t-text-3)', fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 400, background: 'var(--t-panel)' }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {reports.map(r => (
+              <tr key={r.report_id} className="t-table-row">
+                <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: 'var(--t-text)' }}>{r.ticker}</td>
+                <td style={{ fontSize: 9, padding: '4px 8px', color: 'var(--t-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{r.hypothesis_id.replace('tmpl_h_', '')}</td>
+                <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: 'var(--t-cyan)' }}>LONG</td>
+                <td style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: pnlColor(r.total_return_pct), fontWeight: 600 }}>
+                  {r.total_return_pct >= 0 ? '+' : ''}{r.total_return_pct.toFixed(2)}%
+                </td>
+                <td style={{ fontSize: 9, fontFamily: 'var(--t-font-mono)', padding: '4px 8px', color: 'var(--t-amber)' }}>STANDBY</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
   return (
-    <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+    <div style={{ padding: '10px 12px' }}>
+      <div style={{ fontSize: 11, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginBottom: 10 }}>
+        Нет активных позиций · Бумажный режим: Standby
+      </div>
+      {reports.length > 0 && (
+        <div style={{ fontSize: 10, color: 'var(--t-text-3)' }}>
+          {reports.length} стратег{reports.length === 1 ? 'ия' : 'ии'} готов{reports.length === 1 ? 'а' : 'ы'} к бумажной торговле
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Вкладка «AI Brain» ────────────────────────────────────────────────────────
+
+function AIBrainBottomTab() {
+  const { reports, status, decisions } = useTerminal()
+  return (
+    <div style={{ padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
       <div>
-        <div style={{ fontSize: 9, color: 'var(--t-text-3)', marginBottom: 8, letterSpacing: 1 }}>CURRENT STATE</div>
-        {[
-          { label: 'Hypothesis', value: currentSummary?.hypothesis_id?.slice(7, 25) ?? '—' },
-          { label: 'Instrument', value: currentSummary ? `${currentSummary.ticker} · ${currentSummary.timeframe.toUpperCase()}` : '—' },
-          { label: 'Period', value: currentSummary?.period ?? '—' },
-          { label: 'Trades', value: `${totalTrades} (${winCount}W / ${totalTrades - winCount}L)` },
-          { label: 'Capital', value: `₽${(capital / 1_000_000).toFixed(3)}M` },
-        ].map(r => (
-          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--t-text-2)' }}>{r.label}</span>
-            <span style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)' }}>{r.value}</span>
+        <div style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginBottom: 6, letterSpacing: 0.5 }}>ГИПОТЕЗЫ</div>
+        {status ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {[
+              { label: 'Зарег.',   v: status.hypotheses.registered },
+              { label: 'Протест.', v: status.hypotheses.tested },
+              { label: 'Одобрено',v: status.candidates.approved_for_paper, color: 'var(--t-green)' },
+              { label: 'Сессий',  v: status.research.sessions },
+            ].map(r => (
+              <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 9, color: 'var(--t-text-3)' }}>{r.label}</span>
+                <span style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', color: r.color ?? 'var(--t-text-2)' }}>{r.v}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : <div style={{ fontSize: 10, color: 'var(--t-text-3)' }}>Загрузка…</div>}
       </div>
 
       <div>
-        <div style={{ fontSize: 9, color: 'var(--t-text-3)', marginBottom: 8, letterSpacing: 1 }}>LAB STATUS</div>
-        {status ? [
-          { label: 'Hypotheses', value: `${status.hypotheses.registered} registered` },
-          { label: 'Tested', value: String(status.hypotheses.tested) },
-          { label: 'Alpha Passed', value: String(status.hypotheses.passed_alpha_gate) },
-          { label: 'Sessions', value: String(status.research.sessions) },
-          { label: 'Budget', value: `${status.research_budget.used}/${status.research_budget.total}` },
-        ].map(r => (
-          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--t-text-2)' }}>{r.label}</span>
-            <span style={{ fontSize: 10, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)' }}>{r.value}</span>
-          </div>
-        )) : <div style={{ fontSize: 10, color: 'var(--t-text-3)' }}>Loading…</div>}
+        <div style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginBottom: 6, letterSpacing: 0.5 }}>СТРАТЕГИИ</div>
+        {reports.length === 0
+          ? <div style={{ fontSize: 10, color: 'var(--t-text-3)' }}>Нет отчётов</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {reports.slice(0, 4).map(r => (
+                <div key={r.report_id} style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+                  <span style={{ fontSize: 9, color: 'var(--t-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, marginRight: 6 }}>
+                    {r.ticker} · {r.hypothesis_id.replace('tmpl_h_', '').slice(0, 10)}…
+                  </span>
+                  <span style={{ fontSize: 9, fontFamily: 'var(--t-font-mono)', color: pnlColor(r.total_return_pct), flexShrink: 0 }}>
+                    {r.total_return_pct >= 0 ? '+' : ''}{r.total_return_pct.toFixed(1)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+        }
       </div>
 
       <div>
-        <div style={{ fontSize: 9, color: 'var(--t-text-3)', marginBottom: 8, letterSpacing: 1 }}>LAST CS DECISION</div>
-        {d ? (
-          <>
-            <div style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: d.type === 'APPROVE' ? 'var(--t-green)' : d.type === 'ARCHIVE' || d.type === 'REJECT' ? 'var(--t-red)' : 'var(--t-amber)', marginBottom: 6 }}>
-              {d.type}
+        <div style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginBottom: 6, letterSpacing: 0.5 }}>ПОСЛЕДНИЕ РЕШЕНИЯ</div>
+        {decisions.length === 0
+          ? <div style={{ fontSize: 10, color: 'var(--t-text-3)' }}>Нет решений</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {decisions.slice(0, 4).map(d => {
+                const c = d.type === 'APPROVE' ? 'var(--t-green)' : d.type === 'REJECT' || d.type === 'ARCHIVE' ? 'var(--t-red)' : 'var(--t-amber)'
+                const lbl: Record<string, string> = { APPROVE: 'ОДОБРЕНО', REJECT: 'ОТКЛОНЕНО', ARCHIVE: 'В АРХИВ', REQUEST_MORE_EVIDENCE: 'ДАННЫЕ', MONITOR: 'НАБЛЮД.' }
+                return (
+                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+                    <span style={{ fontSize: 9, color: 'var(--t-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {d.hypothesis_title}
+                    </span>
+                    <span style={{ fontSize: 9, fontFamily: 'var(--t-font-mono)', color: c, flexShrink: 0 }}>{lbl[d.type] ?? d.type}</span>
+                  </div>
+                )
+              })}
             </div>
-            <div style={{ fontSize: 9, color: 'var(--t-text-2)', marginBottom: 4, fontFamily: 'var(--t-font-mono)' }}>
-              {d.hypothesis_title}
-            </div>
-            <div style={{ fontSize: 9, color: 'var(--t-text-3)', lineHeight: 1.5 }}>
-              {d.rationale}
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 10, color: 'var(--t-text-3)' }}>No decisions yet</div>
-        )}
+        }
       </div>
     </div>
   )
 }
+
+// ── Вкладки ───────────────────────────────────────────────────────────────────
+
+const BOTTOM_TABS: { id: BottomTab; label: string }[] = [
+  { id: 'trades',    label: 'Сделки'          },
+  { id: 'history',   label: 'История сделок'  },
+  { id: 'positions', label: 'Активные позиции' },
+  { id: 'activity',  label: 'Журнал событий'  },
+  { id: 'aibrain',   label: 'AI Brain'        },
+]
+
+// ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function BottomPanel() {
-  const { bottomTab, setBottomTab, trades, activity, setExplainTradeId } = useTerminal()
+  const { bottomTab, setBottomTab } = useTerminal()
+
+  const renderTab = () => {
+    switch (bottomTab) {
+      case 'trades':    return <OpenTradesTab />
+      case 'history':   return <TradeHistoryTab />
+      case 'positions': return <PositionsTab />
+      case 'activity':  return <EventLogTab />
+      case 'aibrain':   return <AIBrainBottomTab />
+      default:          return null
+    }
+  }
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: 'var(--t-panel)', borderTop: '1px solid var(--t-border)',
-      overflow: 'hidden',
-    }}>
-      <TabBar />
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <ScrollArea style={{ height: '100%' }} scrollbarSize={3}>
-          {bottomTab === 'trades' && (() => {
-            const open = trades.filter(t => (t as any).exit_bar == null)
-            if (open.length > 0) return <TradeTable trades={open} onExplain={setExplainTradeId} />
-            if (trades.length > 0) return (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 11 }}>
-                No open positions — all {trades.length} backtest trades completed.<br />
-                <span style={{ color: 'var(--t-accent)', cursor: 'pointer' }} onClick={() => setBottomTab('history')}>
-                  → View Trade History
-                </span>
-              </div>
-            )
-            return <div style={{ padding: '20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 11 }}>No trades data</div>
-          })()}
-          {bottomTab === 'history' && (
-            <TradeTable trades={trades} onExplain={setExplainTradeId} />
-          )}
-          {bottomTab === 'positions' && (
-            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--t-text-3)', fontSize: 11 }}>
-              Paper trading is in STANDBY mode — no live positions
-            </div>
-          )}
-          {bottomTab === 'activity' && <ActivityFeed events={activity} />}
-          {bottomTab === 'aibrain' && <AIBrainTab />}
-        </ScrollArea>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--t-bg)', borderTop: '1px solid var(--t-border)' }}>
+      <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--t-border)', background: 'var(--t-panel)', overflowX: 'auto' }}>
+        {BOTTOM_TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setBottomTab(t.id)}
+            style={{
+              padding: '0 14px', height: 30, border: 'none', background: 'none',
+              cursor: 'pointer', fontSize: 10, fontFamily: 'var(--t-font-mono)',
+              color: bottomTab === t.id ? 'var(--t-text)' : 'var(--t-text-3)',
+              borderBottom: `2px solid ${bottomTab === t.id ? 'var(--t-accent)' : 'transparent'}`,
+              flexShrink: 0, whiteSpace: 'nowrap', letterSpacing: 0.2,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
+      <ScrollArea style={{ flex: 1 }} scrollbarSize={3}>
+        {renderTab()}
+      </ScrollArea>
     </div>
   )
 }

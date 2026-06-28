@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  fetchStatus, fetchActivity, fetchReports, fetchReport, fetchCandles,
+  fetchStatus, fetchActivity, fetchReports, fetchReport, fetchCandles, fetchDatasets,
   fetchStrategies, fetchPaperSummary, fetchDecisions, fetchKnowledgeGraph,
 } from '../api/client'
 import type {
-  LabStatus, ActivityEvent, ReportSummary, Report,
+  LabStatus, ActivityEvent, ReportSummary, Report, DatasetCell,
   Candle, JournalEntry, Strategy, PaperSummary, Decision, KnowledgeGraph,
 } from '../api/client'
 
@@ -38,8 +38,10 @@ interface Ctx {
   reports: ReportSummary[]
   currentSummary: ReportSummary | undefined
   fullReport: Report | undefined
+  allFullReports: Report[]
   candles: Candle[]
   trades: JournalEntry[]
+  datasets: DatasetCell[]
   strategies: Strategy[]
   paper: PaperSummary | undefined
   decisions: Decision[]
@@ -64,13 +66,14 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Queries
-  const { data: status }       = useQuery({ queryKey: ['status'],    queryFn: fetchStatus,       refetchInterval: 60_000 })
-  const { data: activity = [] }= useQuery({ queryKey: ['activity'],  queryFn: fetchActivity,     refetchInterval: 60_000 })
-  const { data: reports = [] } = useQuery({ queryKey: ['reports'],   queryFn: fetchReports })
-  const { data: strategies = []}= useQuery({ queryKey: ['strategies'], queryFn: () => fetchStrategies() })
-  const { data: paper }        = useQuery({ queryKey: ['paper'],     queryFn: fetchPaperSummary })
-  const { data: decisions = []}= useQuery({ queryKey: ['decisions'], queryFn: fetchDecisions })
-  const { data: knowledgeGraph }= useQuery({ queryKey: ['kg'],       queryFn: fetchKnowledgeGraph })
+  const { data: status }        = useQuery({ queryKey: ['status'],    queryFn: fetchStatus,        refetchInterval: 60_000 })
+  const { data: activity = [] } = useQuery({ queryKey: ['activity'],  queryFn: fetchActivity,      refetchInterval: 60_000 })
+  const { data: reports = [] }  = useQuery({ queryKey: ['reports'],   queryFn: fetchReports })
+  const { data: datasets = [] } = useQuery({ queryKey: ['datasets'],  queryFn: () => fetchDatasets() })
+  const { data: strategies = []}= useQuery({ queryKey: ['strategies'],queryFn: () => fetchStrategies() })
+  const { data: paper }         = useQuery({ queryKey: ['paper'],     queryFn: fetchPaperSummary })
+  const { data: decisions = []} = useQuery({ queryKey: ['decisions'], queryFn: fetchDecisions })
+  const { data: knowledgeGraph }= useQuery({ queryKey: ['kg'],        queryFn: fetchKnowledgeGraph })
 
   const currentSummary = reports[selectedIdx]
 
@@ -84,6 +87,15 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['candles', currentSummary?.dataset_id],
     queryFn: () => fetchCandles(currentSummary!.dataset_id),
     enabled: !!currentSummary,
+  })
+
+  // Fetch all full reports for sparklines (3 reports → 3 cached queries)
+  const { data: allFullReports = [] } = useQuery({
+    queryKey: ['all-full-reports', reports.map(r => r.report_id).join(',')],
+    queryFn: () => Promise.all(
+      reports.map(r => fetchReport(r.hypothesis_id, r.ticker, r.period, r.timeframe))
+    ),
+    enabled: reports.length > 0,
   })
 
   const trades: JournalEntry[] = (fullReport as any)?.trade_journal ?? []
@@ -111,10 +123,7 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     const total = candles.length
     intervalRef.current = setInterval(() => {
       setReplayBar(b => {
-        if (b + replaySpeed >= total - 1) {
-          setReplayPlaying(false)
-          return total - 1
-        }
+        if (b + replaySpeed >= total - 1) { setReplayPlaying(false); return total - 1 }
         return b + replaySpeed
       })
     }, 50)
@@ -132,8 +141,8 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     replayActive, setReplayActive,
     replayBar, setReplayBar,
     replayPlaying, replaySpeed, startReplay, pauseReplay, stopReplay, setReplaySpeed,
-    status, reports, currentSummary, fullReport, candles, trades,
-    strategies, paper, decisions, activity, knowledgeGraph,
+    status, reports, currentSummary, fullReport, allFullReports, candles, trades,
+    datasets, strategies, paper, decisions, activity, knowledgeGraph,
     isLoadingCandles, isLoadingReport,
   }
 

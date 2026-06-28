@@ -41,6 +41,24 @@ export function calcMacd(candles: Candle[], fast = 12, slow = 26, sig = 9) {
   return { macd, signal, hist }
 }
 
+export function calcAtr(candles: Candle[], period = 14): (number | null)[] {
+  if (candles.length < 2) return candles.map(() => null)
+  const result: (number | null)[] = [null]
+  const trs: number[] = []
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i], p = candles[i - 1]
+    trs.push(Math.max(c.high - c.low, Math.abs(c.high - p.close), Math.abs(c.low - p.close)))
+  }
+  let atr = trs.slice(0, period).reduce((a, b) => a + b, 0) / period
+  for (let i = 0; i < period - 1; i++) result.push(null)
+  result.push(atr)
+  for (let i = period; i < trs.length; i++) {
+    atr = (atr * (period - 1) + trs[i]) / period
+    result.push(atr)
+  }
+  return result
+}
+
 export function calcRiskMetrics(trades: Trade[], initialCapital: number) {
   if (!trades.length) return { sharpe: 0, sortino: 0, calmar: 0, var95: 0, maxDD: 0, currentDD: 0 }
   const returns = trades.map(t => t.pnl_pct / 100)
