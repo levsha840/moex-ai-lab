@@ -1,4 +1,4 @@
-import type { Report, JournalEntry, PaperSummary, Candle } from '../api/client'
+import type { Report, JournalEntry, PaperSummary, Candle, Trade } from '../api/client'
 import { calcRiskMetrics } from './indicators'
 import type { UTCTimestamp } from 'lightweight-charts'
 
@@ -109,6 +109,46 @@ export function metricsFromPaper(paper: PaperSummary): PortfolioMetrics {
     ticker: '—',
     strategyLabel: 'Бумажный портфель',
   }
+}
+
+/** Build equity curve from paper trade list + initial capital.
+ *  If no trades: returns a flat horizontal line at initialCapital.
+ *  Never touches Report, candles, or any backtest data. */
+export function equityFromPaperTrades(trades: Trade[], initialCapital: number): EquityPoint[] {
+  const nowSec = Math.floor(Date.now() / 1000)
+
+  if (!trades.length) {
+    // Flat line — 7 synthetic days so the chart renders
+    return [
+      { time: (nowSec - 7 * 86400) as UTCTimestamp, value: initialCapital },
+      { time: nowSec as UTCTimestamp, value: initialCapital },
+    ]
+  }
+
+  const sorted = [...trades].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
+
+  const firstSec = Math.floor(new Date(sorted[0].date).getTime() / 1000)
+  const points: EquityPoint[] = [
+    { time: (firstSec - 86400) as UTCTimestamp, value: initialCapital },
+  ]
+
+  let capital = initialCapital
+  for (const t of sorted) {
+    capital += t.pnl
+    points.push({
+      time: Math.floor(new Date(t.date).getTime() / 1000) as UTCTimestamp,
+      value: capital,
+    })
+  }
+
+  // Deduplicate same-second points, keeping last
+  const map = new Map<number, number>()
+  for (const p of points) map.set(p.time as number, p.value)
+  return [...map.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([t, v]) => ({ time: t as UTCTimestamp, value: v }))
 }
 
 /** Find nearest equity value at or before a given timestamp (binary search). */
