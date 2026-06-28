@@ -1,6 +1,10 @@
-"""Feature provider, regime adapter, and strategy runner for H-13 ADX Continuation.
+"""Feature provider, regime adapter, strategy runner, and provider factory for H-13.
 
 Dependency direction: experiments/ → core/ only. Nothing in core/ imports from here.
+
+AdxContinuationProviderFactory is defined here (not in services/) so the experiment
+is self-contained. The Hypothesis Registry YAML references this class by dotted path:
+  provider_factory: experiments.h13_adx_continuation.providers.AdxContinuationProviderFactory
 """
 from __future__ import annotations
 
@@ -10,11 +14,15 @@ from core.common import OrderSide
 from core.costs.engine import ExecutionCostEngine
 from core.costs.models import ExecutionRequest
 from core.experiment.models import ExperimentConfig
+from core.experiment.protocols import FeatureProvider, RegimeProvider, StrategyRunner, ValidationRunner
 from core.features.technical_indicators import adx, atr, pct_change, rsi, rolling_std, sma
 from core.regime.engine import MarketRegimeEngine
 from core.regime.models import RegimeFeatures, RegimeSnapshot, RegimeType
+from core.research_pipeline.adapters import ValidationReportAdapter
+from core.validation.report import ValidationReportBuilder
 from core.walkforward.engine import WalkForwardEngine
-from core.walkforward.models import WalkForwardSummary, WalkForwardWindow
+from core.walkforward.models import WalkForwardConfig, WalkForwardSummary, WalkForwardWindow
+from core.walkforward.window_generator import WalkForwardWindowGenerator
 from experiments.h13_adx_continuation.dataset import H13Dataset
 
 # H-13 signal parameters
@@ -213,3 +221,31 @@ class H13StrategyRunner:
             }
 
         return self._wf.run(data_length=n, runner=_run_window)
+
+
+class AdxContinuationProviderFactory:
+    """Assembles H-13 ADX Continuation providers from a dataset.
+
+    Registered in hypotheses/h_adx_continuation.yaml:
+      provider_factory: experiments.h13_adx_continuation.providers.AdxContinuationProviderFactory
+    The dataset parameter is duck-typed — any object with a .candles attribute works.
+    """
+
+    def create_providers(
+        self,
+        dataset: Any,
+        wf_config: WalkForwardConfig,
+    ) -> tuple[FeatureProvider, RegimeProvider, StrategyRunner, ValidationRunner]:
+        candles = list(dataset.candles)
+        return (
+            H13FeatureProvider(candles),
+            H13RegimeProvider(),
+            H13StrategyRunner(
+                wf_engine=WalkForwardEngine(WalkForwardWindowGenerator(wf_config)),
+                cost_engine=ExecutionCostEngine(),
+            ),
+            ValidationReportAdapter(
+                builder=ValidationReportBuilder(),
+                evaluator=lambda result: result.get("profitable", False),
+            ),
+        )

@@ -25,9 +25,9 @@ from core.walkforward.window_generator import WalkForwardWindowGenerator
 
 from services.research.config import ServiceConfig
 from services.research.dataset import DatasetLoader, OhlcvDataset
+from services.research.hypothesis_registry import HypothesisTemplateRegistry
 from services.research.persistence import ArtifactWriter, JsonKnowledgeStorage
-from services.research.providers import AdxContinuationProviderFactory, RegistryInfoProviderAdapter
-from services.research.templates import ALPHA_TEMPLATES
+from services.research.providers import RegistryInfoProviderAdapter
 
 
 @dataclass(frozen=True)
@@ -46,6 +46,7 @@ class ResearchRunner:
     """Assembles Core components and executes a full research cycle.
 
     Makes no decisions — delegates to Core. Prints progress to stdout.
+    Hypothesis selection is driven by HypothesisTemplateRegistry (YAML files).
     """
 
     def run(self, config: ServiceConfig) -> RunResult:
@@ -70,7 +71,26 @@ class ResearchRunner:
         print("\n[3/8] Initialising infrastructure ...")
         registry = HypothesisRegistry()
 
-        template_repo = MemoryTemplateRepository(ALPHA_TEMPLATES)
+        # Load templates from YAML registry — no H-ID specific code here
+        tmpl_registry = HypothesisTemplateRegistry(config.hypotheses_dir)
+        all_templates = tmpl_registry.list()
+
+        if not all_templates:
+            raise RuntimeError(
+                "No hypothesis templates available. "
+                "Add YAML files to the hypotheses/ directory."
+            )
+
+        # Select template: use configured id or fall back to first available
+        if config.hypothesis_template_id:
+            active_template = tmpl_registry.get(config.hypothesis_template_id)
+        else:
+            active_template = all_templates[0]
+
+        provider_factory = tmpl_registry.get_provider_factory(active_template.template_id)
+        strategy_name = tmpl_registry.get_strategy_name(active_template.template_id)
+
+        template_repo = MemoryTemplateRepository([active_template])
         stats_provider = KBTemplateStatisticsProvider(kb, registry)
         ranker = KnowledgeRanker(stats_provider)
         generator = HypothesisGenerator(template_repo, ranker)
@@ -80,8 +100,8 @@ class ResearchRunner:
             test_size=config.test_size,
             step_size=config.step_size,
         )
-        feature_p, regime_p, strategy_p, validation_p = (
-            AdxContinuationProviderFactory().create_providers(dataset, wf_config)
+        feature_p, regime_p, strategy_p, validation_p = provider_factory.create_providers(
+            dataset, wf_config
         )
         experiment_runner = ExperimentRunner(feature_p, regime_p, strategy_p, validation_p)
         pipeline = ResearchPipeline(experiment_runner, kb)
@@ -92,23 +112,22 @@ class ResearchRunner:
             max_consecutive_failures=config.max_consecutive_failures
         )
 
-        from experiments.h13_adx_continuation.template import H13_TEMPLATE
-
         session_config = ResearchSessionConfig(
             generation_config=GenerationConfig(max_candidates=config.max_candidates),
             experiment_config=ExperimentConfig(
                 experiment_id=f"exp_{uuid4().hex[:8]}",
                 hypothesis_id="",
                 dataset_id=config.dataset_id,
-                strategy_name="adx_continuation",
-                feature_set=list(H13_TEMPLATE.required_features),
+                strategy_name=strategy_name,
+                feature_set=list(active_template.required_features),
             ),
             description=config.description or f"Research session on {config.dataset_id}",
             pass_threshold=config.pass_threshold,
         )
 
-        template_ids = ", ".join(t.template_id for t in ALPHA_TEMPLATES)
-        print(f"      Templates: {len(ALPHA_TEMPLATES)} ({template_ids})")
+        template_ids = ", ".join(t.template_id for t in all_templates)
+        print(f"      Templates: {len(all_templates)} ({template_ids})")
+        print(f"      Active: {active_template.template_id}")
         print(
             f"      WalkForward: train={config.train_size} test={config.test_size} "
             f"step={config.step_size}"

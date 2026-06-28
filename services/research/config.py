@@ -8,8 +8,10 @@ from pathlib import Path
 class ServiceConfig:
     """All parameters for a single Research Service run.
 
-    data_dir:   where to find datasets/<dataset_id>/ohlcv.csv + metadata.json
-    output_dir: root for all output artifacts (reports/, sessions/, knowledge/, runs/)
+    data_dir:             where to find datasets/<dataset_id>/ohlcv.csv + metadata.json
+    output_dir:           root for all output artifacts (reports/, sessions/, knowledge/, runs/)
+    hypothesis_template_id: which template to run; empty = first template in registry
+    hypotheses_dir:       directory with YAML hypothesis files; None = project hypotheses/
     """
 
     dataset_id: str
@@ -22,6 +24,8 @@ class ServiceConfig:
     train_size: int = 60
     test_size: int = 20
     step_size: int = 20
+    hypothesis_template_id: str = ""
+    hypotheses_dir: Path | None = None
 
     def __post_init__(self) -> None:
         if self.max_candidates <= 0:

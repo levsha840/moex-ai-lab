@@ -1,0 +1,47 @@
+# H-REV-VOL-REG: Mean Reversion with Volatility Spike and Regime Filter
+#
+# First hypothesis added through Hypothesis Registry (no Research Service code change).
+# Alpha Library reference: docs/70_ALPHA_LIBRARY.md — Priority Queue item #1.
+#
+# Factor composition (Tier A + Tier B + Tier C):
+#   Tier A: Mean Reversion (Bollinger Band z-score oversold signal)
+#   Tier B: Volatility (vol spike gates entry — confirms deviation is real)
+#   Tier C: Regime (RANGING regime required — no trend to fight)
+#
+# To add this hypothesis to research: place this file in hypotheses/ directory.
+# No changes to Research Service, Core, or Agent Protocol required.
+
+template_id: tmpl_h_rev_vol_reg
+name: "Mean Reversion with Volatility Spike and Regime Filter"
+category: "Mean Reversion"
+priority: A
+
+title_template: "H-REV-VOL-REG on {ticker} (BB z-score oversold in {regime})"
+
+statement_template: >
+  When the market regime is {regime} (ADX < {adx_threshold}, low directional
+  trend) and the Bollinger Band z-score of price falls below -{bb_z_threshold}
+  standard deviations (price is {bb_z_threshold} sigma below the {bb_period}-bar
+  mean) while realised volatility is elevated, price is expected to revert toward
+  the band midline - generating a profitable mean-reversion long entry on {ticker}
+  with a {hold_bars}-bar time exit.
+
+required_features:
+  - bb_zscore_20
+  - realized_vol_20
+  - adx_14
+  - rsi_14
+  - atr_14
+
+default_parameters:
+  ticker: SBER
+  regime: RANGING
+  adx_threshold: 20
+  bb_period: 20
+  bb_z_threshold: 2.0
+  rsi_period: 14
+  hold_bars: 8
+
+strategy_name: rev_vol_reg
+
+provider_factory: experiments.h_rev_vol_reg.providers.RevVolRegProviderFactory

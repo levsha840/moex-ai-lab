@@ -1,6 +1,8 @@
-from experiments.h13_adx_continuation.template import H13_TEMPLATE
-from core.hypothesis_generator.models import HypothesisTemplate
+"""Hypothesis template access for Research Service.
 
-# Templates available in Research Service Alpha.
-# Extension point EP-02: add new HypothesisTemplate here to include it in generation.
-ALPHA_TEMPLATES: list[HypothesisTemplate] = [H13_TEMPLATE]
+Templates are declared in YAML files under hypotheses/ and loaded via
+HypothesisTemplateRegistry. No hardcoded template references here.
+"""
+from services.research.hypothesis_registry import HypothesisTemplateRegistry
+
+__all__ = ["HypothesisTemplateRegistry"]
