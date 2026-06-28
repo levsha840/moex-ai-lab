@@ -143,27 +143,43 @@ class CampaignRunner:
         instruments: list[str],
         periods: list[str],
         timeframe: str = "1h",
+        max_runs: int | None = None,
     ) -> CampaignResult:
+        """Run the campaign.
+
+        Args:
+            instruments: Ticker list.
+            periods: Year-period list.
+            timeframe: Candle timeframe string (default "1h").
+            max_runs: Optional hard cap on successful (non-error) runs to
+                      support session-level research budget management.
+        """
         campaign_id = uuid4().hex[:12]
         generated_at = datetime.now(timezone.utc).isoformat()
         items: list[CampaignRunItem] = []
 
         total = len(instruments) * len(periods)
+        cap = min(total, max_runs) if max_runs is not None else total
         if self._verbose:
             print(f"\n{'='*60}")
             print(f"Campaign {campaign_id}")
             print(f"Hypothesis: {self._hypothesis_template_id}")
-            print(f"Runs: {total} ({len(instruments)} instruments x {len(periods)} periods)")
+            print(f"Runs: up to {cap}/{total} ({len(instruments)} instr x {len(periods)} periods)")
             print(f"Alpha gate: pass_rate >= {self._alpha_gate.min_pass_rate:.2f}")
             print(f"{'='*60}\n")
 
         idx = 0
+        successful = 0
         for period in periods:
             for ticker in instruments:
+                if max_runs is not None and successful >= max_runs:
+                    break
                 idx += 1
                 dataset_id = p1_dataset_id(ticker, period, timeframe)
-                item = self._run_one(dataset_id, ticker, period, timeframe, idx, total)
+                item = self._run_one(dataset_id, ticker, period, timeframe, idx, cap)
                 items.append(item)
+                if not item.errored:
+                    successful += 1
 
         candidates = [i.candidate for i in items if i.candidate is not None]
 

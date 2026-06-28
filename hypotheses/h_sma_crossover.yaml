@@ -1,0 +1,31 @@
+# H-SMA-CROSSOVER: SMA(20) / SMA(50) Golden Cross (Trend Following, Tier A)
+#
+# Hypothesis: when the 20-period SMA crosses above the 50-period SMA,
+# a new uptrend is confirmed — long entry at the crossover bar.
+
+template_id: tmpl_h_sma_crossover
+name: "SMA(20/50) Golden Cross"
+category: "Trend Following"
+priority: A
+
+title_template: "H-SMA-CROSSOVER on {ticker}"
+
+statement_template: >
+  When the 20-period simple moving average crosses above the 50-period SMA
+  (golden cross), a medium-term uptrend is confirmed — long entry on {ticker}
+  with a {hold_bars}-bar time exit.
+
+required_features:
+  - sma_20
+  - sma_50
+  - adx_14
+
+default_parameters:
+  ticker: SBER
+  fast_period: 20
+  slow_period: 50
+  hold_bars: 10
+
+strategy_name: sma_crossover
+
+provider_factory: experiments.h_sma_crossover.providers.SmaCrossoverProviderFactory

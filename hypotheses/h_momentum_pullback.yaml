@@ -1,0 +1,32 @@
+# H-MOMENTUM-PULLBACK: Pullback to SMA(20) in SMA(50) Uptrend (Momentum, Tier A)
+#
+# Hypothesis: when price is above the 50-period SMA (uptrend confirmed) but
+# has pulled back below the 20-period SMA, it represents a buy-the-dip entry.
+
+template_id: tmpl_h_momentum_pullback
+name: "Momentum Pullback to SMA(20)"
+category: "Momentum"
+priority: A
+
+title_template: "H-MOMENTUM-PULLBACK on {ticker}"
+
+statement_template: >
+  When price is above SMA(50) (uptrend context) but falls below SMA(20)
+  (short-term pullback), a mean-reversion long entry is expected to profit
+  as price returns toward the fast moving average — {hold_bars}-bar time exit.
+
+required_features:
+  - sma_20
+  - sma_50
+  - adx_14
+  - rsi_14
+
+default_parameters:
+  ticker: SBER
+  fast_period: 20
+  slow_period: 50
+  hold_bars: 5
+
+strategy_name: momentum_pullback
+
+provider_factory: experiments.h_momentum_pullback.providers.MomentumPullbackProviderFactory

@@ -1,0 +1,33 @@
+# H-TREND-STRENGTH: Strong Trend (ADX>30) + RSI Momentum (Trend Following, Tier A)
+#
+# Hypothesis: when ADX exceeds 30 (strong trend) and RSI is above 50 (bullish
+# momentum), trend-following long entries produce above-average results.
+
+template_id: tmpl_h_trend_strength
+name: "Strong Trend + RSI Momentum"
+category: "Trend Following"
+priority: A
+
+title_template: "H-TREND-STRENGTH on {ticker}"
+
+statement_template: >
+  When ADX(14) exceeds {adx_min} (strong directional trend) and RSI(14)
+  exceeds {rsi_min} (price momentum positive), trend continuation is
+  expected — long entry on {ticker} with {hold_bars}-bar time exit.
+
+required_features:
+  - adx_14
+  - rsi_14
+  - atr_14
+
+default_parameters:
+  ticker: SBER
+  adx_period: 14
+  rsi_period: 14
+  adx_min: 30.0
+  rsi_min: 50.0
+  hold_bars: 10
+
+strategy_name: trend_strength
+
+provider_factory: experiments.h_trend_strength.providers.TrendStrengthProviderFactory

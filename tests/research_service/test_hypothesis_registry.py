@@ -23,8 +23,8 @@ class TestDefaultRegistry:
     def registry(self) -> HypothesisTemplateRegistry:
         return HypothesisTemplateRegistry()
 
-    def test_loads_both_hypotheses(self, registry):
-        assert len(registry.list()) == 2
+    def test_loads_all_hypotheses(self, registry):
+        assert len(registry.list()) >= 10
 
     def test_lists_h_adx_continuation(self, registry):
         ids = [t.template_id for t in registry.list()]

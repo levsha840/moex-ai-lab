@@ -1,0 +1,34 @@
+# H-DUAL-MA-TREND: Full Moving Average Alignment SMA(5)>SMA(20)>SMA(50) (Momentum, Tier A)
+#
+# Hypothesis: when all three moving averages are aligned in ascending order
+# (SMA_5 > SMA_20 > SMA_50), the trend is strong and price continuation
+# is statistically more likely — long-only trend-following entry.
+
+template_id: tmpl_h_dual_ma_trend
+name: "Tri-MA Alignment Trend (5/20/50)"
+category: "Momentum"
+priority: A
+
+title_template: "H-DUAL-MA-TREND on {ticker}"
+
+statement_template: >
+  When SMA(5) > SMA(20) > SMA(50) (full moving average stack alignment),
+  the short, medium, and long-term trend are all pointing up — long entry
+  on {ticker} with a {hold_bars}-bar time exit.
+
+required_features:
+  - sma_5
+  - sma_20
+  - sma_50
+  - adx_14
+
+default_parameters:
+  ticker: SBER
+  fast_period: 5
+  mid_period: 20
+  slow_period: 50
+  hold_bars: 5
+
+strategy_name: dual_ma_trend
+
+provider_factory: experiments.h_dual_ma_trend.providers.DualMaTrendProviderFactory

@@ -1,0 +1,33 @@
+# H-RSI-MOMENTUM: RSI Momentum + ADX Trend Confirmation (Momentum, Tier A)
+#
+# Hypothesis: when RSI > 55 (bullish momentum) combined with ADX > 20
+# (trending market), price continuation is more likely — long entry.
+
+template_id: tmpl_h_rsi_momentum
+name: "RSI Momentum with ADX Trend Filter"
+category: "Momentum"
+priority: A
+
+title_template: "H-RSI-MOMENTUM on {ticker}"
+
+statement_template: >
+  When RSI(14) exceeds {rsi_min} (bullish momentum) and ADX(14) exceeds
+  {adx_min} (confirmed directional trend), price is expected to continue
+  upward — long entry on {ticker} with a {hold_bars}-bar time exit.
+
+required_features:
+  - rsi_14
+  - adx_14
+  - atr_14
+
+default_parameters:
+  ticker: SBER
+  rsi_period: 14
+  adx_period: 14
+  rsi_min: 55.0
+  adx_min: 20.0
+  hold_bars: 8
+
+strategy_name: rsi_momentum
+
+provider_factory: experiments.h_rsi_momentum.providers.RsiMomentumProviderFactory

@@ -1,0 +1,34 @@
+# H-BB-SQUEEZE: Price Near Bollinger Midline with Bullish RSI (Market Structure, Tier B)
+#
+# Hypothesis: when BB z-score is near zero (price at mean, low relative deviation)
+# and RSI is above 50 (bullish bias), price is expected to trend upward from equilibrium.
+
+template_id: tmpl_h_bb_squeeze
+name: "Bollinger Band Squeeze Near Midline"
+category: "Market Structure"
+priority: B
+
+title_template: "H-BB-SQUEEZE on {ticker}"
+
+statement_template: >
+  When the Bollinger Band z-score is within (-{bb_z_max}, +{bb_z_max}) (price
+  near the 20-period mean) and RSI(14) exceeds {rsi_min} (bullish bias), a
+  low-volatility upward move is expected — long entry on {ticker} with
+  {hold_bars}-bar time exit.
+
+required_features:
+  - bb_zscore_20
+  - rsi_14
+  - adx_14
+
+default_parameters:
+  ticker: SBER
+  bb_period: 20
+  rsi_period: 14
+  bb_z_max: 0.5
+  rsi_min: 50.0
+  hold_bars: 8
+
+strategy_name: bb_squeeze
+
+provider_factory: experiments.h_bb_squeeze.providers.BBSqueezeProviderFactory

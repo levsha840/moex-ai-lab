@@ -1,0 +1,33 @@
+# H-VOL-BREAKOUT: Realized Volatility Spike + Trend Confirmation (Volatility, Tier B)
+#
+# Hypothesis: when realized volatility spikes above a threshold and ADX confirms
+# a directional move, the breakout direction is expected to continue — long entry.
+
+template_id: tmpl_h_vol_breakout
+name: "Realized Volatility Breakout"
+category: "Volatility"
+priority: B
+
+title_template: "H-VOL-BREAKOUT on {ticker}"
+
+statement_template: >
+  When 20-bar realized volatility exceeds {vol_threshold} and ADX(14)
+  exceeds {adx_min} (confirming directional move), a volatility-driven
+  breakout long entry is expected — {hold_bars}-bar time exit on {ticker}.
+
+required_features:
+  - realized_vol_20
+  - adx_14
+  - atr_14
+
+default_parameters:
+  ticker: SBER
+  vol_period: 20
+  adx_period: 14
+  vol_threshold: 0.010
+  adx_min: 20.0
+  hold_bars: 5
+
+strategy_name: vol_breakout
+
+provider_factory: experiments.h_vol_breakout.providers.VolBreakoutProviderFactory
