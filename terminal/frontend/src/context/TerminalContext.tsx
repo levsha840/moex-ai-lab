@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchStatus, fetchActivity, fetchReports, fetchReport, fetchCandles, fetchDatasets,
@@ -9,6 +9,7 @@ import type {
   Candle, JournalEntry, Strategy, PaperSummary, Decision, KnowledgeGraph,
 } from '../api/client'
 import type { IChartApi, UTCTimestamp } from 'lightweight-charts'
+import { type TF, parseNativeTF, availableTFs, resampleData } from '../utils/resample'
 
 // Nav tabs visible in the top bar (visual only)
 export type TopTab =
@@ -56,6 +57,17 @@ interface Ctx {
   setCompareMode: (v: boolean) => void
   equityExpanded: boolean
   setEquityExpanded: (v: boolean) => void
+  // Timeframe
+  selectedTimeframe: TF
+  setSelectedTimeframe: (tf: TF) => void
+  nativeTF: TF
+  displayCandles: Candle[]
+  displayTrades: JournalEntry[]
+  barMapping: number[]
+  // Chart interaction
+  jumpToBar: (originalBar: number) => void
+  jumpToBarRef: React.MutableRefObject<((bar: number) => void) | null>
+  pendingJumpBar: React.MutableRefObject<number | null>
   // Chart sync refs
   mainChartRef: React.MutableRefObject<IChartApi | null>
   equityChartRef: React.MutableRefObject<IChartApi | null>
@@ -95,7 +107,10 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const [replaySpeed, setReplaySpeed] = useState(5)
   const [compareMode, setCompareMode] = useState(false)
   const [equityExpanded, setEquityExpanded] = useState(false)
+  const [selectedTimeframe, setSelectedTimeframe] = useState<TF>('1H')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const jumpToBarRef = useRef<((bar: number) => void) | null>(null)
+  const pendingJumpBar = useRef<number | null>(null)
 
   const mainChartRef = useRef<IChartApi | null>(null)
   const equityChartRef = useRef<IChartApi | null>(null)
@@ -142,6 +157,32 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
 
   const trades: JournalEntry[] = (fullReport as any)?.trade_journal ?? []
 
+  // ── Timeframe resampling ───────────────────────────────────────────────────
+  const nativeTF = currentSummary ? parseNativeTF(currentSummary.timeframe) : '1H' as TF
+
+  const { candles: displayCandles, barMapping } = useMemo(() => {
+    if (!candles.length) return { candles: [] as Candle[], barMapping: [] as number[] }
+    const tfToUse = availableTFs(nativeTF).has(selectedTimeframe) ? selectedTimeframe : nativeTF
+    return resampleData(candles, nativeTF, tfToUse)
+  }, [candles, nativeTF, selectedTimeframe])
+
+  const displayTrades = useMemo(() =>
+    trades.map(t => ({
+      ...t,
+      entry_bar: barMapping[t.entry_bar] ?? Math.max(0, displayCandles.length - 1),
+      exit_bar:  barMapping[t.exit_bar]  ?? Math.max(0, displayCandles.length - 1),
+    }))
+  , [trades, barMapping, displayCandles.length])
+
+  const jumpToBar = useCallback((originalBar: number) => {
+    const mapped = barMapping[originalBar] ?? originalBar
+    if (jumpToBarRef.current) {
+      jumpToBarRef.current(mapped)
+    } else {
+      pendingJumpBar.current = mapped
+    }
+  }, [barMapping])
+
   // Replay logic
   const startReplay = useCallback(() => {
     if (!replayActive) setReplayActive(true)
@@ -176,7 +217,9 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     setReplayBar(0)
     setReplayPlaying(false)
     setSelectedTradeId(null)
-  }, [selectedIdx])
+    // Reset to native timeframe when switching strategy
+    setSelectedTimeframe(currentSummary ? parseNativeTF(currentSummary.timeframe) : '1H')
+  }, [selectedIdx]) // eslint-disable-line
 
   const value: Ctx = {
     activeTab, setActiveTab,
@@ -190,6 +233,9 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
     replayPlaying, replaySpeed, startReplay, pauseReplay, stopReplay, setReplaySpeed,
     compareMode, setCompareMode,
     equityExpanded, setEquityExpanded,
+    selectedTimeframe, setSelectedTimeframe, nativeTF,
+    displayCandles, displayTrades, barMapping,
+    jumpToBar, jumpToBarRef, pendingJumpBar,
     mainChartRef, equityChartRef, chartSyncingRef,
     notifyCrosshairTime, subscribeCrosshairTime,
     status, reports, currentSummary, fullReport, allFullReports, candles, trades,

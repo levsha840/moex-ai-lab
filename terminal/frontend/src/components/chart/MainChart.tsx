@@ -62,7 +62,7 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
 
   const prevUpToBar = useRef<number | undefined>(undefined)
 
-  const { mainChartRef, equityChartRef, chartSyncingRef, notifyCrosshairTime, subscribeCrosshairTime } = useTerminal()
+  const { mainChartRef, equityChartRef, chartSyncingRef, notifyCrosshairTime, subscribeCrosshairTime, jumpToBarRef, pendingJumpBar } = useTerminal()
 
   // Keep mutable refs in sync with props
   useEffect(() => { tradesRef.current = trades }, [trades])
@@ -75,6 +75,17 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     const mc = mkChart(mainRef.current)
     mcRef.current = mc
     mainChartRef.current = mc
+
+    // Register jumpToBar callback
+    jumpToBarRef.current = (bar: number) => {
+      mc.timeScale().setVisibleLogicalRange({ from: bar - 50, to: bar + 50 })
+    }
+    // Handle any pending jump that happened before chart was mounted
+    if (pendingJumpBar.current !== null) {
+      const bar = pendingJumpBar.current
+      pendingJumpBar.current = null
+      requestAnimationFrame(() => mc.timeScale().setVisibleLogicalRange({ from: bar - 50, to: bar + 50 }))
+    }
 
     csSeries.current = mc.addCandlestickSeries({
       upColor: '#089981', downColor: '#f23645',
@@ -203,6 +214,7 @@ export default function MainChart({ candles, trades, upToBar }: Props) {
     return () => {
       unsubCrosshair()
       mainChartRef.current = null
+      jumpToBarRef.current = null
       mc.remove(); rc.remove(); mc2.remove(); atrChart.remove()
     }
   }, [])

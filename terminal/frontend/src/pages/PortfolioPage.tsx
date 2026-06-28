@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { IconBriefcase, IconAlertTriangle } from '@tabler/icons-react'
 import { useTerminal } from '../context/TerminalContext'
-import { metricsFromReport, metricsFromPaper } from '../utils/portfolio'
+import { metricsFromReport, metricsFromPaper, equityFromReport } from '../utils/portfolio'
+import EquityChart from '../components/chart/EquityChart'
 import type { ReportSummary, Report } from '../api/client'
 import type { PortfolioMetrics } from '../utils/portfolio'
 
@@ -122,7 +123,7 @@ function StrategyTable({ reports, allFullReports, setSelectedIdx, setActiveTab }
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function PortfolioPage() {
-  const { paper, allFullReports, reports, setSelectedIdx, setActiveTab } = useTerminal()
+  const { paper, allFullReports, reports, setSelectedIdx, setActiveTab, fullReport, candles } = useTerminal()
 
   const hasReports = allFullReports.length > 0
   const hasPaper   = !!paper
@@ -131,6 +132,13 @@ export default function PortfolioPage() {
   const allMetrics    = useMemo(() =>
     allFullReports.map(r => { try { return metricsFromReport(r) } catch { return null } })
   , [allFullReports])
+
+  const currentEquity = useMemo(() => {
+    if (fullReport && candles.length) {
+      try { return equityFromReport(fullReport, candles) } catch { return [] }
+    }
+    return []
+  }, [fullReport, candles])
 
   // ── State 1: no data ────────────────────────────────────────────────────────
   if (!hasReports && !hasPaper) {
@@ -155,6 +163,16 @@ export default function PortfolioPage() {
         <PageHeader badge={<Badge text="PAPER TRADING" color="var(--t-green)" />} />
         <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
           <MetricsGrid m={paperMetrics} />
+          {currentEquity.length > 1 && (
+            <>
+              <div style={{ fontSize: 9, letterSpacing: 0.8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, padding: '4px 0 8px' }}>
+                КРИВАЯ КАПИТАЛА
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <EquityChart primaryData={currentEquity} primaryLabel={fullReport?.ticker ?? 'Paper'} height={180} compact />
+              </div>
+            </>
+          )}
           {paper.note && (
             <div style={{ marginBottom: 16, padding: '8px 12px', background: 'var(--t-elevated)', borderRadius: 4, fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', lineHeight: 1.6 }}>
               {paper.note}
@@ -190,6 +208,17 @@ export default function PortfolioPage() {
           <MetricCard label="СРЕДНЯЯ ДОХОДНОСТЬ"   value={fmtPct(avgReturn)}  color={pnlCol(avgReturn)} />
           <MetricCard label="ЛУЧШИЙ РЕЗУЛЬТАТ"     value={fmtPct(bestReturn)} color={pnlCol(bestReturn)} />
         </div>
+
+        {currentEquity.length > 1 && (
+          <>
+            <div style={{ fontSize: 9, letterSpacing: 0.8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, padding: '4px 0 8px' }}>
+              КРИВАЯ КАПИТАЛА (ТЕКУЩАЯ СТРАТЕГИЯ)
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <EquityChart primaryData={currentEquity} primaryLabel={fullReport?.ticker ?? ''} height={180} compact />
+            </div>
+          </>
+        )}
 
         <div style={{ marginBottom: 14, padding: '8px 12px', background: 'rgba(255,184,0,0.07)', borderRadius: 4, border: '1px solid rgba(255,184,0,0.2)', display: 'flex', gap: 8, alignItems: 'center' }}>
           <IconAlertTriangle size={12} color="var(--t-amber)" />

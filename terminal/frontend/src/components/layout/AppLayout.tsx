@@ -6,6 +6,7 @@ import {
   IconTestPipe,
 } from '@tabler/icons-react'
 import { useTerminal, type TopTab, type BottomTab } from '../../context/TerminalContext'
+import { availableTFs, TF_LABEL, type TF } from '../../utils/resample'
 import LeftPanel from '../panels/LeftPanel'
 import RightPanel from '../panels/RightPanel'
 import BottomPanel from '../panels/BottomPanel'
@@ -18,6 +19,7 @@ const HistoryPage   = lazy(() => import('../../pages/HistoryPage'))
 const BacktestsPage = lazy(() => import('../../pages/BacktestsPage'))
 const PortfolioPage = lazy(() => import('../../pages/PortfolioPage'))
 const RisksPage     = lazy(() => import('../../pages/RisksPage'))
+const ReportsPage   = lazy(() => import('../../pages/ReportsPage'))
 const SettingsPage  = lazy(() => import('../../pages/SettingsPage'))
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,13 +155,16 @@ function TopBar() {
   )
 }
 
+const TF_ORDER: TF[] = ['1m', '5m', '15m', '1H', '4H', '1D']
+
 function ChartToolbar() {
-  const { currentSummary, candles } = useTerminal()
-  const lastCandle = candles[candles.length - 1]
-  const prevCandle = candles[candles.length - 2]
+  const { currentSummary, candles, displayCandles, selectedTimeframe, setSelectedTimeframe, nativeTF } = useTerminal()
+  const lastCandle = displayCandles[displayCandles.length - 1]
+  const prevCandle = displayCandles[displayCandles.length - 2]
   const change = lastCandle && prevCandle
     ? ((lastCandle.close - prevCandle.close) / prevCandle.close) * 100
     : null
+  const avail = availableTFs(nativeTF)
 
   return (
     <div style={{
@@ -193,17 +198,29 @@ function ChartToolbar() {
 
       <div style={{ width: 1, height: 14, background: 'var(--t-border)' }} />
 
-      {['1ч', '4ч', '1д', '1н', '1м', '3м', '1г'].map((p, i) => (
-        <button key={p} style={{
-          padding: '2px 6px', borderRadius: 2,
-          background: i === 0 ? 'var(--t-accent-soft)' : 'none',
-          color: i === 0 ? 'var(--t-accent)' : 'var(--t-text-3)',
-          fontSize: 10, cursor: 'pointer', fontFamily: 'var(--t-font-mono)',
-          border: i === 0 ? '1px solid var(--t-accent)' : '1px solid transparent',
-        } as React.CSSProperties}>
-          {p}
-        </button>
-      ))}
+      {/* Timeframe buttons — functional */}
+      {TF_ORDER.map(tf => {
+        const isActive   = selectedTimeframe === tf
+        const isDisabled = !avail.has(tf)
+        return (
+          <button
+            key={tf}
+            disabled={isDisabled}
+            onClick={() => setSelectedTimeframe(tf)}
+            title={isDisabled ? `Нет данных для таймфрейма ${TF_LABEL[tf]}` : TF_LABEL[tf]}
+            style={{
+              padding: '2px 6px', borderRadius: 2,
+              background: isActive ? 'var(--t-accent-soft)' : 'none',
+              color: isActive ? 'var(--t-accent)' : isDisabled ? '#2e3444' : 'var(--t-text-3)',
+              fontSize: 10, cursor: isDisabled ? 'default' : 'pointer',
+              fontFamily: 'var(--t-font-mono)',
+              border: isActive ? '1px solid var(--t-accent)' : '1px solid transparent',
+            } as React.CSSProperties}
+          >
+            {TF_LABEL[tf]}
+          </button>
+        )
+      })}
 
       <div style={{ width: 1, height: 14, background: 'var(--t-border)' }} />
 
@@ -219,15 +236,16 @@ function ChartToolbar() {
 
       <div style={{ flex: 1 }} />
       <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
-        {candles.length > 0 ? `${candles.length} баров` : ''}
+        {displayCandles.length > 0 ? `${displayCandles.length} баров` : candles.length > 0 ? `${candles.length} баров` : ''}
       </span>
     </div>
   )
 }
 
 function CenterPanel() {
-  const { candles, trades, replayActive, replayBar, activeTab } = useTerminal()
-  const upToBar = replayActive ? replayBar : undefined
+  const { candles, displayCandles, displayTrades, barMapping, replayActive, replayBar, activeTab } = useTerminal()
+  // Map replay bar through barMapping to get display bar index
+  const upToBar = replayActive ? (barMapping[replayBar] ?? replayBar) : undefined
 
   const PAGE_STYLE: React.CSSProperties = { flex: 1, minHeight: 0, overflow: 'hidden' }
 
@@ -251,6 +269,7 @@ function CenterPanel() {
   if (activeTab === 'backtests') return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><BacktestsPage /></Suspense></div>
   if (activeTab === 'portfolio') return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><PortfolioPage /></Suspense></div>
   if (activeTab === 'risks')     return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><RisksPage /></Suspense></div>
+  if (activeTab === 'reports')   return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><ReportsPage /></Suspense></div>
   if (activeTab === 'settings')  return <div style={PAGE_STYLE}><Suspense fallback={<PageFallback />}><SettingsPage /></Suspense></div>
 
   return (
@@ -263,7 +282,7 @@ function CenterPanel() {
             <div style={{ fontFamily: 'var(--t-font-mono)' }}>Выберите инструмент на левой панели</div>
           </div>
         ) : (
-          <MainChart candles={candles} trades={trades} upToBar={upToBar} />
+          <MainChart candles={displayCandles} trades={displayTrades} upToBar={upToBar} />
         )}
       </div>
       <div style={{ flex: 35, minHeight: 0, overflow: 'hidden' }}>
@@ -273,7 +292,7 @@ function CenterPanel() {
   )
 }
 
-const FULL_WIDTH_TABS = new Set(['history', 'backtests', 'portfolio', 'risks', 'settings'])
+const FULL_WIDTH_TABS = new Set(['history', 'backtests', 'portfolio', 'risks', 'reports', 'settings'])
 
 export default function AppLayout() {
   const { activeTab } = useTerminal()

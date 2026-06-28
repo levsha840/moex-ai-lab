@@ -1,86 +1,182 @@
-import { IconLock, IconShield, IconServer, IconDatabase, IconPalette } from '@tabler/icons-react'
+import { IconSettings, IconLock, IconDatabase, IconBrain, IconShield, IconBell, IconCpu, IconTestPipe } from '@tabler/icons-react'
 import { useTerminal } from '../context/TerminalContext'
 
-function SH({ label }: { label: string }) {
+function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div style={{ padding: '10px 16px 4px', fontSize: 9, letterSpacing: 0.8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700 }}>
-      {label}
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--t-border)' }}>
+        {icon}
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-text)', fontFamily: 'var(--t-font-mono)', letterSpacing: 0.6 }}>
+          {title}
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {children}
+      </div>
     </div>
   )
 }
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+function Row({ label, value, mono, accent, dim }: { label: string; value: React.ReactNode; mono?: boolean; accent?: string; dim?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12 }}>
-      <span style={{ fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', width: 220, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 10, color: 'var(--t-text)', fontFamily: 'var(--t-font-mono)' }}>{value}</span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: 'var(--t-elevated)', borderRadius: 3, border: '1px solid var(--t-border)' }}>
+      <span style={{ fontSize: 9, color: dim ? 'var(--t-text-3)' : 'var(--t-text-2)', fontFamily: 'var(--t-font-mono)' }}>{label}</span>
+      <span style={{
+        fontSize: 9, fontFamily: mono ? 'var(--t-font-mono)' : undefined,
+        color: accent ?? (dim ? 'var(--t-text-3)' : 'var(--t-text)'), fontWeight: mono ? 600 : undefined,
+      }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function BlockedRow({ label }: { label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: 'rgba(242,54,69,0.04)', borderRadius: 3, border: '1px solid rgba(242,54,69,0.15)' }}>
+      <span style={{ fontSize: 9, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)' }}>{label}</span>
+      <span style={{ fontSize: 8, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)', padding: '1px 5px', borderRadius: 2, background: 'rgba(242,54,69,0.1)', border: '1px solid rgba(242,54,69,0.2)', fontWeight: 700 }}>
+        ЗАБЛОКИРОВАНО
+      </span>
+    </div>
+  )
+}
+
+function PlannedRow({ label }: { label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: 'rgba(255,184,0,0.04)', borderRadius: 3, border: '1px solid rgba(255,184,0,0.12)' }}>
+      <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>{label}</span>
+      <span style={{ fontSize: 8, color: 'var(--t-amber)', fontFamily: 'var(--t-font-mono)', padding: '1px 5px', borderRadius: 2, background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.15)' }}>
+        ЗАПЛАНИРОВАНО
+      </span>
     </div>
   )
 }
 
 export default function SettingsPage() {
-  const { status, reports } = useTerminal()
+  const { status } = useTerminal()
 
-  const budgetUsed  = (status as any)?.research_budget?.used  ?? 0
-  const budgetTotal = (status as any)?.research_budget?.total ?? 100
-  const sessions    = (status as any)?.research?.sessions     ?? 0
-  const hRegistered = (status as any)?.hypotheses?.registered ?? 0
-  const hTested     = (status as any)?.hypotheses?.tested     ?? 0
-  const paperCands  = (status as any)?.candidates?.approved_for_paper ?? 0
-
-  const tickers = [...new Set(reports.map(r => r.ticker))].join(', ') || '—'
+  const budgetUsed  = (status as any)?.budget_used  ?? null
+  const budgetTotal = (status as any)?.budget_total ?? null
+  const budgetPct   = budgetUsed != null && budgetTotal ? ((budgetUsed / budgetTotal) * 100).toFixed(1) : null
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--t-bg)', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ height: 44, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 16px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', gap: 10 }}>
-        <IconServer size={13} color="var(--t-text-3)" />
+        <IconSettings size={13} color="var(--t-text-3)" />
         <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 1 }}>НАСТРОЙКИ</span>
-        <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 2, background: 'rgba(255,184,0,0.12)', color: 'var(--t-amber)', fontFamily: 'var(--t-font-mono)', border: '1px solid rgba(255,184,0,0.25)', fontWeight: 700, letterSpacing: 0.5 }}>
+        <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', padding: '1px 6px', background: 'var(--t-elevated)', border: '1px solid var(--t-border)', borderRadius: 2, marginLeft: 4 }}>
           ТОЛЬКО ДЛЯ ЧТЕНИЯ
         </span>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <SH label="ДАННЫЕ И ИССЛЕДОВАНИЯ" />
-        <Row label="Путь к данным" value="data/" />
-        <Row label="Вселенная" value="P1 (MOEX Blue Chips)" />
-        <Row label="Инструменты в работе" value={tickers} />
-        <Row label="Таймфрейм по умолчанию" value="1H" />
-        <Row label="Бюджет исследований" value={`${budgetUsed} / ${budgetTotal} запусков`} />
-        <Row label="Сессий исследования" value={String(sessions)} />
-        <Row label="Гипотез зарегистрировано" value={String(hRegistered)} />
-        <Row label="Гипотез протестировано" value={String(hTested)} />
-        <Row label="Кандидатов для Paper Trading" value={String(paperCands)} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', maxWidth: 760 }}>
 
-        <SH label="РЕЖИМ ТОРГОВЛИ" />
-        <Row label="Режим системы" value={<span style={{ color: 'var(--t-cyan)' }}>Исследование (Research)</span>} />
-        <Row label="Бумажная торговля" value={<span style={{ color: 'var(--t-amber)' }}>Ожидает кандидатов</span>} />
-        <Row label="Sandbox Execute" value={<span style={{ color: 'var(--t-text-3)' }}>Отключён</span>} />
-        <Row label="Live Trading" value={
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--t-red)' }}>
-            <IconLock size={10} />
-            ЗАБЛОКИРОВАНО — защита от реальных сделок
-          </span>
-        } />
+        {/* 1 ── Данные и исследование */}
+        <Section icon={<IconDatabase size={11} color="var(--t-text-3)" />} title="ДАННЫЕ И ИССЛЕДОВАНИЕ">
+          <Row label="Режим"        value={(status as any)?.mode ?? 'research'} mono accent="var(--t-cyan)" />
+          <Row label="Путь данных"  value={(status as any)?.data_path ?? 'data/'} mono />
+          <Row label="Всего сессий" value={(status as any)?.total_sessions ?? '—'} mono />
+          <Row label="Гипотез"      value={(status as any)?.total_hypotheses ?? '—'} mono />
+          <Row label="Отчётов"      value={(status as any)?.total_reports ?? '—'} mono />
+        </Section>
 
-        <SH label="ИНТЕРФЕЙС" />
-        <Row label="Тема" value="Тёмная (Dark Terminal)" />
-        <Row label="Язык" value="Русский (RU)" />
-        <Row label="Часовой пояс" value="МСК (Europe/Moscow)" />
-        <Row label="Версия интерфейса" value="v2.4" />
+        {/* 2 ── Бюджет исследования */}
+        <Section icon={<IconTestPipe size={11} color="var(--t-text-3)" />} title="БЮДЖЕТ ИССЛЕДОВАНИЯ">
+          {budgetTotal != null ? (
+            <>
+              <Row label="Использовано" value={`${budgetUsed ?? 0} / ${budgetTotal} запусков`} mono />
+              {budgetPct != null && (
+                <>
+                  <div style={{ height: 4, background: 'var(--t-elevated)', borderRadius: 2, overflow: 'hidden', border: '1px solid var(--t-border)' }}>
+                    <div style={{
+                      height: '100%', width: `${budgetPct}%`,
+                      background: parseFloat(budgetPct) > 80 ? 'var(--t-red)' : parseFloat(budgetPct) > 50 ? 'var(--t-amber)' : 'var(--t-green)',
+                      borderRadius: 2, transition: 'width 0.3s',
+                    }} />
+                  </div>
+                  <Row label="Процент использован" value={`${budgetPct}%`} mono
+                    accent={parseFloat(budgetPct) > 80 ? 'var(--t-red)' : parseFloat(budgetPct) > 50 ? 'var(--t-amber)' : 'var(--t-green)'} />
+                </>
+              )}
+            </>
+          ) : (
+            <Row label="Бюджет" value="Не установлен" dim />
+          )}
+          <Row label="Кандидаты для Paper" value={(status as any)?.paper_candidates ?? 0} mono />
+        </Section>
 
-        <div style={{ margin: '16px', padding: 12, background: 'rgba(242,54,69,0.07)', borderRadius: 4, border: '1px solid rgba(242,54,69,0.2)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <IconShield size={14} color="var(--t-red)" style={{ flexShrink: 0, marginTop: 1 }} />
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)', marginBottom: 5, letterSpacing: 0.5 }}>
-              ЗАЩИТА АКТИВИРОВАНА
+        {/* 3 ── Бумажная торговля */}
+        <Section icon={<IconTestPipe size={11} color="var(--t-text-3)" />} title="БУМАЖНАЯ ТОРГОВЛЯ (PAPER TRADING)">
+          <Row
+            label="Статус"
+            value={(status as any)?.paper_candidates ? 'Есть кандидаты' : 'Нет одобренных кандидатов'}
+            accent={(status as any)?.paper_candidates ? 'var(--t-amber)' : 'var(--t-text-3)'}
+          />
+          <Row label="Кандидаты APPROVED_FOR_PAPER" value={(status as any)?.paper_candidates ?? 0} mono />
+          <Row label="Тип исполнения" value="Симуляция без реальных ордеров" dim />
+          <Row label="Биржа" value="MOEX · TQBR (планируется)" dim />
+        </Section>
+
+        {/* 4 ── Sandbox */}
+        <Section icon={<IconShield size={11} color="var(--t-text-3)" />} title="БРОКЕР · SANDBOX">
+          <PlannedRow label="Брокер" />
+          <PlannedRow label="API ключ (Sandbox)" />
+          <PlannedRow label="Счёт Sandbox" />
+          <PlannedRow label="Тестовый баланс" />
+        </Section>
+
+        {/* 5 ── Live Trading — BLOCKED */}
+        <Section icon={<IconLock size={11} color="var(--t-red)" />} title="LIVE TRADING">
+          <div style={{ padding: '10px 12px', background: 'rgba(242,54,69,0.05)', borderRadius: 4, border: '1px solid rgba(242,54,69,0.2)', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <IconLock size={11} color="var(--t-red)" />
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)' }}>
+                LIVE TRADING ЗАБЛОКИРОВАН
+              </span>
             </div>
-            <div style={{ fontSize: 9, color: 'var(--t-text-3)', lineHeight: 1.7, fontFamily: 'var(--t-font-mono)' }}>
-              Система работает в режиме исследования. Live Trading заблокирован на уровне кода и не может быть включён из интерфейса.
-              Для изменения режима необходимо ручное вмешательство разработчика с явным изменением конфигурации системы.
-            </div>
+            <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', lineHeight: 1.6 }}>
+              Защита от случайного включения реальных торгов. Управляется через SafetyGuard на стороне сервера. Изменение через UI невозможно.
+            </span>
           </div>
+          <BlockedRow label="Исполнение реальных ордеров" />
+          <BlockedRow label="Подключение Live-брокера" />
+          <BlockedRow label="Снятие / пополнение средств" />
+        </Section>
+
+        {/* 6 ── AI и агенты */}
+        <Section icon={<IconBrain size={11} color="var(--t-text-3)" />} title="AI · АГЕНТЫ">
+          <Row label="ChiefScientist"  value="Активен · 7 правил" accent="var(--t-green)" />
+          <Row label="KnowledgeAgent"  value="Активен · KB graph" accent="var(--t-green)" />
+          <Row label="RegimeDetection" value="Активен" accent="var(--t-green)" />
+          <Row label="CorrelationAgent" value="Активен" accent="var(--t-green)" />
+          <Row label="MacroAgent"      value="Активен · IMOEX / USDRUB / RGBI" accent="var(--t-green)" />
+          <Row label="LLM / внешние модели" value="Не используются" dim />
+          <Row label="Детерминированный режим" value="Да · без случайности" accent="var(--t-cyan)" />
+        </Section>
+
+        {/* 7 ── GPU */}
+        <Section icon={<IconCpu size={11} color="var(--t-text-3)" />} title="GPU / ВЫЧИСЛЕНИЯ">
+          <Row label="Текущий режим" value="CPU · Python стандартные библиотеки" dim />
+          <PlannedRow label="GPU-ускорение (CUDA / ROCm)" />
+          <PlannedRow label="Параллельные эксперименты" />
+        </Section>
+
+        {/* 8 ── Уведомления */}
+        <Section icon={<IconBell size={11} color="var(--t-text-3)" />} title="УВЕДОМЛЕНИЯ">
+          <Row label="Статус" value="Не настроены" dim />
+          <PlannedRow label="Email уведомления" />
+          <PlannedRow label="Telegram бот" />
+          <PlannedRow label="Webhook" />
+        </Section>
+
+        {/* Footer */}
+        <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(242,54,69,0.04)', borderRadius: 4, border: '1px solid rgba(242,54,69,0.12)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <IconShield size={12} color="var(--t-red)" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', lineHeight: 1.7 }}>
+            Все настройки доступны только для просмотра. Конфигурация управляется через файлы среды и SafetyGuard на сервере. Live Trading защищён от включения через UI на уровне архитектуры.
+          </span>
         </div>
       </div>
     </div>

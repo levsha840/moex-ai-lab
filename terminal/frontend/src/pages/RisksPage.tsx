@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { IconShield, IconTrendingDown } from '@tabler/icons-react'
+import { IconShield } from '@tabler/icons-react'
+import ReactECharts from 'echarts-for-react'
 import { useTerminal } from '../context/TerminalContext'
-import { metricsFromReport, metricsFromPaper } from '../utils/portfolio'
+import { metricsFromReport, metricsFromPaper, equityFromReport } from '../utils/portfolio'
 import type { JournalEntry, ReportSummary, Report } from '../api/client'
 import type { PortfolioMetrics } from '../utils/portfolio'
 
@@ -62,9 +63,82 @@ function fmtF(n: number | null | undefined, dec = 2): string {
   return n.toFixed(dec)
 }
 
+// ── Drawdown chart ──────────────────────────────────────────────────────────────
+function DrawdownChart({ equity }: { equity: { time: number; value: number }[] }) {
+  if (equity.length < 2) return null
+  // Compute drawdown series
+  let peak = equity[0].value
+  const ddData = equity.map(p => {
+    if (p.value > peak) peak = p.value
+    return peak > 0 ? ((p.value - peak) / peak) * 100 : 0
+  })
+  const times = equity.map(p => {
+    const d = new Date(p.time * 1000)
+    return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}`
+  })
+
+  return (
+    <ReactECharts
+      style={{ height: 140 }}
+      option={{
+        backgroundColor: 'transparent',
+        grid: { top: 8, right: 12, bottom: 24, left: 46 },
+        xAxis: { type: 'category', data: times, axisLine: { lineStyle: { color: '#2a2e39' } }, axisLabel: { color: '#6c7282', fontSize: 8 }, splitLine: { show: false } },
+        yAxis: {
+          type: 'value', splitLine: { lineStyle: { color: '#1e222d', type: 'dashed' } },
+          axisLabel: { color: '#6c7282', fontSize: 8, formatter: (v: number) => `${v.toFixed(1)}%` },
+        },
+        series: [{
+          type: 'line', data: ddData, smooth: false, symbol: 'none',
+          lineStyle: { color: '#f23645', width: 1 },
+          areaStyle: { color: 'rgba(242,54,69,0.15)' },
+        }],
+        tooltip: { trigger: 'axis', backgroundColor: '#1e222d', borderColor: '#2a2e39', textStyle: { color: '#d1d4dc', fontSize: 9 }, formatter: (p: any) => `DD: ${p[0].value.toFixed(2)}%` },
+      }}
+      notMerge
+    />
+  )
+}
+
+// ── Rolling Sharpe chart ───────────────────────────────────────────────────────
+function RollingSharpeChart({ trades: tds }: { trades: JournalEntry[] }) {
+  if (tds.length < 10) return null
+  const WINDOW = 20
+  const returns = tds.map(t => t.pnl_pct ?? 0)
+  const rolling: number[] = []
+  for (let i = WINDOW; i <= returns.length; i++) {
+    const w = returns.slice(i - WINDOW, i)
+    const mean = w.reduce((s, v) => s + v, 0) / WINDOW
+    const std  = Math.sqrt(w.reduce((s, v) => s + (v - mean) ** 2, 0) / WINDOW)
+    rolling.push(std > 0 ? (mean / std) * Math.sqrt(252) : 0)
+  }
+  return (
+    <ReactECharts
+      style={{ height: 120 }}
+      option={{
+        backgroundColor: 'transparent',
+        grid: { top: 8, right: 12, bottom: 24, left: 46 },
+        xAxis: { type: 'category', data: rolling.map((_, i) => String(WINDOW + i)), axisLine: { lineStyle: { color: '#2a2e39' } }, axisLabel: { color: '#6c7282', fontSize: 8 }, splitLine: { show: false } },
+        yAxis: {
+          type: 'value', splitLine: { lineStyle: { color: '#1e222d', type: 'dashed' } },
+          axisLabel: { color: '#6c7282', fontSize: 8, formatter: (v: number) => v.toFixed(1) },
+        },
+        series: [{
+          type: 'line', data: rolling, smooth: true, symbol: 'none',
+          lineStyle: { color: '#2962ff', width: 1 },
+          areaStyle: { color: 'rgba(41,98,255,0.08)' },
+          markLine: { data: [{ yAxis: 0, lineStyle: { color: '#434651', type: 'dashed', width: 1 } }], label: { show: false }, symbol: 'none' },
+        }],
+        tooltip: { trigger: 'axis', backgroundColor: '#1e222d', borderColor: '#2a2e39', textStyle: { color: '#d1d4dc', fontSize: 9 }, formatter: (p: any) => `Sharpe: ${p[0].value.toFixed(2)}` },
+      }}
+      notMerge
+    />
+  )
+}
+
 // ── Main component ──────────────────────────────────────────────────────────────
 export default function RisksPage() {
-  const { fullReport, allFullReports, reports, trades, paper, setSelectedIdx, setActiveTab } = useTerminal()
+  const { fullReport, allFullReports, reports, trades, paper, candles, setSelectedIdx, setActiveTab } = useTerminal()
 
   const currentMetrics = useMemo(() => {
     if (fullReport) { try { return metricsFromReport(fullReport) } catch { return null } }
@@ -88,6 +162,13 @@ export default function RisksPage() {
 
   const lStreak = useMemo(() => losingStreak(trades), [trades])
   const wStreak = useMemo(() => winningStreak(trades), [trades])
+
+  const equityData = useMemo(() => {
+    if (fullReport && candles.length) {
+      try { return equityFromReport(fullReport, candles) } catch { return [] }
+    }
+    return []
+  }, [fullReport, candles])
 
   if (!currentMetrics && allFullReports.length === 0) {
     return (
@@ -147,6 +228,26 @@ export default function RisksPage() {
               <RiskCard label="СЕРИЯ ПРИБЫЛЕЙ"  value={`${wStreak} подряд`} color={wStreak >= 5 ? 'var(--t-green)' : undefined} />
               <RiskCard label="ВСЕГО СДЕЛОК"    value={String(currentMetrics.numTrades)} />
             </div>
+
+            {/* Drawdown chart */}
+            {equityData.length > 1 && (
+              <>
+                <SH label="ПРОСАДКА (DRAWDOWN)" />
+                <div style={{ background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: '8px', marginBottom: 8 }}>
+                  <DrawdownChart equity={equityData} />
+                </div>
+              </>
+            )}
+
+            {/* Rolling Sharpe */}
+            {trades.length >= 10 && (
+              <>
+                <SH label={`ROLLING SHARPE (окно 20 сделок)`} />
+                <div style={{ background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: '8px', marginBottom: 8 }}>
+                  <RollingSharpeChart trades={trades} />
+                </div>
+              </>
+            )}
 
             {/* Worst / Best trade */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
