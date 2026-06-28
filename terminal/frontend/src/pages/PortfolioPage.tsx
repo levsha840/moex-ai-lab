@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { IconBriefcase, IconAlertTriangle } from '@tabler/icons-react'
 import { useTerminal } from '../context/TerminalContext'
@@ -12,52 +12,64 @@ import type { ReportSummary, Report, Trade, Position } from '../api/client'
 import type { PortfolioMetrics, EquityPoint } from '../utils/portfolio'
 import { TH, TD, fmtRub, fmtPct, fmtF, pnlColor } from '../styles/tokens'
 
-// ─── Primitives ───────────────────────────────────────────────────────────────
+// ─── Card ─────────────────────────────────────────────────────────────────────
 
-function Card({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
+function Card({ label, value, color, wide }: {
+  label: string
+  value: React.ReactNode
+  color?: string
+  wide?: boolean
+}) {
   return (
-    <div style={{ padding: '8px 10px', background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <span style={{ fontSize: 8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, letterSpacing: 0.5 }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: color ?? 'var(--t-text)' }}>{value}</span>
+    <div style={{
+      padding: '10px 12px',
+      background: 'var(--t-elevated)',
+      borderRadius: 4,
+      border: '1px solid var(--t-border)',
+      display: 'flex', flexDirection: 'column', gap: 4,
+      gridColumn: wide ? 'span 2' : undefined,
+    }}>
+      <span style={{ fontSize: 8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: color ?? 'var(--t-text)' }}>
+        {value}
+      </span>
     </div>
   )
 }
 
-function SH({ label }: { label: string }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 9, letterSpacing: 0.8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, padding: '10px 0 5px' }}>
-      {label}
+    <div style={{ fontSize: 9, letterSpacing: 0.8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, padding: '12px 0 6px', textTransform: 'uppercase' }}>
+      {children}
     </div>
   )
 }
 
-// ─── Mode tabs ────────────────────────────────────────────────────────────────
+// ─── Mode switcher (only shown when both modes are available) ─────────────────
 
-function ModeTabs({
-  mode, hasPaper, hasBacktest, onChange,
-}: {
+function ModeTabs({ mode, hasPaper, hasBacktest, onChange }: {
   mode: 'paper' | 'backtest'
   hasPaper: boolean
   hasBacktest: boolean
   onChange: (m: 'paper' | 'backtest') => void
 }) {
-  const tab = (m: 'paper' | 'backtest', label: string, available: boolean) => {
+  const btn = (m: 'paper' | 'backtest', label: string, available: boolean) => {
     const active = mode === m
-    const activeColor  = m === 'paper' ? 'var(--t-green)' : 'var(--t-amber)'
-    const activeBg     = m === 'paper' ? 'rgba(0,200,83,0.15)' : 'rgba(255,184,0,0.15)'
-    const activeBorder = m === 'paper' ? 'rgba(0,200,83,0.3)'  : 'rgba(255,184,0,0.3)'
+    const col  = m === 'paper' ? 'var(--t-green)' : 'var(--t-amber)'
+    const bg   = m === 'paper' ? 'rgba(0,200,83,0.12)' : 'rgba(255,184,0,0.12)'
+    const bdr  = m === 'paper' ? 'rgba(0,200,83,0.3)'  : 'rgba(255,184,0,0.3)'
     return (
       <button
-        key={m}
-        disabled={!available}
-        onClick={() => onChange(m)}
+        key={m} disabled={!available} onClick={() => onChange(m)}
         style={{
-          padding: '3px 12px', borderRadius: 3,
+          padding: '3px 14px', borderRadius: 3,
           cursor: available ? 'pointer' : 'not-allowed',
-          fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 700, letterSpacing: 0.5,
-          background: active ? activeBg : 'var(--t-elevated)',
-          color: active ? activeColor : available ? 'var(--t-text-2)' : 'var(--t-text-3)',
-          border: active ? `1px solid ${activeBorder}` : '1px solid var(--t-border)',
+          fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 700,
+          background: active ? bg : 'var(--t-elevated)',
+          color: active ? col : available ? 'var(--t-text-2)' : 'var(--t-text-3)',
+          border: active ? `1px solid ${bdr}` : '1px solid var(--t-border)',
           opacity: available ? 1 : 0.4,
         }}
       >
@@ -66,23 +78,168 @@ function ModeTabs({
     )
   }
   return (
-    <div style={{ flexShrink: 0, padding: '6px 14px', borderBottom: '1px solid var(--t-border)', display: 'flex', gap: 6, alignItems: 'center' }}>
-      <span style={{ fontSize: 8, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginRight: 4 }}>РЕЖИМ</span>
-      {tab('paper',    'PAPER TRADING',      hasPaper)}
-      {tab('backtest', 'BACKTEST PORTFOLIO', hasBacktest)}
+    <div style={{ flexShrink: 0, padding: '5px 14px', borderBottom: '1px solid var(--t-border)', display: 'flex', gap: 6, alignItems: 'center' }}>
+      {btn('paper',    'Paper Trading',      hasPaper)}
+      {btn('backtest', 'Backtest Portfolio', hasBacktest)}
     </div>
   )
 }
 
-// ─── Paper Trading panel ──────────────────────────────────────────────────────
+// ─── BACKTEST panel ───────────────────────────────────────────────────────────
 
-function PaperPositionsTable({ positions }: { positions: Position[] }) {
-  if (!positions.length)
-    return <div style={{ padding: '10px 0', fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Нет открытых позиций</div>
+const STRAT_TH: React.CSSProperties = {
+  padding: '5px 10px', color: 'var(--t-text-3)', fontWeight: 600,
+  fontSize: 9, textAlign: 'left', background: 'var(--t-elevated)',
+  borderBottom: '1px solid var(--t-border)', fontFamily: 'var(--t-font-mono)',
+  position: 'sticky', top: 0, zIndex: 1,
+}
+
+function StrategyRow({ r, m, onClick }: { r: ReportSummary; m: PortfolioMetrics | null; onClick: () => void }) {
+  const name = r.hypothesis_id.replace('tmpl_h_', '').replace(/_/g, ' ')
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <tr
+      onClick={onClick}
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
+      <td style={{ padding: '6px 10px', color: 'var(--t-text)', fontSize: 10, fontFamily: 'var(--t-font-mono)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</td>
+      <td style={{ padding: '6px 10px', color: 'var(--t-text-2)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{r.ticker}</td>
+      <td style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'var(--t-font-mono)', color: pnlColor(r.total_return_pct), fontWeight: 600 }}>{fmtPct(r.total_return_pct)}</td>
+      <td style={{ padding: '6px 10px', color: 'var(--t-red)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m ? `${m.maxDrawdown.toFixed(1)}%` : '—'}</td>
+      <td style={{ padding: '6px 10px', color: 'var(--t-text-2)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m ? `${m.winRate.toFixed(0)}%` : '—'}</td>
+      <td style={{ padding: '6px 10px', color: m ? (m.profitFactor >= 1.5 ? 'var(--t-green)' : m.profitFactor < 1 ? 'var(--t-red)' : 'var(--t-text-2)') : 'var(--t-text-3)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m ? m.profitFactor.toFixed(2) : '—'}</td>
+      <td style={{ padding: '6px 10px', color: 'var(--t-text-3)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m?.numTrades ?? r.num_trades ?? '—'}</td>
+    </tr>
+  )
+}
+
+function BacktestPanel({ reports, allFullReports, fullReport, candles, setSelectedIdx, setActiveTab }: {
+  reports: ReportSummary[]
+  allFullReports: Report[]
+  fullReport: Report | undefined
+  candles: import('../api/client').Candle[]
+  setSelectedIdx: (i: number) => void
+  setActiveTab: (t: string) => void
+}) {
+  const allMetrics = useMemo(() =>
+    allFullReports.map(r => { try { return metricsFromReport(r) } catch { return null } }),
+    [allFullReports],
+  )
+
+  const equity = useMemo<EquityPoint[]>(() => {
+    if (!fullReport || !candles.length) return []
+    try { return equityFromReport(fullReport, candles) } catch { return [] }
+  }, [fullReport, candles])
+
+  // Metrics for currently selected strategy
+  const cur = fullReport
+    ? (() => { try { return metricsFromReport(fullReport) } catch { return null } })()
+    : null
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+
+      {/* Subtitle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, padding: '6px 10px', background: 'rgba(255,184,0,0.06)', borderRadius: 4, border: '1px solid rgba(255,184,0,0.18)' }}>
+        <IconAlertTriangle size={11} color="var(--t-amber)" />
+        <span style={{ fontSize: 9, color: 'var(--t-amber)', fontFamily: 'var(--t-font-mono)' }}>
+          Историческая симуляция, не Paper Trading
+        </span>
+      </div>
+
+      {/* Current strategy metrics */}
+      {cur ? (
+        <>
+          <SectionTitle>{cur.ticker} · {cur.strategyLabel}</SectionTitle>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+            <Card label="Начальный капитал" value={`${Math.round(cur.initialCapital).toLocaleString('ru-RU')} ₽`} />
+            <Card label="Итоговый капитал"  value={`${Math.round(cur.currentCapital).toLocaleString('ru-RU')} ₽`} />
+            <Card label="PnL"               value={fmtRub(cur.pnl)}          color={pnlColor(cur.pnl)} />
+            <Card label="Доходность"         value={fmtPct(cur.pnlPct)}       color={pnlColor(cur.pnlPct)} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
+            <Card label="Max Drawdown"   value={`${fmtF(cur.maxDrawdown)}%`}  color="var(--t-red)" />
+            <Card label="Win Rate"       value={`${fmtF(cur.winRate, 1)}%`} />
+            <Card label="Profit Factor"  value={fmtF(cur.profitFactor)}        color={cur.profitFactor >= 1.5 ? 'var(--t-green)' : cur.profitFactor < 1 ? 'var(--t-red)' : undefined} />
+            <Card label="Сделок"         value={String(cur.numTrades)} />
+          </div>
+        </>
+      ) : (
+        allFullReports.length > 0 && (() => {
+          const valid = allMetrics.filter(Boolean) as PortfolioMetrics[]
+          const totalFinal = valid.reduce((s, m) => s + m.currentCapital, 0)
+          const totalInit  = valid.reduce((s, m) => s + m.initialCapital, 0)
+          const avgReturn  = valid.length ? valid.reduce((s, m) => s + m.pnlPct, 0) / valid.length : 0
+          const bestReturn = valid.length ? Math.max(...valid.map(m => m.pnlPct)) : 0
+          const worstDD    = valid.length ? Math.max(...valid.map(m => m.maxDrawdown)) : 0
+          const avgWR      = valid.length ? valid.reduce((s, m) => s + m.winRate, 0) / valid.length : 0
+          return (
+            <>
+              <SectionTitle>Сводка по всем стратегиям</SectionTitle>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
+                <Card label="Суммарный капитал"  value={`${Math.round(totalFinal).toLocaleString('ru-RU')} ₽`} />
+                <Card label="Суммарный PnL"       value={fmtRub(totalFinal - totalInit)} color={pnlColor(totalFinal - totalInit)} />
+                <Card label="Средняя доходность"  value={fmtPct(avgReturn)}  color={pnlColor(avgReturn)} />
+                <Card label="Лучший результат"    value={fmtPct(bestReturn)} color={pnlColor(bestReturn)} />
+                <Card label="Max Drawdown (макс.)" value={`${fmtF(worstDD)}%`} color="var(--t-red)" />
+                <Card label="Win Rate (средний)"  value={`${fmtF(avgWR, 1)}%`} />
+              </div>
+            </>
+          )
+        })()
+      )}
+
+      {/* Equity curve */}
+      {equity.length > 1 && (
+        <>
+          <SectionTitle>Кривая капитала{fullReport ? ` — ${fullReport.ticker}` : ''}</SectionTitle>
+          <div style={{ marginBottom: 16, background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: 4 }}>
+            <EquityChart primaryData={equity} primaryLabel={fullReport?.ticker ?? ''} height={200} compact />
+          </div>
+        </>
+      )}
+
+      {/* Strategy list */}
+      {reports.length > 0 && (
+        <>
+          <SectionTitle>Стратегии ({reports.length})</SectionTitle>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['Стратегия','Инструмент','Доходность','Max DD','Win Rate','Profit Factor','Сделок'].map(h => (
+                    <th key={h} style={STRAT_TH}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((r, i) => (
+                  <StrategyRow
+                    key={r.report_id}
+                    r={r}
+                    m={allMetrics[i] ?? null}
+                    onClick={() => { setSelectedIdx(i); setActiveTab('terminal') }}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── PAPER panel ──────────────────────────────────────────────────────────────
+
+function PositionsTable({ positions }: { positions: Position[] }) {
+  if (!positions.length)
+    return <div style={{ padding: '8px 0', fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Нет открытых позиций</div>
+  return (
+    <div style={{ overflowX: 'auto', marginBottom: 4 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead><tr>{['Тикер','Вход ₽','Тек. ₽','PnL ₽'].map(h => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+        <thead><tr>{['Тикер','Вход ₽','Текущая ₽','PnL ₽'].map(h => <th key={h} style={TH}>{h}</th>)}</tr></thead>
         <tbody>
           {positions.map(p => (
             <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -98,9 +255,9 @@ function PaperPositionsTable({ positions }: { positions: Position[] }) {
   )
 }
 
-function PaperTradesTable({ trades }: { trades: Trade[] }) {
+function TradesTable({ trades }: { trades: Trade[] }) {
   if (!trades.length)
-    return <div style={{ padding: '10px 0', fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Нет закрытых сделок</div>
+    return <div style={{ padding: '8px 0', fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Нет Paper-сделок</div>
   const sorted = [...trades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const fmt = (s: string) => {
     try {
@@ -109,7 +266,7 @@ function PaperTradesTable({ trades }: { trades: Trade[] }) {
     } catch { return s.slice(0, 10) }
   }
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: 'auto', marginBottom: 4 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead><tr>{['Дата','Тикер','Вход ₽','Выход ₽','PnL ₽'].map(h => <th key={h} style={TH}>{h}</th>)}</tr></thead>
         <tbody>
@@ -132,165 +289,49 @@ function PaperPanel({ initialCapital, metrics }: { initialCapital: number; metri
   const { data: paperTrades    = [] } = useQuery({ queryKey: ['paper-trades'],    queryFn: fetchPaperTrades })
   const { data: paperPositions = [] } = useQuery({ queryKey: ['paper-positions'], queryFn: fetchPaperPositions })
 
-  const paperEquity = useMemo<EquityPoint[]>(
+  const equity = useMemo<EquityPoint[]>(
     () => equityFromPaperTrades(paperTrades, initialCapital),
     [paperTrades, initialCapital],
   )
 
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px' }}>
+  const noTrades = paperTrades.length === 0
 
-      <SH label="КАПИТАЛ" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 10 }}>
-        <Card label="НАЧАЛЬНЫЙ"    value={`${Math.round(initialCapital).toLocaleString('ru-RU')} ₽`} />
-        <Card label="ТЕКУЩИЙ"      value={`${Math.round(metrics.currentCapital).toLocaleString('ru-RU')} ₽`} />
-        <Card label="PnL"          value={fmtRub(metrics.pnl)}           color={pnlColor(metrics.pnl)} />
-        <Card label="ДОХОДНОСТЬ"   value={fmtPct(metrics.pnlPct)}        color={pnlColor(metrics.pnlPct)} />
-        <Card label="MAX DRAWDOWN" value={`${fmtF(metrics.maxDrawdown)}%`} color="var(--t-red)" />
-      </div>
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+
+      {/* Capital metrics */}
+      <SectionTitle>Капитал</SectionTitle>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
-        <Card label="WIN RATE"   value={`${fmtF(metrics.winRate, 1)}%`} />
-        <Card label="СДЕЛОК"     value={String(metrics.numTrades)} />
-        <Card label="ПОЗИЦИИ"    value={String(paperPositions.length)} />
-        <Card label="ЭКСПОЗИЦИЯ" value={`${fmtF(metrics.usedPct, 1)}%`} />
+        <Card label="Начальный капитал" value={`${Math.round(initialCapital).toLocaleString('ru-RU')} ₽`} />
+        <Card label="Текущий капитал"   value={`${Math.round(metrics.currentCapital).toLocaleString('ru-RU')} ₽`} />
+        <Card label="PnL"               value={fmtRub(metrics.pnl)}     color={pnlColor(metrics.pnl)} />
+        <Card label="Доходность"         value={fmtPct(metrics.pnlPct)}  color={pnlColor(metrics.pnlPct)} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
+        <Card label="Win Rate"   value={`${fmtF(metrics.winRate, 1)}%`} />
+        <Card label="Сделок"     value={String(metrics.numTrades)} />
+        <Card label="Позиции"    value={String(paperPositions.length)} />
+        <Card label="Экспозиция" value={`${fmtF(metrics.usedPct, 1)}%`} />
       </div>
 
-      <SH label="EQUITY PAPER" />
-      <div style={{ marginBottom: 14, background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: 4 }}>
-        <EquityChart primaryData={paperEquity} primaryLabel="Paper" height={200} compact />
-      </div>
-
-      <SH label={`ПОЗИЦИИ (${paperPositions.length})`} />
-      <PaperPositionsTable positions={paperPositions} />
-
-      <SH label={`ЗАКРЫТЫЕ СДЕЛКИ (${paperTrades.length})`} />
-      <PaperTradesTable trades={paperTrades} />
-    </div>
-  )
-}
-
-// ─── Backtest panel ───────────────────────────────────────────────────────────
-
-const TH2: React.CSSProperties = {
-  padding: '5px 10px', color: 'var(--t-text-3)', fontWeight: 600, letterSpacing: 0.5,
-  fontSize: 9, textAlign: 'left', background: 'var(--t-elevated)',
-  borderBottom: '1px solid var(--t-border)', fontFamily: 'var(--t-font-mono)',
-  position: 'sticky', top: 0, zIndex: 1,
-}
-
-function BacktestStratRow({ r, m, onClick }: { r: ReportSummary; m: PortfolioMetrics | null; onClick: () => void }) {
-  return (
-    <tr
-      onClick={onClick}
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-    >
-      <td style={{ padding: '6px 10px', color: 'var(--t-text)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>
-        {r.hypothesis_id.replace('tmpl_h_', '').replace(/_/g, ' ')}
-      </td>
-      <td style={{ padding: '6px 10px', color: 'var(--t-text-2)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{r.ticker}</td>
-      <td style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'var(--t-font-mono)', color: pnlColor(r.total_return_pct) }}>{fmtPct(r.total_return_pct)}</td>
-      <td style={{ padding: '6px 10px', color: 'var(--t-red)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m ? `${m.maxDrawdown.toFixed(1)}%` : '—'}</td>
-      <td style={{ padding: '6px 10px', color: 'var(--t-text-2)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m ? `${m.winRate.toFixed(0)}%` : '—'}</td>
-      <td style={{ padding: '6px 10px', color: m ? (m.sharpe > 1 ? 'var(--t-green)' : 'var(--t-text-2)') : 'var(--t-text-3)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m ? fmtF(m.sharpe) : '—'}</td>
-      <td style={{ padding: '6px 10px', color: 'var(--t-text-3)', fontSize: 10, fontFamily: 'var(--t-font-mono)' }}>{m?.numTrades ?? r.num_trades ?? '—'}</td>
-    </tr>
-  )
-}
-
-function BacktestPanel({ reports, allFullReports, fullReport, candles, setSelectedIdx, setActiveTab }: {
-  reports: ReportSummary[]
-  allFullReports: Report[]
-  fullReport: Report | undefined
-  candles: import('../api/client').Candle[]
-  setSelectedIdx: (i: number) => void
-  setActiveTab: (t: string) => void
-}) {
-  const allMetrics = useMemo(() =>
-    allFullReports.map(r => { try { return metricsFromReport(r) } catch { return null } }),
-    [allFullReports],
-  )
-
-  const backtestEquity = useMemo<EquityPoint[]>(() => {
-    if (!fullReport || !candles.length) return []
-    try { return equityFromReport(fullReport, candles) } catch { return [] }
-  }, [fullReport, candles])
-
-  const valid = allMetrics.filter(Boolean) as PortfolioMetrics[]
-  const totalFinal = valid.reduce((s, m) => s + m.currentCapital, 0)
-  const totalInit  = valid.reduce((s, m) => s + m.initialCapital, 0)
-  const avgReturn  = valid.length ? valid.reduce((s, m) => s + m.pnlPct, 0) / valid.length : 0
-  const bestReturn = valid.length ? Math.max(...valid.map(m => m.pnlPct)) : 0
-  const worstDD    = valid.length ? Math.max(...valid.map(m => m.maxDrawdown)) : 0
-  const avgWR      = valid.length ? valid.reduce((s, m) => s + m.winRate, 0) / valid.length : 0
-
-  const curMetrics = fullReport
-    ? (() => { try { return metricsFromReport(fullReport) } catch { return null } })()
-    : null
-
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px' }}>
-
-      <div style={{ marginBottom: 10, padding: '5px 10px', background: 'rgba(255,184,0,0.07)', borderRadius: 4, border: '1px solid rgba(255,184,0,0.2)', display: 'flex', gap: 8, alignItems: 'center' }}>
-        <IconAlertTriangle size={11} color="var(--t-amber)" />
-        <span style={{ fontSize: 9, color: 'var(--t-amber)', fontFamily: 'var(--t-font-mono)' }}>
-          Бэктест — не Paper Trading. Данные из исторических симуляций.
-        </span>
-      </div>
-
-      <SH label={`СВОДКА БЭКТЕСТОВ (${allFullReports.length})`} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginBottom: 10 }}>
-        <Card label="СУММАРНЫЙ КАПИТАЛ"  value={`${Math.round(totalFinal).toLocaleString('ru-RU')} ₽`} />
-        <Card label="СУММАРНЫЙ PnL"      value={fmtRub(totalFinal - totalInit)} color={pnlColor(totalFinal - totalInit)} />
-        <Card label="СРЕДНЯЯ ДОХОДНОСТЬ" value={fmtPct(avgReturn)}  color={pnlColor(avgReturn)} />
-        <Card label="ЛУЧШИЙ РЕЗУЛЬТАТ"   value={fmtPct(bestReturn)} color={pnlColor(bestReturn)} />
-        <Card label="MAX DRAWDOWN"        value={`${fmtF(worstDD)}%`} color="var(--t-red)" />
-        <Card label="СРЕДНИЙ WIN RATE"   value={`${fmtF(avgWR, 1)}%`} />
-      </div>
-
-      {curMetrics && (
-        <>
-          <SH label={`ТЕКУЩАЯ СТРАТЕГИЯ — ${curMetrics.ticker}`} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 10 }}>
-            <Card label="ДОХОДНОСТЬ"   value={fmtPct(curMetrics.pnlPct)}         color={pnlColor(curMetrics.pnlPct)} />
-            <Card label="PnL"          value={fmtRub(curMetrics.pnl)}             color={pnlColor(curMetrics.pnl)} />
-            <Card label="MAX DRAWDOWN" value={`${fmtF(curMetrics.maxDrawdown)}%`} color="var(--t-red)" />
-            <Card label="WIN RATE"     value={`${fmtF(curMetrics.winRate, 1)}%`} />
-            <Card label="SHARPE"       value={fmtF(curMetrics.sharpe)}            color={curMetrics.sharpe > 1 ? 'var(--t-green)' : undefined} />
-          </div>
-        </>
+      {/* Equity */}
+      <SectionTitle>Кривая капитала</SectionTitle>
+      {noTrades && (
+        <div style={{ marginBottom: 6, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', borderRadius: 3, fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>
+          Нет Paper-сделок — кривая горизонтальна на уровне начального капитала
+        </div>
       )}
-
-      {backtestEquity.length > 1 && (
-        <>
-          <SH label={`EQUITY БЭКТЕСТ${fullReport ? ` — ${fullReport.ticker}` : ''}`} />
-          <div style={{ marginBottom: 14, background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: 4 }}>
-            <EquityChart primaryData={backtestEquity} primaryLabel={fullReport?.ticker ?? ''} height={200} compact />
-          </div>
-        </>
-      )}
-
-      <SH label={`СТРАТЕГИИ (${reports.length})`} />
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>{['Стратегия','Инструмент','Доходность','Max DD','Win Rate','Sharpe','Сделок'].map(h => (
-              <th key={h} style={TH2}>{h}</th>
-            ))}</tr>
-          </thead>
-          <tbody>
-            {reports.map((r, i) => (
-              <BacktestStratRow
-                key={r.report_id}
-                r={r}
-                m={allMetrics[i] ?? null}
-                onClick={() => { setSelectedIdx(i); setActiveTab('terminal') }}
-              />
-            ))}
-          </tbody>
-        </table>
+      <div style={{ marginBottom: 16, background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: 4 }}>
+        <EquityChart primaryData={equity} primaryLabel="Paper" height={200} compact />
       </div>
+
+      {/* Open positions */}
+      <SectionTitle>Открытые позиции ({paperPositions.length})</SectionTitle>
+      <PositionsTable positions={paperPositions} />
+
+      {/* Closed trades */}
+      <SectionTitle>Сделки ({paperTrades.length})</SectionTitle>
+      <TradesTable trades={paperTrades} />
     </div>
   )
 }
@@ -320,19 +361,37 @@ export default function PortfolioPage() {
     [mode, paper],
   )
 
+  // Dev-only console diagnostics (never shown in UI)
+  useEffect(() => {
+    console.debug('[Portfolio] mode=%s hasPaper=%s hasBacktest=%s paper.enabled=%s reports=%d',
+      mode, hasPaper, hasBacktest, paper?.enabled, allFullReports.length)
+  }, [mode, hasPaper, hasBacktest, paper, allFullReports.length])
+
+  const pageTitle =
+    mode === 'paper'    ? 'Портфель — Paper Trading' :
+    mode === 'backtest' ? 'Портфель — бэктест'       : 'Портфель'
+
+  // ── Header shared across all modes ─────────────────────────────────────────
+  const header = (
+    <div style={{ height: 42, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 16px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', gap: 8 }}>
+      <IconBriefcase size={13} color="var(--t-text-3)" />
+      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 0.5 }}>
+        {pageTitle}
+      </span>
+    </div>
+  )
+
   // ── Empty ──────────────────────────────────────────────────────────────────
   if (mode === 'empty') {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--t-bg)', overflow: 'hidden' }}>
-        <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 12px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', gap: 8 }}>
-          <IconBriefcase size={12} color="var(--t-text-3)" />
-          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 1 }}>ПОРТФЕЛЬ</span>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--t-text-3)' }}>
-          <IconBriefcase size={40} style={{ opacity: 0.15 }} />
-          <div style={{ fontSize: 12, fontFamily: 'var(--t-font-mono)' }}>Нет данных портфеля</div>
-          <div style={{ fontSize: 10, color: 'var(--t-text-3)', textAlign: 'center', maxWidth: 340, lineHeight: 1.7 }}>
-            Запустите бэктест или включите Paper Trading.
+        {header}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+          <IconBriefcase size={40} style={{ opacity: 0.12 }} color="var(--t-text-3)" />
+          <div style={{ fontSize: 13, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text-2)' }}>Нет данных портфеля</div>
+          <div style={{ fontSize: 10, color: 'var(--t-text-3)', textAlign: 'center', maxWidth: 340, lineHeight: 1.8 }}>
+            Запустите бэктест чтобы увидеть результаты стратегий,<br />
+            или включите Paper Trading для реального мониторинга.
           </div>
         </div>
       </div>
@@ -341,24 +400,9 @@ export default function PortfolioPage() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--t-bg)', overflow: 'hidden' }}>
+      {header}
 
-      {/* Header */}
-      <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 12px', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)', gap: 8 }}>
-        <IconBriefcase size={12} color="var(--t-text-3)" />
-        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 1 }}>ПОРТФЕЛЬ</span>
-        {mode === 'paper' && (
-          <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: 'rgba(0,200,83,0.15)', color: 'var(--t-green)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, border: '1px solid rgba(0,200,83,0.3)' }}>
-            PAPER TRADING
-          </span>
-        )}
-        {mode === 'backtest' && (
-          <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: 'rgba(255,184,0,0.15)', color: 'var(--t-amber)', fontFamily: 'var(--t-font-mono)', fontWeight: 700, border: '1px solid rgba(255,184,0,0.3)' }}>
-            БЭКТЕСТ
-          </span>
-        )}
-      </div>
-
-      {/* Mode tabs — only when both modes have data */}
+      {/* Mode tabs — shown only when BOTH modes have data */}
       {hasPaper && hasBacktest && (
         <ModeTabs
           mode={mode as 'paper' | 'backtest'}
@@ -368,25 +412,14 @@ export default function PortfolioPage() {
         />
       )}
 
-      {/* Paper note */}
+      {/* Paper note from backend */}
       {mode === 'paper' && paper?.note && (
-        <div style={{ flexShrink: 0, padding: '3px 14px', fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)' }}>
+        <div style={{ flexShrink: 0, padding: '4px 16px', fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', background: 'var(--t-panel)', borderBottom: '1px solid var(--t-border)' }}>
           {paper.note}
         </div>
       )}
 
-      {/* Paper content */}
-      {mode === 'paper' && paper && paperMetrics && (
-        <PaperPanel initialCapital={paper.initial_capital} metrics={paperMetrics} />
-      )}
-
-      {mode === 'paper' && paper && !paperMetrics && (
-        <div style={{ flex: 1, padding: 20, fontSize: 10, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)' }}>
-          Ошибка загрузки данных Paper Trading.
-        </div>
-      )}
-
-      {/* Backtest content */}
+      {/* ── Backtest content ─────────────────────────────────────────────── */}
       {mode === 'backtest' && (
         <BacktestPanel
           reports={reports}
@@ -396,6 +429,19 @@ export default function PortfolioPage() {
           setSelectedIdx={setSelectedIdx}
           setActiveTab={setActiveTab as (t: string) => void}
         />
+      )}
+
+      {/* ── Paper content ────────────────────────────────────────────────── */}
+      {mode === 'paper' && paper && paperMetrics && (
+        <PaperPanel initialCapital={paper.initial_capital} metrics={paperMetrics} />
+      )}
+
+      {mode === 'paper' && (!paper || !paperMetrics) && (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 10, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)' }}>
+            Ошибка загрузки данных Paper Trading
+          </span>
+        </div>
       )}
     </div>
   )
