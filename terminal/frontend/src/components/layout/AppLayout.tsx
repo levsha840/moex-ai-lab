@@ -3,7 +3,7 @@ import {
   IconChartCandle, IconDatabase, IconCircleDot,
   IconPlayerPlay, IconBriefcase, IconShield,
   IconFileText, IconSettings, IconHistory,
-  IconTestPipe,
+  IconTestPipe, IconBrain,
 } from '@tabler/icons-react'
 import { useTerminal, type TopTab, type BottomTab } from '../../context/TerminalContext'
 import { availableTFs, TF_LABEL, type TF } from '../../utils/resample'
@@ -28,11 +28,12 @@ type NavItem = { id: string; label: string; icon: React.ComponentType<any>; tab:
 const NAV_ITEMS: NavItem[] = [
   { id: 'terminal',  label: 'Торговый терминал', icon: IconChartCandle,  tab: 'terminal'  },
   { id: 'strategy',  label: 'Стратегии',          icon: IconDatabase,     tab: 'strategy'  },
-  { id: 'history',   label: 'История торгов',     icon: IconHistory,      tab: 'history' },
+  { id: 'history',   label: 'История торгов',     icon: IconHistory,      tab: 'history'   },
   { id: 'backtests', label: 'Бэктесты',           icon: IconTestPipe,     tab: 'backtests' },
   { id: 'portfolio', label: 'Портфель',            icon: IconBriefcase,    tab: 'portfolio' },
   { id: 'risks',     label: 'Риски',               icon: IconShield,       tab: 'risks'     },
   { id: 'reports',   label: 'Отчёты',             icon: IconFileText,     tab: 'reports'   },
+  { id: 'knowledge', label: 'Карта знаний',        icon: IconBrain,        tab: 'knowledge' },
   { id: 'settings',  label: 'Настройки',           icon: IconSettings,     tab: 'settings'  },
 ]
 
@@ -63,7 +64,8 @@ function TopBar() {
     const map: Partial<Record<string, string>> = {
       terminal: 'terminal', strategy: 'strategy',
       history: 'history', backtests: 'backtests', portfolio: 'portfolio',
-      risks: 'risks', reports: 'reports', scientist: 'reports', settings: 'settings',
+      risks: 'risks', reports: 'reports', scientist: 'reports',
+      knowledge: 'knowledge', settings: 'settings',
     }
     const nav = map[activeTab]
     if (nav !== undefined) setActiveNav(nav)
@@ -292,7 +294,7 @@ function CenterPanel() {
   )
 }
 
-const FULL_WIDTH_TABS = new Set(['history', 'backtests', 'portfolio', 'risks', 'reports', 'settings'])
+const FULL_WIDTH_TABS = new Set(['history', 'backtests', 'portfolio', 'risks', 'reports', 'knowledge', 'settings'])
 
 export default function AppLayout() {
   const { activeTab } = useTerminal()

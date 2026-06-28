@@ -12,7 +12,7 @@ import type { ReportSummary, Report, Trade, Position } from '../api/client'
 import type { PortfolioMetrics, EquityPoint } from '../utils/portfolio'
 import { TH, TD, fmtRub, fmtPct, fmtF, pnlColor } from '../styles/tokens'
 
-// ─── primitives ───────────────────────────────────────────────────────────────
+// ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Card({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return (
@@ -31,28 +31,7 @@ function SH({ label }: { label: string }) {
   )
 }
 
-// ─── Debug banner ─────────────────────────────────────────────────────────────
-
-function DebugBanner({ mode, source }: { mode: string; source: string }) {
-  const color =
-    mode === 'paper'    ? 'var(--t-green)' :
-    mode === 'backtest' ? 'var(--t-amber)' : 'var(--t-text-3)'
-  const bg =
-    mode === 'paper'    ? 'rgba(0,200,83,0.07)' :
-    mode === 'backtest' ? 'rgba(255,184,0,0.07)' : 'rgba(255,255,255,0.03)'
-  return (
-    <div style={{ flexShrink: 0, padding: '3px 14px', background: bg, borderBottom: '1px solid var(--t-border)', display: 'flex', gap: 20, alignItems: 'center' }}>
-      <span style={{ fontSize: 9, fontFamily: 'var(--t-font-mono)', fontWeight: 700, color }}>
-        DATA_MODE: {mode.toUpperCase()}
-      </span>
-      <span style={{ fontSize: 9, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text-3)' }}>
-        SOURCE: {source}
-      </span>
-    </div>
-  )
-}
-
-// ─── Mode tab switcher ────────────────────────────────────────────────────────
+// ─── Mode tabs ────────────────────────────────────────────────────────────────
 
 function ModeTabs({
   mode, hasPaper, hasBacktest, onChange,
@@ -64,9 +43,9 @@ function ModeTabs({
 }) {
   const tab = (m: 'paper' | 'backtest', label: string, available: boolean) => {
     const active = mode === m
-    const activeColor = m === 'paper' ? 'var(--t-green)' : 'var(--t-amber)'
-    const activeBg    = m === 'paper' ? 'rgba(0,200,83,0.15)' : 'rgba(255,184,0,0.15)'
-    const activeBorder = m === 'paper' ? 'rgba(0,200,83,0.3)' : 'rgba(255,184,0,0.3)'
+    const activeColor  = m === 'paper' ? 'var(--t-green)' : 'var(--t-amber)'
+    const activeBg     = m === 'paper' ? 'rgba(0,200,83,0.15)' : 'rgba(255,184,0,0.15)'
+    const activeBorder = m === 'paper' ? 'rgba(0,200,83,0.3)'  : 'rgba(255,184,0,0.3)'
     return (
       <button
         key={m}
@@ -96,8 +75,6 @@ function ModeTabs({
 }
 
 // ─── Paper Trading panel ──────────────────────────────────────────────────────
-// SOURCE: PaperSummary + /paper/trades + /paper/positions
-// NEVER reads: fullReport, allFullReports, candles, reports
 
 function PaperPositionsTable({ positions }: { positions: Position[] }) {
   if (!positions.length)
@@ -123,7 +100,7 @@ function PaperPositionsTable({ positions }: { positions: Position[] }) {
 
 function PaperTradesTable({ trades }: { trades: Trade[] }) {
   if (!trades.length)
-    return <div style={{ padding: '10px 0', fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Нет Paper-сделок</div>
+    return <div style={{ padding: '10px 0', fontSize: 10, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)' }}>Нет закрытых сделок</div>
   const sorted = [...trades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const fmt = (s: string) => {
     try {
@@ -152,7 +129,6 @@ function PaperTradesTable({ trades }: { trades: Trade[] }) {
 }
 
 function PaperPanel({ initialCapital, metrics }: { initialCapital: number; metrics: PortfolioMetrics }) {
-  // Fetches ONLY paper-specific endpoints. Zero backtest state used.
   const { data: paperTrades    = [] } = useQuery({ queryKey: ['paper-trades'],    queryFn: fetchPaperTrades })
   const { data: paperPositions = [] } = useQuery({ queryKey: ['paper-positions'], queryFn: fetchPaperPositions })
 
@@ -164,15 +140,7 @@ function PaperPanel({ initialCapital, metrics }: { initialCapital: number; metri
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px' }}>
 
-      {paperTrades.length === 0 && (
-        <div style={{ marginBottom: 10, padding: '6px 10px', background: 'rgba(0,200,83,0.07)', borderRadius: 4, border: '1px solid rgba(0,200,83,0.2)' }}>
-          <span style={{ fontSize: 9, color: 'var(--t-green)', fontFamily: 'var(--t-font-mono)' }}>
-            Нет Paper-сделок — Equity горизонталь на уровне начального капитала
-          </span>
-        </div>
-      )}
-
-      <SH label="КАПИТАЛ · SOURCE: PaperSummary" />
+      <SH label="КАПИТАЛ" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 10 }}>
         <Card label="НАЧАЛЬНЫЙ"    value={`${Math.round(initialCapital).toLocaleString('ru-RU')} ₽`} />
         <Card label="ТЕКУЩИЙ"      value={`${Math.round(metrics.currentCapital).toLocaleString('ru-RU')} ₽`} />
@@ -187,23 +155,21 @@ function PaperPanel({ initialCapital, metrics }: { initialCapital: number; metri
         <Card label="ЭКСПОЗИЦИЯ" value={`${fmtF(metrics.usedPct, 1)}%`} />
       </div>
 
-      <SH label={`EQUITY PAPER · SOURCE: /paper/trades (${paperTrades.length} сделок)`} />
+      <SH label="EQUITY PAPER" />
       <div style={{ marginBottom: 14, background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: 4 }}>
         <EquityChart primaryData={paperEquity} primaryLabel="Paper" height={200} compact />
       </div>
 
-      <SH label={`ПОЗИЦИИ · SOURCE: /paper/positions (${paperPositions.length})`} />
+      <SH label={`ПОЗИЦИИ (${paperPositions.length})`} />
       <PaperPositionsTable positions={paperPositions} />
 
-      <SH label={`СДЕЛКИ · SOURCE: /paper/trades (${paperTrades.length})`} />
+      <SH label={`ЗАКРЫТЫЕ СДЕЛКИ (${paperTrades.length})`} />
       <PaperTradesTable trades={paperTrades} />
     </div>
   )
 }
 
 // ─── Backtest panel ───────────────────────────────────────────────────────────
-// SOURCE: fullReport + allFullReports + reports + candles
-// NEVER reads: paper, PaperSummary, /paper/trades, /paper/positions
 
 const TH2: React.CSSProperties = {
   padding: '5px 10px', color: 'var(--t-text-3)', fontWeight: 600, letterSpacing: 0.5,
@@ -273,7 +239,7 @@ function BacktestPanel({ reports, allFullReports, fullReport, candles, setSelect
         </span>
       </div>
 
-      <SH label={`СВОДКА · SOURCE: VisualBacktestReport × ${allFullReports.length}`} />
+      <SH label={`СВОДКА БЭКТЕСТОВ (${allFullReports.length})`} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginBottom: 10 }}>
         <Card label="СУММАРНЫЙ КАПИТАЛ"  value={`${Math.round(totalFinal).toLocaleString('ru-RU')} ₽`} />
         <Card label="СУММАРНЫЙ PnL"      value={fmtRub(totalFinal - totalInit)} color={pnlColor(totalFinal - totalInit)} />
@@ -285,7 +251,7 @@ function BacktestPanel({ reports, allFullReports, fullReport, candles, setSelect
 
       {curMetrics && (
         <>
-          <SH label={`ТЕКУЩАЯ СТРАТЕГИЯ · SOURCE: fullReport (${curMetrics.ticker})`} />
+          <SH label={`ТЕКУЩАЯ СТРАТЕГИЯ — ${curMetrics.ticker}`} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 10 }}>
             <Card label="ДОХОДНОСТЬ"   value={fmtPct(curMetrics.pnlPct)}         color={pnlColor(curMetrics.pnlPct)} />
             <Card label="PnL"          value={fmtRub(curMetrics.pnl)}             color={pnlColor(curMetrics.pnl)} />
@@ -298,14 +264,14 @@ function BacktestPanel({ reports, allFullReports, fullReport, candles, setSelect
 
       {backtestEquity.length > 1 && (
         <>
-          <SH label={`EQUITY БЭКТЕСТ · SOURCE: fullReport + candles${fullReport ? ` (${fullReport.ticker})` : ''}`} />
+          <SH label={`EQUITY БЭКТЕСТ${fullReport ? ` — ${fullReport.ticker}` : ''}`} />
           <div style={{ marginBottom: 14, background: 'var(--t-elevated)', borderRadius: 4, border: '1px solid var(--t-border)', padding: 4 }}>
             <EquityChart primaryData={backtestEquity} primaryLabel={fullReport?.ticker ?? ''} height={200} compact />
           </div>
         </>
       )}
 
-      <SH label={`СТРАТЕГИИ · SOURCE: reports (${reports.length})`} />
+      <SH label={`СТРАТЕГИИ (${reports.length})`} />
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -334,15 +300,12 @@ function BacktestPanel({ reports, allFullReports, fullReport, candles, setSelect
 export default function PortfolioPage() {
   const { paper, allFullReports, reports, setSelectedIdx, setActiveTab, fullReport, candles } = useTerminal()
 
-  // KEY FIX: hasPaper is true ONLY when paper trading is ENABLED in the backend.
-  // paper.enabled === false means engine exists but inactive → treat as backtest mode.
   const hasPaper    = paper?.enabled === true
   const hasBacktest = allFullReports.length > 0
 
   const defaultMode: 'paper' | 'backtest' | 'empty' =
     hasPaper ? 'paper' : hasBacktest ? 'backtest' : 'empty'
 
-  // User can switch modes explicitly via tab buttons
   const [manualMode, setManualMode] = useState<'paper' | 'backtest' | null>(null)
 
   const mode: 'paper' | 'backtest' | 'empty' =
@@ -357,10 +320,6 @@ export default function PortfolioPage() {
     [mode, paper],
   )
 
-  const debugSource =
-    mode === 'paper'    ? 'PaperSummary + /paper/trades + /paper/positions' :
-    mode === 'backtest' ? 'VisualBacktestReport + candles'                  : 'none'
-
   // ── Empty ──────────────────────────────────────────────────────────────────
   if (mode === 'empty') {
     return (
@@ -369,15 +328,11 @@ export default function PortfolioPage() {
           <IconBriefcase size={12} color="var(--t-text-3)" />
           <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--t-font-mono)', color: 'var(--t-text)', letterSpacing: 1 }}>ПОРТФЕЛЬ</span>
         </div>
-        <DebugBanner mode="empty" source="none" />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--t-text-3)' }}>
           <IconBriefcase size={40} style={{ opacity: 0.15 }} />
           <div style={{ fontSize: 12, fontFamily: 'var(--t-font-mono)' }}>Нет данных портфеля</div>
           <div style={{ fontSize: 10, color: 'var(--t-text-3)', textAlign: 'center', maxWidth: 340, lineHeight: 1.7 }}>
-            Запустите бэктест или включите Paper Trading в настройках бэкенда.
-          </div>
-          <div style={{ fontSize: 9, color: 'var(--t-text-3)', fontFamily: 'var(--t-font-mono)', marginTop: 8 }}>
-            paper.enabled={String(paper?.enabled ?? 'undefined')} · backtest_count={allFullReports.length}
+            Запустите бэктест или включите Paper Trading.
           </div>
         </div>
       </div>
@@ -403,10 +358,7 @@ export default function PortfolioPage() {
         )}
       </div>
 
-      {/* Debug banner — exact mode + data source */}
-      <DebugBanner mode={mode} source={debugSource} />
-
-      {/* Mode tabs — visible when both paper and backtest are available */}
+      {/* Mode tabs — only when both modes have data */}
       {hasPaper && hasBacktest && (
         <ModeTabs
           mode={mode as 'paper' | 'backtest'}
@@ -423,18 +375,18 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* Paper content — ZERO backtest data */}
+      {/* Paper content */}
       {mode === 'paper' && paper && paperMetrics && (
         <PaperPanel initialCapital={paper.initial_capital} metrics={paperMetrics} />
       )}
 
       {mode === 'paper' && paper && !paperMetrics && (
         <div style={{ flex: 1, padding: 20, fontSize: 10, color: 'var(--t-red)', fontFamily: 'var(--t-font-mono)' }}>
-          Ошибка вычисления метрик. Проверьте /api/paper/summary.
+          Ошибка загрузки данных Paper Trading.
         </div>
       )}
 
-      {/* Backtest content — ZERO paper data */}
+      {/* Backtest content */}
       {mode === 'backtest' && (
         <BacktestPanel
           reports={reports}
