@@ -12,9 +12,12 @@ env/
 # Environment
 .env
 
-# Logs / generated reports
+# Logs / generated reports (generated output — not tracked)
 logs/
-reports/
+# /reports/ is generated output; visual_backtest source lives in /services/visual_backtest/
+/reports/
+operational_reports/
+campaigns/
 
 # VS Code
 .vscode/
