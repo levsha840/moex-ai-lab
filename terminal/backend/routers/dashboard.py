@@ -1,7 +1,6 @@
 """Dashboard router — lab status and activity feed."""
 from __future__ import annotations
 
-import glob
 import json
 import os
 from datetime import datetime, timezone
@@ -27,20 +26,9 @@ def _data_dir() -> Path:
 
 
 def _legacy_reports() -> list[dict]:
-    """Read all legacy research session reports."""
-    results = []
-    for path in (_reports_dir()).glob("*/report.json"):
-        if "visual_backtest" in str(path):
-            continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-            data["_path"] = str(path)
-            data["_mtime"] = os.path.getmtime(path)
-            results.append(data)
-        except Exception:
-            pass
-    results.sort(key=lambda x: x["_mtime"], reverse=True)
-    return results
+    """Return cached legacy research session reports (60s TTL)."""
+    from services.cache.reports_cache import ReportsCache
+    return ReportsCache.get_instance(_reports_dir()).get_legacy_reports()
 
 
 def _vb_reports() -> list[dict]:
@@ -123,9 +111,9 @@ def get_status():
             "snapshots": len(list((ROOT / "data" / "knowledge" / "snapshots").glob("*.json"))) if (ROOT / "data" / "knowledge" / "snapshots").exists() else 0,
         },
         "research_budget": {
-            "total": 100,
-            "used": min(len(all_findings), 100),
-            "remaining": max(0, 100 - len(all_findings)),
+            "total": len(all_findings),
+            "used": len(all_findings),
+            "remaining": 0,
         },
     }
 

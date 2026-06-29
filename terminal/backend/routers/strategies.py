@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -17,35 +16,31 @@ def _all_findings() -> list[dict]:
     """Collect all research findings from legacy reports + visual backtest reports."""
     findings = []
 
-    # From legacy research reports
-    reports_dir = ROOT / "reports"
-    for path in reports_dir.glob("*/report.json"):
-        if "visual_backtest" in str(path):
-            continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-            generated_at = data.get("generated_at", "")
-            for f in data.get("findings", []):
-                findings.append({
-                    "id": f.get("hypothesis_id", "")[:16],
-                    "strategy": f.get("hypothesis_title", "Unknown"),
-                    "template_id": f.get("template_id", ""),
-                    "strategy_name": f.get("strategy_name", ""),
-                    "status": "RESEARCH_PASS" if f.get("outcome") == "PASS" else "RESEARCH_FAIL",
-                    "research_score": round(f.get("pass_rate", 0) * 100, 1),
-                    "pass_rate": f.get("pass_rate", 0),
-                    "windows_total": f.get("windows_total", 0),
-                    "win_rate": None,
-                    "profit_factor": None,
-                    "total_return_pct": None,
-                    "max_drawdown_pct": None,
-                    "paper_status": "PENDING",
-                    "sandbox_status": "NOT_STARTED",
-                    "source": "research",
-                    "generated_at": generated_at,
-                })
-        except Exception:
-            pass
+    # From legacy research reports — use cache to avoid re-scanning 1817 files per request
+    from services.cache.reports_cache import ReportsCache
+    legacy_reports = ReportsCache.get_instance(ROOT / "reports").get_legacy_reports()
+
+    for data in legacy_reports:
+        generated_at = data.get("generated_at", "")
+        for f in data.get("findings", []):
+            findings.append({
+                "id": f.get("hypothesis_id", "")[:16],
+                "strategy": f.get("hypothesis_title", "Unknown"),
+                "template_id": f.get("template_id", ""),
+                "strategy_name": f.get("strategy_name", ""),
+                "status": "RESEARCH_PASS" if f.get("outcome") == "PASS" else "RESEARCH_FAIL",
+                "research_score": round(f.get("pass_rate", 0) * 100, 1),
+                "pass_rate": f.get("pass_rate", 0),
+                "windows_total": f.get("windows_total", 0),
+                "win_rate": None,
+                "profit_factor": None,
+                "total_return_pct": None,
+                "max_drawdown_pct": None,
+                "paper_status": "PENDING",
+                "sandbox_status": "NOT_STARTED",
+                "source": "research",
+                "generated_at": generated_at,
+            })
 
     # From visual backtest reports (richer data)
     vb_dir = ROOT / "reports" / "visual_backtest"
